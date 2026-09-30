@@ -376,6 +376,42 @@ const AdminPortal = {
     }
   },
 
+  async resetRevenue() {
+    if (!confirm("⚠️ RESET REVENUE:\nAre you sure you want to reset all revenue and transaction records to ₹0?\nThis will clear all transactions from the database.")) return;
+    try {
+      const res = await fetch(`/api/admin/reset/revenue?token=${encodeURIComponent(this.adminToken)}`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message);
+        await this.refreshAll();
+      } else {
+        alert(data.detail || "Failed to reset revenue.");
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  },
+
+  async resetUsers() {
+    if (!confirm("⚠️ RESET USERS:\nAre you sure you want to reset all registered student accounts to 0?\nThis will remove registered users from the database.")) return;
+    try {
+      const res = await fetch(`/api/admin/reset/users?token=${encodeURIComponent(this.adminToken)}`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message);
+        await this.refreshAll();
+      } else {
+        alert(data.detail || "Failed to reset users.");
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  },
+
   logout() {
     this.adminToken = null;
     localStorage.removeItem(this.TOKEN_KEY);

@@ -467,6 +467,22 @@ class Database:
         return deleted
 
     @classmethod
+    def reset_users(cls) -> int:
+        """Reset all users from database and clear users.json."""
+        conn = cls.get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM users")
+        count = cur.rowcount
+        conn.commit()
+        conn.close()
+        try:
+            with open(USERS_FILE, "w", encoding="utf-8") as f:
+                json.dump({"users": {}}, f, indent=2)
+        except Exception as e:
+            print(f"[DB] Error resetting users.json: {e}")
+        return count
+
+    @classmethod
     def _row_to_user(cls, row: sqlite3.Row) -> Dict[str, Any]:
         d = dict(row)
         d["user_id"] = d.get("id")
@@ -564,6 +580,23 @@ class Database:
         conn.commit()
         conn.close()
         return deleted
+
+    @classmethod
+    def reset_transactions(cls) -> int:
+        """Reset all transactions from database and clear transactions.json."""
+        conn = cls.get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM transactions")
+        count = cur.rowcount
+        conn.commit()
+        conn.close()
+        try:
+            cls._ensure_data_dir()
+            with open(TRANSACTIONS_FILE, "w", encoding="utf-8") as f:
+                json.dump({"transactions": []}, f, indent=2)
+        except Exception as e:
+            print(f"[DB] Error resetting transactions.json: {e}")
+        return count
 
     @classmethod
     def get_transaction_by_id(cls, tx_id: str) -> Optional[Dict[str, Any]]:

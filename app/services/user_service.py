@@ -416,6 +416,13 @@ class UserService:
             deleted_json = True
         return deleted_db or deleted_json
 
+    @classmethod
+    def reset_all_users(cls) -> int:
+        """Reset all registered users from database and json."""
+        count = Database.reset_users()
+        cls._write_users({"users": {}})
+        return count
+
     # ── Mock Tests Storage ──
 
     @classmethod

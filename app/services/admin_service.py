@@ -116,3 +116,28 @@ class AdminService:
             "service_inquiries": UserService.list_service_inquiries(),
             "custom_subjects": LPUVertoService.get_custom_subjects()
         }
+
+    @classmethod
+    def reset_revenue(cls) -> Dict[str, Any]:
+        """Reset all transactions and revenue history to ₹0."""
+        from app.services.paywall_service import PaywallService
+        deleted_count = PaywallService.reset_all_transactions()
+        return {
+            "success": True,
+            "message": f"Successfully reset all revenue. {deleted_count} transaction record(s) cleared.",
+            "total_revenue_inr": 0.0,
+            "deleted_count": deleted_count
+        }
+
+    @classmethod
+    def reset_users(cls) -> Dict[str, Any]:
+        """Reset all registered students from the platform."""
+        from app.services.user_service import UserService
+        deleted_count = UserService.reset_all_users()
+        return {
+            "success": True,
+            "message": f"Successfully reset registered students. {deleted_count} student account(s) cleared.",
+            "total_users": 0,
+            "deleted_count": deleted_count
+        }
+

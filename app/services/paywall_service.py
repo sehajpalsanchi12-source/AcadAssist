@@ -558,3 +558,16 @@ class PaywallService:
             return True
 
         return False
+
+    @classmethod
+    def reset_all_transactions(cls) -> int:
+        """Reset all transactions and revenue."""
+        count = Database.reset_transactions()
+        cls._ensure_files()
+        try:
+            with open(TRANSACTIONS_FILE, "w", encoding="utf-8") as f:
+                json.dump({"transactions": []}, f, indent=2)
+        except Exception:
+            pass
+        return count
+

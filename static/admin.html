@@ -128,8 +128,13 @@
       <!-- Top KPI Summary Cards -->
       <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <!-- Revenue -->
-        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Revenue</span>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1 relative group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Revenue</span>
+            <button onclick="AdminApp.resetRevenue()" title="Reset Revenue & Transactions to ₹0" class="px-2 py-0.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/40 text-[10px] font-bold transition-all flex items-center gap-1">
+              <span>🔄 Reset</span>
+            </button>
+          </div>
           <div id="stat-revenue" class="text-xl sm:text-2xl font-black text-emerald-400">₹0</div>
           <span class="text-[10px] text-slate-500">Paytm UPI: 7719730804@ptyes</span>
         </div>
@@ -162,8 +167,13 @@
         </div>
 
         <!-- Registered Students -->
-        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Registered</span>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1 relative group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Registered</span>
+            <button onclick="AdminApp.resetUsers()" title="Reset Registered Students to 0" class="px-2 py-0.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/40 text-[10px] font-bold transition-all flex items-center gap-1">
+              <span>🔄 Reset</span>
+            </button>
+          </div>
           <div id="stat-users" class="text-xl sm:text-2xl font-black text-purple-400">0</div>
           <span id="stat-pro-users" class="text-[10px] text-slate-500">Pro Pass: 0</span>
         </div>
@@ -218,6 +228,10 @@
             <button onclick="AdminApp.filterPayments('pending')" id="tx-filter-pending" class="px-3 py-2 rounded-xl bg-slate-800 text-amber-400 hover:bg-slate-700">⏳ Pending</button>
             <button onclick="AdminApp.filterPayments('approved')" id="tx-filter-approved" class="px-3 py-2 rounded-xl bg-slate-800 text-emerald-400 hover:bg-slate-700">✓ Approved</button>
             <button onclick="AdminApp.filterPayments('rejected')" id="tx-filter-rejected" class="px-3 py-2 rounded-xl bg-slate-800 text-red-400 hover:bg-slate-700">✗ Rejected</button>
+            <button onclick="AdminApp.resetRevenue()" class="px-3 py-2 rounded-xl bg-red-950/70 hover:bg-red-900/90 text-red-400 border border-red-800/60 font-bold transition-all flex items-center gap-1 ml-1" title="Reset all transactions and revenue back to ₹0">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <span>Reset Revenue</span>
+            </button>
           </div>
         </div>
 
@@ -253,7 +267,13 @@
             <input type="text" id="user-search-input" oninput="AdminApp.renderUsers()" placeholder="Search students by name, email, LPU reg no, phone..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500">
             <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
           </div>
-          <span class="text-xs text-slate-400 font-semibold" id="users-count-label">Total Registered: 0</span>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="text-xs text-slate-400 font-semibold" id="users-count-label">Total Registered: 0</span>
+            <button onclick="AdminApp.resetUsers()" class="px-3 py-2 rounded-xl bg-red-950/70 hover:bg-red-900/90 text-red-400 border border-red-800/60 text-xs font-bold transition-all flex items-center gap-1.5" title="Reset all registered student accounts to 0">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <span>Reset Users</span>
+            </button>
+          </div>
         </div>
 
         <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
@@ -837,6 +857,48 @@
           }
         } catch (e) {
           alert("Error deleting user.");
+        }
+      },
+
+      async resetRevenue() {
+        if (!confirm("⚠️ RESET REVENUE WARNING:\n\nAre you sure you want to reset all revenue and transaction records back to ₹0?\n\nThis will clear all transactions from the database. This action cannot be undone.")) {
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/admin/reset/revenue?token=${encodeURIComponent(this.adminToken)}`, {
+            method: 'POST'
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(`✅ ${data.message}`);
+            await this.refreshData();
+          } else {
+            alert(data.detail || data.message || "Failed to reset revenue.");
+          }
+        } catch (e) {
+          alert("Network error while resetting revenue: " + e.message);
+        }
+      },
+
+      async resetUsers() {
+        if (!confirm("⚠️ RESET USERS WARNING:\n\nAre you sure you want to reset all registered student accounts back to 0?\n\nThis will remove registered users from the database. This action cannot be undone.")) {
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/admin/reset/users?token=${encodeURIComponent(this.adminToken)}`, {
+            method: 'POST'
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(`✅ ${data.message}`);
+            await this.refreshData();
+          } else {
+            alert(data.detail || data.message || "Failed to reset users.");
+          }
+        } catch (e) {
+          alert("Network error while resetting users: " + e.message);
         }
       },
 

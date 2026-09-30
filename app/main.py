@@ -878,6 +878,21 @@ async def admin_export_data(token: Optional[str] = Query(None)):
         raise HTTPException(status_code=401, detail="Unauthorized: invalid admin session.")
     return AdminService.export_all_data()
 
+@app.post("/api/admin/reset/revenue")
+async def admin_reset_revenue(token: Optional[str] = Query(None)):
+    """Reset all revenue and transaction records in the database."""
+    if not AdminService.verify_admin_token(token):
+        raise HTTPException(status_code=401, detail="Unauthorized: invalid admin session.")
+    return AdminService.reset_revenue()
+
+@app.post("/api/admin/reset/users")
+async def admin_reset_users(token: Optional[str] = Query(None)):
+    """Reset all registered students in the database."""
+    if not AdminService.verify_admin_token(token):
+        raise HTTPException(status_code=401, detail="Unauthorized: invalid admin session.")
+    return AdminService.reset_users()
+
+
 # ── Printable Official LPU Exam Paper ────────────────────────────────────
 
 class ExportRequest(BaseModel):

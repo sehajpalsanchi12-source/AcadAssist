@@ -1629,12 +1629,18 @@
 
       <!-- Stats Grid -->
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div class="p-4 rounded-2xl bg-pink-50/50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800/40">
-          <span class="text-[10px] text-pink-600 dark:text-pink-400 uppercase font-bold tracking-wider">Total Revenue</span>
+        <div class="p-4 rounded-2xl bg-pink-50/50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800/40 relative group">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] text-pink-600 dark:text-pink-400 uppercase font-bold tracking-wider">Total Revenue</span>
+            <button onclick="AdminPortal.resetRevenue()" title="Reset Revenue to ₹0" class="text-[9px] px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 font-bold hover:bg-red-200 transition-colors">Reset</button>
+          </div>
           <h4 id="admin-stat-revenue" class="text-xl font-black text-gray-900 dark:text-white mt-0.5">₹0</h4>
         </div>
-        <div class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40">
-          <span class="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-bold tracking-wider">Registered Students</span>
+        <div class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 relative group">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-bold tracking-wider">Registered Students</span>
+            <button onclick="AdminPortal.resetUsers()" title="Reset Students to 0" class="text-[9px] px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 font-bold hover:bg-red-200 transition-colors">Reset</button>
+          </div>
           <h4 id="admin-stat-users" class="text-xl font-black text-gray-900 dark:text-white mt-0.5">0</h4>
         </div>
         <div class="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40">
@@ -1657,7 +1663,11 @@
           <h4 class="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
             <span>💳 UPI Transactions (Destination: 7719730804@ptyes)</span>
           </h4>
-          <button onclick="AdminPortal.fetchTransactions()" class="text-xs text-pink-500 font-bold hover:underline">Refresh Transactions ↺</button>
+          <div class="flex items-center gap-2">
+            <button onclick="AdminPortal.resetRevenue()" class="text-xs text-red-500 hover:text-red-600 font-bold transition-colors">Reset Revenue 🗑️</button>
+            <span class="text-gray-300 dark:text-slate-700">•</span>
+            <button onclick="AdminPortal.fetchTransactions()" class="text-xs text-pink-500 font-bold hover:underline">Refresh Transactions ↺</button>
+          </div>
         </div>
 
         <div class="overflow-x-auto rounded-2xl border border-gray-200 dark:border-slate-800">
@@ -1684,7 +1694,11 @@
       <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-slate-800">
         <div class="flex items-center justify-between">
           <h4 class="text-sm font-black text-gray-900 dark:text-white">👥 Registered Google Students</h4>
-          <button onclick="AdminPortal.fetchUsers()" class="text-xs text-pink-500 font-bold hover:underline">Refresh Students ↺</button>
+          <div class="flex items-center gap-2">
+            <button onclick="AdminPortal.resetUsers()" class="text-xs text-red-500 hover:text-red-600 font-bold transition-colors">Reset Users 🗑️</button>
+            <span class="text-gray-300 dark:text-slate-700">•</span>
+            <button onclick="AdminPortal.fetchUsers()" class="text-xs text-pink-500 font-bold hover:underline">Refresh Students ↺</button>
+          </div>
         </div>
 
         <div class="overflow-x-auto rounded-2xl border border-gray-200 dark:border-slate-800">

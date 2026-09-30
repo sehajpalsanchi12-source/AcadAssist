@@ -346,7 +346,7 @@ const PaywallManager = {
 
       } else if (data.pending === true) {
         // Real UPI payment — awaiting admin verification
-        // Automatically open WhatsApp with complete payment details to 7719730804
+        // Automatically open WhatsApp with complete payment details to 8053122848
         const waDetails = 
           `*AcadAssist Payment Verification Request*\n` +
           `👤 *Student Name:* ${nameInput}\n` +
@@ -360,7 +360,7 @@ const PaywallManager = {
           `⏰ *Date/Time:* ${new Date().toLocaleString()}\n\n` +
           `Please check Paytm and approve this transaction in the AcadAssist Admin Dashboard to unlock my access. Thank you!`;
 
-        const waUrl = `https://wa.me/917719730804?text=${encodeURIComponent(waDetails)}`;
+        const waUrl = `https://wa.me/918053122848?text=${encodeURIComponent(waDetails)}`;
         try {
           window.open(waUrl, '_blank');
         } catch (err) {
@@ -475,7 +475,7 @@ const PaywallManager = {
     const txId = txData.transaction_id || '';
     const utrRef = txData.utr_ref || 'N/A';
     const amount = txData.amount_paid || 0;
-    const finalWaUrl = waUrl || `https://wa.me/917719730804?text=${encodeURIComponent(`Hi AcadAssist! I paid ₹${amount} via UPI. UTR: ${utrRef} (TxID: ${txId}). Please verify my payment!`)}`;
+    const finalWaUrl = waUrl || `https://wa.me/918053122848?text=${encodeURIComponent(`Hi AcadAssist! I paid ₹${amount} via UPI. UTR: ${utrRef} (TxID: ${txId}). Please verify my payment!`)}`;
 
     modal.innerHTML = `
       <div class="p-6 sm:p-8 space-y-5 text-center animate-fade-in-up max-w-lg mx-auto">
@@ -489,7 +489,7 @@ const PaywallManager = {
             Your payment is recorded. Admin will verify the ₹${amount} payment in Paytm/UPI and approve your access.
           </p>
           <div class="mt-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1.5 font-medium">
-            <span>📲</span> WhatsApp message with payment details sent automatically to <strong>7719730804</strong>!
+            <span>📲</span> WhatsApp message with payment details sent automatically to <strong>8053122848</strong>!
           </div>
         </div>
         <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 text-left text-xs space-y-2 font-mono">
@@ -501,7 +501,7 @@ const PaywallManager = {
         </div>
         <div class="space-y-2 pt-1">
           <a href="${finalWaUrl}" target="_blank" class="block w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-500/20 transition-all text-center flex items-center justify-center gap-2">
-            <span>💬 Message Admin on WhatsApp (+91 7719730804)</span>
+            <span>💬 Message Admin on WhatsApp (+91 8053122848)</span>
           </a>
           <button onclick="PaywallManager.pollPaymentStatus('${txId}', '${subjectCode}', '${planId}')" class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold text-sm rounded-2xl shadow transition-all flex items-center justify-center gap-2">
             🔄 Check Approval Status Now

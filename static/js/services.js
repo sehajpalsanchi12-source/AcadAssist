@@ -1,7 +1,7 @@
 /**
  * AcadAssist - Academic & Tech Services Hub Manager
  * Services: Website Making, Projects, Reports, Resume, PPT, Thesis, Automations, Custom Services
- * All inquiries dispatch directly to WhatsApp (+91 7719730804) & persist in SQLite Admin DB
+ * All inquiries dispatch directly to WhatsApp (+91 8053122848) & persist in SQLite Admin DB
  */
 
 const SERVICES_CATALOG = {
@@ -136,7 +136,7 @@ const SERVICES_CATALOG = {
 
 const ServicesHub = {
   activeServiceKey: 'website',
-  WHATSAPP_NUMBER: '7719730804',
+  WHATSAPP_NUMBER: '8053122848',
 
   init() {
     this.renderCatalog();
@@ -385,7 +385,7 @@ const ServicesHub = {
         links ? `\n🔗 *Drive / GitHub Links:*\n${links}` : null,
         `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
         `📍 *Ref ID:* ${inqId}`,
-        `✨ *Sent via AcadAssist Portal (Direct to WhatsApp 7719730804)*`
+        `✨ *Sent via AcadAssist Portal (Direct to WhatsApp 8053122848)*`
       ].filter(Boolean);
 
       const fullWaMessage = waMsgLines.join('\n');

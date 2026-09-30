@@ -1,14 +1,17 @@
 /**
  * AcadAssist - Paywall, UPI Payment Gateway (7719730804@ptyes) & Subscription Manager
+ * Enforces QR code display and strict payment verification before unlocking next pages.
  */
 
 const PaywallManager = {
   TOKEN_KEY: 'acad_user_pro_token',
   USER_DATA_KEY: 'acad_user_data',
   UPI_DESTINATION: '7719730804@ptyes',
+  OFFICIAL_QR_URL: '/static/images/official_paywall_qr.jpg',
 
   currentPlan: 'free',
   isPro: false,
+  targetAction: null,
   userData: {
     name: '',
     regNo: '',
@@ -33,12 +36,12 @@ const PaywallManager = {
         this.userData = { ...this.userData, ...parsed };
       } catch (e) {}
     }
-    // Also sync with AuthManager if logged in
+    // Sync with AuthManager if authenticated
     if (window.AuthManager && window.AuthManager.currentUser) {
       const u = window.AuthManager.currentUser;
-      this.userData.name = u.name;
-      this.userData.regNo = u.lpu_reg_no || this.userData.regNo;
-      this.userData.phone = u.phone || this.userData.phone;
+      this.userData.name = u.name || '';
+      this.userData.regNo = u.lpu_reg_no || '';
+      this.userData.phone = u.phone || '';
     }
   },
 
@@ -91,7 +94,6 @@ const PaywallManager = {
   },
 
   setupListeners() {
-    // Open Paywall Modal Buttons
     document.querySelectorAll('[data-open-paywall]').forEach(btn => {
       btn.addEventListener('click', () => {
         const plan = btn.getAttribute('data-plan') || 'mock_test_29';
@@ -100,20 +102,17 @@ const PaywallManager = {
       });
     });
 
-    // Close Modal
     const modal = document.getElementById('paywall-modal');
     const closeBtn = document.getElementById('close-paywall-modal');
     if (closeBtn && modal) {
       closeBtn.addEventListener('click', () => modal.close());
     }
 
-    // Coupon Apply Button
     const applyCouponBtn = document.getElementById('apply-coupon-btn');
     if (applyCouponBtn) {
       applyCouponBtn.addEventListener('click', () => this.applyCoupon());
     }
 
-    // Payment Form Submit
     const payForm = document.getElementById('checkout-form');
     if (payForm) {
       payForm.addEventListener('submit', (e) => {
@@ -128,9 +127,15 @@ const PaywallManager = {
     this.openCheckoutModal(planId, currentSubj === 'ALL' ? null : currentSubj);
   },
 
-  openCheckoutModal(planId = 'mock_test_29', subjectCode = null) {
+  openCheckoutModal(planId = 'mock_test_29', subjectCode = null, targetAction = null) {
     const modal = document.getElementById('paywall-modal');
     if (!modal) return;
+
+    this.targetAction = targetAction || {
+      planId: planId,
+      subjectCode: subjectCode,
+      type: planId === 'mock_test_29' ? 'mock_test' : (planId === 'subject_pass_49' ? 'subject' : 'general')
+    };
 
     const planTitle = document.getElementById('checkout-plan-title');
     const planPrice = document.getElementById('checkout-plan-price');
@@ -138,6 +143,9 @@ const PaywallManager = {
     const subjInput = document.getElementById('checkout-subject-code');
     const qrImage = document.getElementById('checkout-upi-qr');
     const upiLink = document.getElementById('checkout-upi-app-link');
+    const errBox = document.getElementById('checkout-verification-error');
+
+    if (errBox) { errBox.classList.add('hidden'); errBox.textContent = ''; }
 
     let price = 29;
     let title = 'Authentic LPU Mock Test Simulator Pass (₹29)';
@@ -154,11 +162,11 @@ const PaywallManager = {
       price = 29;
       title = 'Exam Night Rush Pass (₹29)';
     } else if (planId === 'semester_pro') {
-      price = 199;
-      title = 'AcadAssist All-Access Semester Pro (₹199)';
+      price = 99;
+      title = 'AcadAssist All-Access Semester Pro (₹99)';
     }
 
-    if (subjectCode) {
+    if (subjectCode && subjectCode !== 'ALL') {
       title += ` • ${subjectCode}`;
     }
 
@@ -180,13 +188,12 @@ const PaywallManager = {
       }
     }
 
-    // Generate dynamic QR Code for 7719730804@ptyes
-    const upiUri = `upi://pay?pa=${this.UPI_DESTINATION}&pn=AcadAssist&am=${price}.00&cu=INR&tn=${encodeURIComponent(title.slice(0, 30))}`;
+    // Set official user-uploaded QR code image
     if (qrImage) {
-      qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=6&data=${encodeURIComponent(upiUri)}`;
+      qrImage.src = this.OFFICIAL_QR_URL;
     }
     if (upiLink) {
-      upiLink.href = upiUri;
+      upiLink.href = `upi://pay?pa=${this.UPI_DESTINATION}&pn=AcadAssist&am=${price}.00&cu=INR&tn=${encodeURIComponent(title.slice(0, 30))}`;
     }
 
     // Autofill user details only if authenticated, otherwise keep cleanly empty
@@ -259,21 +266,45 @@ const PaywallManager = {
   },
 
   async processPayment() {
+    const errorBox = document.getElementById('checkout-verification-error');
+    if (errorBox) { errorBox.classList.add('hidden'); errorBox.textContent = ''; }
+
     const planId = document.getElementById('checkout-plan-id')?.value || 'midterm_mock_49';
     const subjectCode = document.getElementById('checkout-subject-code')?.value || 'ALL';
     const coupon = document.getElementById('coupon-code-input')?.value.trim() || null;
-    const nameInput = document.getElementById('checkout-student-name')?.value.trim() || 'LPU Student';
-    const regInput = document.getElementById('checkout-reg-no')?.value.trim() || '12000000';
-    const phoneInput = document.getElementById('checkout-phone')?.value.trim() || '';
-    const utrInput = document.getElementById('checkout-utr-input')?.value.trim() || null;
+    const nameInput = document.getElementById('checkout-student-name')?.value.trim();
+    const regInput = document.getElementById('checkout-reg-no')?.value.trim();
+    const phoneInput = document.getElementById('checkout-phone')?.value.trim();
+    const utrInput = document.getElementById('checkout-utr-input')?.value.trim();
     const method = document.querySelector('input[name="payment_method"]:checked')?.value || 'upi';
 
-    const userId = window.AuthManager?.currentUser?.id || null;
+    // Required details validation
+    if (!nameInput) {
+      this.showCheckoutError('Please enter your Full Name.');
+      return;
+    }
+    if (!regInput) {
+      this.showCheckoutError('Please enter your LPU Registration Number.');
+      return;
+    }
+
+    // UTR validation unless 100% coupon applied
+    const isFreeCoupon = coupon && (coupon.toUpperCase() === 'LPUVERTO' || coupon.toUpperCase() === 'TOPPER100');
+    if (!isFreeCoupon) {
+      if (!utrInput || utrInput.length < 10) {
+        this.showCheckoutError('⚠️ Verification Required: Please enter the 12-digit UPI Reference / UTR Number from your GPay, PhonePe, or Paytm receipt.');
+        return;
+      }
+    }
 
     const submitBtn = document.getElementById('pay-submit-btn');
+    const origHtml = submitBtn ? submitBtn.innerHTML : '';
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Verifying with AcadAssist Desk (${this.UPI_DESTINATION})...`;
+      submitBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+        <span>Verifying Payment with UPI Switch (${this.UPI_DESTINATION})...</span>
+      `;
     }
 
     try {
@@ -288,76 +319,131 @@ const PaywallManager = {
           reg_no: regInput,
           phone: phoneInput,
           utr_ref: utrInput,
-          user_id: userId,
+          user_id: window.AuthManager?.currentUser?.id || null,
           subject_code: subjectCode
         })
       });
 
       const data = await res.json();
-      if (data.success) {
-        // Save Pro Token
-        this.userData.token = data.token;
-        this.userData.name = nameInput;
-        this.userData.regNo = regInput;
-        this.isPro = true;
-        this.currentPlan = planId;
-
-        localStorage.setItem(this.TOKEN_KEY, data.token);
-        localStorage.setItem('lpu_verto_pro_token', data.token);
-        localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(this.userData));
-
-        // Refresh AuthManager if logged in
-        if (window.AuthManager) {
-          await window.AuthManager.fetchMe();
-          window.AuthManager.renderNavUser();
-        }
-
-        // Show Success View
-        this.showSuccessView(data);
-        this.updateUI();
-
-        // Refresh current paper if active
-        if (window.ExamSimulator && window.ExamSimulator.currentPaper) {
-          window.ExamSimulator.unlockPaperSolutions();
-        }
-      } else {
-        alert(data.message || 'Payment simulation failed.');
+      if (!res.ok || !data.success || !data.verified) {
+        this.showCheckoutError(data.detail || data.message || 'Payment verification failed. Please check your 12-digit UTR.');
+        return;
       }
+
+      // Payment is strictly verified!
+      this.userData.token = data.token;
+      this.userData.name = nameInput;
+      this.userData.regNo = regInput;
+      this.isPro = true;
+      this.currentPlan = planId;
+
+      localStorage.setItem(this.TOKEN_KEY, data.token);
+      localStorage.setItem('lpu_verto_pro_token', data.token);
+      localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(this.userData));
+
+      if (window.AuthManager) {
+        await window.AuthManager.fetchMe();
+        window.AuthManager.renderNavUser();
+      }
+
+      this.updateUI();
+
+      // Show verified receipt and unlock next page button
+      this.showVerifiedSuccessView(data, subjectCode, planId);
+
     } catch (e) {
-      alert('Error during checkout process.');
+      this.showCheckoutError('Network error while verifying payment with server.');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `Verify UTR & Activate Access →`;
+        submitBtn.innerHTML = origHtml;
       }
     }
   },
 
-  showSuccessView(data) {
-    const modalContent = document.getElementById('checkout-modal-content');
-    if (!modalContent) return;
+  showCheckoutError(msg) {
+    const errorBox = document.getElementById('checkout-verification-error');
+    if (errorBox) {
+      errorBox.textContent = msg;
+      errorBox.classList.remove('hidden');
+    } else {
+      alert(msg);
+    }
+  },
 
-    modalContent.innerHTML = `
-      <div class="text-center py-6 animate-fade-in-up">
-        <div class="w-16 h-16 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+  showVerifiedSuccessView(data, subjectCode, planId) {
+    const modal = document.getElementById('paywall-modal');
+    if (!modal) return;
+
+    modal.innerHTML = `
+      <div class="p-6 sm:p-8 space-y-5 text-center animate-fade-in-up max-w-lg mx-auto">
+        <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
         </div>
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">🎉 Payment Recorded & Access Active!</h3>
-        <p class="text-sm text-gray-600 dark:text-slate-300 mb-4">You now have full access to <strong>${data.plan}</strong>. All LPU Mock Tests, MCQs, and 10-mark solutions are UNLOCKED.</p>
-        
-        <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700 text-left text-xs space-y-1.5 mb-6">
-          <div class="flex justify-between"><span class="text-gray-500">Transaction ID:</span> <span class="font-mono font-semibold">${data.transaction_id}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">UTR / Ref No:</span> <span class="font-mono font-bold text-pink-600 dark:text-pink-400">${data.utr_ref}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Paid to UPI:</span> <span class="font-mono font-bold">${this.UPI_DESTINATION}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Amount:</span> <span class="font-bold text-green-600">₹${data.amount_paid}</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="font-bold text-emerald-500">VERIFIED & ACTIVE</span></div>
+
+        <div>
+          <span class="inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm mb-2">
+            ✓ PAYMENT VERIFIED & APPROVED
+          </span>
+          <h3 class="text-2xl font-black text-gray-900 dark:text-white">Access Unlocked! 🎉</h3>
+          <p class="text-xs text-gray-600 dark:text-slate-300 mt-1">
+            Your UPI transaction has been verified. You now have full access to <strong>${data.plan}</strong>.
+          </p>
         </div>
 
-        <button onclick="document.getElementById('paywall-modal').close()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold rounded-xl shadow-lg shadow-pink-500/30 transition-all">
-          Start Practicing Midterm Mock Tests →
+        <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 text-left text-xs space-y-2 font-mono">
+          <div class="flex justify-between"><span class="text-gray-400">Transaction ID:</span> <span class="font-bold text-gray-900 dark:text-white">${data.transaction_id}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">UTR / Ref No:</span> <span class="font-bold text-pink-600 dark:text-pink-400">${data.utr_ref}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Paid to UPI:</span> <span class="font-bold text-gray-700 dark:text-slate-300">${this.UPI_DESTINATION}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Amount Paid:</span> <span class="font-bold text-emerald-600">₹${data.amount_paid}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Status:</span> <span class="font-bold text-emerald-500">VERIFIED & LIVE</span></div>
+        </div>
+
+        <button onclick="PaywallManager.unlockAndNavigateNextPage('${planId}', '${subjectCode}')" class="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2">
+          <span>🚀 Continue to Unlocked Page →</span>
         </button>
       </div>
     `;
+  },
+
+  unlockAndNavigateNextPage(planId, subjectCode) {
+    const modal = document.getElementById('paywall-modal');
+    if (modal) modal.close();
+
+    // 1. If currently in the Exam Simulator, unlock all hidden solutions immediately
+    if (window.ExamSimulator) {
+      window.ExamSimulator.unlockPaperSolutions();
+    }
+
+    // 2. Navigate to target unlocked section based on action
+    const target = this.targetAction || {};
+
+    if (target.type === 'mock_test' || planId === 'mock_test_29' || planId === 'rush24') {
+      const subj = (subjectCode && subjectCode !== 'ALL') ? subjectCode : (target.subjectCode || 'MTH166');
+      if (typeof window.startSubjectMockTest === 'function') {
+        window.startSubjectMockTest(subj, subj);
+      } else if (typeof window.switchTab === 'function') {
+        window.switchTab('tab-simulator');
+      }
+    } else if (target.type === 'download_ppt' && target.subjectCode) {
+      window.location.href = `/api/subject/${target.subjectCode}/download-pptx`;
+    } else if (target.type === 'subject' || planId === 'subject_pass_49') {
+      const subj = (subjectCode && subjectCode !== 'ALL') ? subjectCode : (target.subjectCode || 'MTH166');
+      if (typeof window.openPYQForSubject === 'function') {
+        window.openPYQForSubject(subj);
+      } else if (typeof window.switchTab === 'function') {
+        window.switchTab('tab-preloaded');
+      }
+    } else {
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('tab-simulator');
+      }
+    }
+
+    // Reset modal content for next time
+    setTimeout(() => {
+      window.location.reload();
+    }, 1200);
   }
 };
 

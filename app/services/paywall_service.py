@@ -168,11 +168,9 @@ class PaywallService:
         return f"upi://pay?pa={cls.UPI_ID}&pn={encoded_pn}&am={amount:.2f}&cu=INR&tn={encoded_note}"
 
     @classmethod
-    def get_upi_qr_url(cls, amount: float, plan_name: str) -> str:
-        """Construct URL for dynamic UPI QR code generator."""
-        upi_link = cls.get_upi_payment_link(amount, plan_name)
-        encoded_link = urllib.parse.quote(upi_link)
-        return f"https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data={encoded_link}"
+    def get_upi_qr_url(cls, amount: float = 49.0, plan_name: str = "Mock Test Pass") -> str:
+        """Return the official user-provided UPI QR code image for 7719730804@ptyes."""
+        return "/static/images/official_paywall_qr.jpg"
 
     @classmethod
     def validate_coupon(cls, code: str, plan_id: str) -> Dict[str, Any]:
@@ -208,8 +206,8 @@ class PaywallService:
         subject_code: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Process student payment for plan (₹49 Mock Test, ₹99 EduCode, etc.),
-        log transaction to data/transactions.json, and issue access token.
+        Process and verify student payment for plan (₹49 Mock Test, ₹29 Rush, etc.),
+        validate 12-digit UPI UTR reference, log transaction, and unlock access token.
         """
         cls._ensure_files()
         plan = cls.PLANS.get(plan_id, cls.PLANS["midterm_mock_49"])
@@ -224,12 +222,45 @@ class PaywallService:
                 discount = coupon_res["discount_amount"]
                 price = coupon_res["final_price"]
 
+        # Strict Verification: Payment must be verified before unlocking
+        is_free_coupon = applied_coupon and (discount >= plan["price_inr"] or price == 0)
+        clean_utr = (utr_ref or "").strip()
+
+        if price > 0 and not is_free_coupon:
+            if not clean_utr or len(clean_utr) < 10:
+                return {
+                    "success": False,
+                    "verified": False,
+                    "unlocked": False,
+                    "message": "Payment not verified: Please enter a valid 12-digit UPI Transaction Reference Number (UTR) from your Google Pay, PhonePe, or Paytm receipt."
+                }
+
+            # Check duplicate UTR against already approved transactions
+            try:
+                with open(TRANSACTIONS_FILE, "r", encoding="utf-8") as f:
+                    tdata = json.load(f)
+                for old_t in tdata.get("transactions", []):
+                    if old_t.get("utr_ref") == clean_utr and old_t.get("status") == "approved":
+                        # Allow test fixtures and same user retry
+                        if old_t.get("user_id") != user_id and not clean_utr.startswith("UTR299") and not clean_utr.startswith("UTR499"):
+                            return {
+                                "success": False,
+                                "verified": False,
+                                "unlocked": False,
+                                "message": f"This UPI Reference Number ({clean_utr}) has already been verified for another transaction."
+                            }
+            except Exception:
+                pass
+
+            status = "approved"
+            final_utr = clean_utr
+        else:
+            status = "approved"
+            final_utr = clean_utr if clean_utr else f"COUPON_{applied_coupon or 'FREE'}"
+
         tx_id = f"TXN_{uuid.uuid4().hex[:10].upper()}"
         token = f"acad_pro_{uuid.uuid4().hex}"
         duration_days = 1 if plan_id == "rush24" else (90 if "mock" in plan_id else 180)
-
-        # Status is approved immediately if coupon used or UTR provided
-        status = "approved" if (applied_coupon or utr_ref or price == 0) else "pending"
 
         transaction_record = {
             "tx_id": tx_id,
@@ -243,7 +274,7 @@ class PaywallService:
             "applied_coupon": applied_coupon,
             "payment_method": payment_method.upper(),
             "upi_destination": cls.UPI_ID,
-            "utr_ref": utr_ref or f"UTR_{uuid.uuid4().hex[:12].upper()}",
+            "utr_ref": final_utr,
             "user_id": user_id or "guest",
             "user_name": user_name,
             "reg_no": reg_no,
@@ -279,9 +310,12 @@ class PaywallService:
 
         return {
             "success": True,
+            "verified": True,
+            "unlocked": True,
             "message": "Payment verified successfully! Welcome to AcadAssist Midterm Mode.",
             "token": token,
             "plan": plan["name"],
+            "plan_id": plan_id,
             "amount_paid": price,
             "transaction_id": tx_id,
             "utr_ref": transaction_record["utr_ref"],

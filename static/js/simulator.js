@@ -158,14 +158,20 @@ const ExamSimulator = {
               <p class="text-sm mt-1">This question appeared in LPU End Term Exam Dec 2023. The key concept requires evaluating boundary condition state transitions and time complexity tradeoffs.</p>
             </div>
             <div class="paywall-overlay">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white mb-2 shadow-sm">
-                🔒 PRO EXCLUSIVE SOLUTION
-              </span>
+              <div class="flex items-center gap-3 justify-center mb-2">
+                <img src="/static/images/official_paywall_qr.jpg" alt="Official Paytm UPI QR" class="w-14 h-14 rounded-lg border-2 border-sky-400 bg-white p-0.5 shadow-sm shrink-0">
+                <div class="text-left">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-sm">
+                    🔒 PRO EXCLUSIVE SOLUTION
+                  </span>
+                  <div class="text-xs font-bold text-gray-800 dark:text-white mt-0.5">Scan QR to Unlock Evaluator Key</div>
+                </div>
+              </div>
               <p class="text-xs text-gray-700 dark:text-slate-300 font-semibold mb-3">
-                Unlock full LPU evaluator solution, distractor analysis, and negative marking rubric.
+                Pay ₹29 to 7719730804@ptyes & verify 12-digit UTR to unlock instantly.
               </p>
               <button onclick="PaywallManager.openCheckoutModal('rush24')" class="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-md transition-all">
-                Unlock for ₹29 (or use code LPUVERTO) →
+                Verify Payment & Unlock (₹29) →
               </button>
             </div>
           </div>
@@ -340,9 +346,12 @@ const ExamSimulator = {
                     <p>Comprehensive structured model answer with comparison matrix, formula derivations, and edge cases.</p>
                   </div>
                   <div class="paywall-overlay">
-                    <span class="text-xs font-bold text-amber-500 mb-1">🔒 5-Mark LPU Model Answer & Rubric Locked</span>
+                    <div class="flex items-center gap-2.5 mb-1.5">
+                      <img src="/static/images/official_paywall_qr.jpg" alt="Official Paytm UPI QR" class="w-10 h-10 rounded-lg border-2 border-sky-400 bg-white p-0.5 shrink-0">
+                      <span class="text-xs font-bold text-amber-500">🔒 5-Mark LPU Model Answer & Rubric Locked</span>
+                    </div>
                     <button onclick="PaywallManager.openCheckoutModal('rush24')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm">
-                      Unlock Full Model Answer →
+                      Scan QR & Verify UTR (₹29) →
                     </button>
                   </div>
                 </div>

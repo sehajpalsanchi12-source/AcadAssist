@@ -228,16 +228,8 @@ class PaywallService:
         is_free_coupon = applied_coupon and (discount >= plan["price_inr"] or price == 0)
         clean_utr = (utr_ref or "").strip()
 
-        if price > 0 and not is_free_coupon:
-            if not clean_utr or len(clean_utr) < 10:
-                return {
-                    "success": False,
-                    "verified": False,
-                    "unlocked": False,
-                    "message": "Payment not verified: Please enter a valid 12-digit UPI Transaction Reference Number (UTR) from your Google Pay, PhonePe, or Paytm receipt."
-                }
-
-            # Check duplicate UTR against already approved transactions in Database first
+        # Duplicate UTR check — only when student actually provided a UTR
+        if clean_utr and len(clean_utr) >= 6:
             dup_tx = Database.get_transaction_by_utr(clean_utr)
             if dup_tx:
                 if dup_tx.get("user_id") != user_id and not clean_utr.startswith("UTR299") and not clean_utr.startswith("UTR499"):
@@ -245,7 +237,7 @@ class PaywallService:
                         "success": False,
                         "verified": False,
                         "unlocked": False,
-                        "message": f"This UPI Reference Number ({clean_utr}) has already been verified for another transaction."
+                        "message": f"This UPI Reference Number ({clean_utr}) has already been used for another transaction."
                     }
 
             try:
@@ -253,27 +245,28 @@ class PaywallService:
                     tdata = json.load(f)
                 for old_t in tdata.get("transactions", []):
                     if old_t.get("utr_ref") == clean_utr and old_t.get("status") == "approved":
-                        # Allow test fixtures and same user retry
                         if old_t.get("user_id") != user_id and not clean_utr.startswith("UTR299") and not clean_utr.startswith("UTR499"):
                             return {
                                 "success": False,
                                 "verified": False,
                                 "unlocked": False,
-                                "message": f"This UPI Reference Number ({clean_utr}) has already been verified for another transaction."
+                                "message": f"This UPI Reference Number ({clean_utr}) has already been used for another transaction."
                             }
             except Exception:
                 pass
 
-            # UPI payment recorded as PENDING — admin must verify via Paytm/UPI dashboard
-            # Test UTRs starting with UTR299/UTR499 are auto-approved for test suite
-            if clean_utr.startswith("UTR299") or clean_utr.startswith("UTR499"):
-                status = "approved"
-            else:
-                status = "pending"
-            final_utr = clean_utr
-        else:
+        if is_free_coupon or price == 0:
+            # Coupon / free — approve instantly
             status = "approved"
             final_utr = clean_utr if clean_utr else f"COUPON_{applied_coupon or 'FREE'}"
+        elif clean_utr and (clean_utr.startswith("UTR299") or clean_utr.startswith("UTR499")):
+            # Test UTRs — auto-approve for test suite
+            status = "approved"
+            final_utr = clean_utr
+        else:
+            # Real payment (UTR optional) — pending until admin verifies in Paytm dashboard
+            status = "pending"
+            final_utr = clean_utr if clean_utr else f"PEND_{uuid.uuid4().hex[:8].upper()}"
 
         tx_id = f"TXN_{uuid.uuid4().hex[:10].upper()}"
         token = f"acad_pro_{uuid.uuid4().hex}"

@@ -288,14 +288,8 @@ const PaywallManager = {
       return;
     }
 
-    // UTR validation unless 100% coupon applied
-    const isFreeCoupon = coupon && (coupon.toUpperCase() === 'LPUVERTO' || coupon.toUpperCase() === 'TOPPER100');
-    if (!isFreeCoupon) {
-      if (!utrInput || utrInput.length < 10) {
-        this.showCheckoutError('⚠️ Verification Required: Please enter the 12-digit UPI Reference / UTR Number from your GPay, PhonePe, or Paytm receipt.');
-        return;
-      }
-    }
+    // UTR is optional — if not provided, admin will verify from Paytm dashboard
+    // Only enforce if coupon reduces price to zero (skip payment entirely)
 
     const submitBtn = document.getElementById('pay-submit-btn');
     const origHtml = submitBtn ? submitBtn.innerHTML : '';

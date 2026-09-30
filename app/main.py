@@ -596,7 +596,7 @@ class CheckoutRequest(BaseModel):
 
 @app.post("/api/paywall/checkout")
 async def checkout(req: CheckoutRequest):
-    return PaywallService.process_checkout(
+    res = PaywallService.process_checkout(
         plan_id=req.plan_id,
         payment_method=req.payment_method,
         coupon_code=req.coupon_code,
@@ -607,6 +607,9 @@ async def checkout(req: CheckoutRequest):
         user_id=req.user_id,
         subject_code=req.subject_code
     )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message"))
+    return res
 
 @app.get("/api/paywall/verify")
 async def verify_token(token: Optional[str] = Query(None)):
@@ -897,4 +900,5 @@ async def export_printable(req: ExportRequest):
     return HTMLResponse(content=html)
 
 # Serve Frontend static assets
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static_prefix")
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

@@ -678,54 +678,73 @@ function renderStudyAsset(data) {
 
     // Units section with important questions
     const unitsHtml = units.map(u => {
-      const mcqs = (u.important_questions?.mcq || []).map(q => `
-        <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
-          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-2">❓ ${q.q}</p>
-          <div class="grid grid-cols-2 gap-1 mb-2">
-            ${(q.options||[]).map(o => `<span class="text-[11px] px-2 py-1 rounded-lg bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400">${o}</span>`).join('')}
+      const mcqList = (u.important_questions && Array.isArray(u.important_questions.mcq)) ? u.important_questions.mcq : [];
+      const mcqs = mcqList.map(q => {
+        let opts = [];
+        if (Array.isArray(q.options)) {
+          opts = q.options;
+        } else if (q.options && typeof q.options === 'object') {
+          opts = Object.entries(q.options).map(([k, v]) => `${k}) ${v}`);
+        }
+        return `
+          <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
+            <p class="text-xs font-semibold text-gray-800 dark:text-white mb-2">❓ ${q.q || ''}</p>
+            ${opts.length > 0 ? `
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 mb-2">
+              ${opts.map(o => `<span class="text-[11px] px-2 py-1 rounded-lg bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400">${o}</span>`).join('')}
+            </div>` : ''}
+            <div class="flex items-start gap-2">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shrink-0">✓ ${q.answer || ''}</span>
+              <span class="text-[11px] text-gray-500 dark:text-slate-400">${q.explanation || ''}</span>
+            </div>
           </div>
-          <div class="flex items-start gap-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shrink-0">✓ ${q.answer}</span>
-            <span class="text-[11px] text-gray-500 dark:text-slate-400">${q.explanation || ''}</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
-      const fiveMarkHtml = (u.important_questions?.five_mark || []).map(q => `
+      const fiveMarkList = (u.important_questions && Array.isArray(u.important_questions.five_mark)) ? u.important_questions.five_mark : [];
+      const fiveMarkHtml = fiveMarkList.map(q => `
         <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50">
           <div class="flex items-center gap-1.5 mb-1">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white">5 Marks</span>
           </div>
-          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-1.5">${q.q}</p>
-          <p class="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed"><span class="font-bold text-amber-600 dark:text-amber-400">Answer outline:</span> ${q.answer_outline}</p>
+          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-1.5">${q.q || ''}</p>
+          <p class="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed"><span class="font-bold text-amber-600 dark:text-amber-400">Answer outline:</span> ${q.answer_outline || ''}</p>
         </div>
       `).join('');
 
-      const tenMarkHtml = (u.important_questions?.ten_mark || []).map(q => `
+      const tenMarkList = (u.important_questions && Array.isArray(u.important_questions.ten_mark)) ? u.important_questions.ten_mark : [];
+      const tenMarkHtml = tenMarkList.map(q => `
         <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50">
           <div class="flex items-center gap-1.5 mb-1">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white">10 Marks</span>
           </div>
-          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-1.5">${q.q}</p>
-          <p class="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed"><span class="font-bold text-purple-600 dark:text-purple-400">Answer outline:</span> ${q.answer_outline}</p>
+          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-1.5">${q.q || ''}</p>
+          <p class="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed"><span class="font-bold text-purple-600 dark:text-purple-400">Answer outline:</span> ${q.answer_outline || ''}</p>
         </div>
       `).join('');
 
-      const formulasHtml = (u.must_know_formulas || []).length > 0 ? `
+      const formulasList = Array.isArray(u.must_know_formulas) 
+        ? u.must_know_formulas 
+        : (typeof u.must_know_formulas === 'string' && u.must_know_formulas ? [u.must_know_formulas] : []);
+      const formulasHtml = formulasList.length > 0 ? `
         <div class="flex flex-wrap gap-2 pt-1">
-          ${(u.must_know_formulas).map(f => `
+          ${formulasList.map(f => `
             <span class="px-3 py-1 rounded-full text-[11px] font-mono bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700">📐 ${f}</span>
           `).join('')}
         </div>
       ` : '';
 
+      const topicsStr = Array.isArray(u.key_topics) 
+        ? u.key_topics.join(' • ') 
+        : (typeof u.key_topics === 'string' ? u.key_topics : '');
+
       return `
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm space-y-4">
           <div class="flex items-center gap-3">
-            <span class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-black text-sm flex items-center justify-center shrink-0">${u.unit_no}</span>
+            <span class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-black text-sm flex items-center justify-center shrink-0">${u.unit_no || 1}</span>
             <div>
-              <h4 class="font-black text-sm sm:text-base text-gray-900 dark:text-white">${u.unit_title || 'Unit ' + u.unit_no}</h4>
-              <p class="text-[11px] text-gray-500 dark:text-slate-400">${(u.key_topics || []).join(' • ')}</p>
+              <h4 class="font-black text-sm sm:text-base text-gray-900 dark:text-white">${u.unit_title || 'Unit ' + (u.unit_no || 1)}</h4>
+              ${topicsStr ? `<p class="text-[11px] text-gray-500 dark:text-slate-400">${topicsStr}</p>` : ''}
             </div>
           </div>
           ${formulasHtml}

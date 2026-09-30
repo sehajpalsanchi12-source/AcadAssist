@@ -159,11 +159,11 @@ async def run_tests():
         print("\n10e. Testing Google Authentication: POST /api/auth/google ...")
         r = await client.post(f"{BASE_URL}/api/auth/google", json={
             "google_id": "goog_test_987654",
-            "name": "Sanchi Sharma (Verto)",
-            "email": "sanchi.verto.test@gmail.com",
-            "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=sanchi",
-            "lpu_reg_no": "12214589",
-            "phone": "8053122848"
+            "name": "Test Student Verto",
+            "email": "test.verto@lpu.in",
+            "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=student",
+            "lpu_reg_no": "12299887",
+            "phone": "9876543211"
         })
         assert r.status_code == 200, f"Failed: {r.status_code}"
         auth_data = r.json()
@@ -207,9 +207,9 @@ async def run_tests():
             "plan_id": "mock_test_29",
             "payment_method": "upi",
             "coupon_code": None,
-            "user_name": "Sanchi Sharma",
-            "reg_no": "12214589",
-            "phone": "8053122848",
+            "user_name": "Test Student Verto",
+            "reg_no": "12299887",
+            "phone": "9876543211",
             "utr_ref": "UTR299827361829",
             "user_id": user["id"],
             "subject_code": "MTH166"
@@ -226,9 +226,9 @@ async def run_tests():
             "plan_id": "subject_pass_49",
             "payment_method": "upi",
             "coupon_code": None,
-            "user_name": "Sanchi Sharma",
-            "reg_no": "12214589",
-            "phone": "8053122848",
+            "user_name": "Test Student Verto",
+            "reg_no": "12299887",
+            "phone": "9876543211",
             "utr_ref": "UTR499827361849",
             "user_id": user["id"],
             "subject_code": "CSE205"
@@ -242,7 +242,7 @@ async def run_tests():
         print(f"   ✓ Payment recorded: UTR={checkout_res['utr_ref']} | Amount=₹{checkout_res['amount_paid']}")
 
         print("\n15. Testing Exam Generation: POST /api/generate-exam ...")
-        file_path = "/Users/sanchisharma/.gemini/antigravity/scratch/lpu-verto-exam-ai/test_samples/sample_notes.txt"
+        file_path = os.path.join(os.path.dirname(__file__), "test_samples", "sample_notes.txt")
         with open(file_path, "rb") as f:
             files = {"file": ("sample_notes.txt", f, "text/plain")}
             data = {
@@ -282,9 +282,9 @@ async def run_tests():
         print("\n17. Testing Service Inquiry Submission (Poster Offers): POST /api/services/inquiry ...")
         r = await client.post(f"{BASE_URL}/api/services/inquiry", json={
             "service_category": "EduCode Completion Support",
-            "student_name": "Sanchi Sharma",
-            "phone": "8053122848",
-            "email": "sanchi@gmail.com",
+            "student_name": "Test Student Verto",
+            "phone": "9876543211",
+            "email": "test.verto@lpu.in",
             "details": "Need debugging help with DSA graph traversal and dynamic programming project.",
             "subject_or_topic": "CSE205 DSA",
             "deadline": "2026-10-15"
@@ -293,7 +293,7 @@ async def run_tests():
         inq_res = r.json()
         print(f"   ✓ Service inquiry recorded: {inq_res['service_category']} (ID: {inq_res['id']})")
 
-        print("\n18. Testing Admin Login (User: acadassit0812 | Pass: ;Sharma@1290) ...")
+        print("\n18. Testing Admin Login (User: acadassit0812) ...")
         r = await client.post(f"{BASE_URL}/api/admin/login", json={
             "username": "acadassit0812",
             "password": ";Sharma@1290"

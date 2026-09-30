@@ -96,20 +96,16 @@ class UserService:
         if len(password) < 6:
             return {"success": False, "message": "Password must be at least 6 characters long."}
 
-        # Check for existing email or reg no in DB and JSON
-        if Database.get_user_by_email(email):
-            return {"success": False, "message": "An account with this email already exists. Please sign in."}
-        if lpu_reg_no and Database.get_user_by_reg_no(lpu_reg_no):
-            return {"success": False, "message": "An account with this LPU Registration Number already exists. Please sign in."}
+        # Check for existing email or reg no in DB and JSON (prevents duplicate accounts)
+        if Database.get_user_by_email(email) or (lpu_reg_no and Database.get_user_by_reg_no(lpu_reg_no)):
+            return {"success": False, "message": "An account with these credentials already exists. Please sign in."}
 
         data = cls._read_users()
         users = data.get("users", {})
 
         for uid, u in users.items():
-            if u.get("email", "").lower() == email:
-                return {"success": False, "message": "An account with this email already exists. Please sign in."}
-            if lpu_reg_no and u.get("lpu_reg_no") and u.get("lpu_reg_no") == lpu_reg_no:
-                return {"success": False, "message": "An account with this LPU Registration Number already exists. Please sign in."}
+            if u.get("email", "").lower() == email or (lpu_reg_no and u.get("lpu_reg_no") and u.get("lpu_reg_no") == lpu_reg_no):
+                return {"success": False, "message": "An account with these credentials already exists. Please sign in."}
 
         now = time.time()
         session_token = f"acad_usr_{uuid.uuid4().hex}"
@@ -154,7 +150,7 @@ class UserService:
 
     @classmethod
     def login_user(cls, identifier: str, password: str) -> Dict[str, Any]:
-        """Authenticate user by Email or LPU Registration Number and verify password."""
+        """Authenticate user by Email or LPU Registration Number and verify password securely."""
         identifier = (identifier or "").strip().lower()
         password = (password or "").strip()
 
@@ -177,8 +173,9 @@ class UserService:
                     target_user = u
                     break
 
+        # Uniform security message against user enumeration
         if not target_user:
-            return {"success": False, "message": "No account found with this email or registration number. Please create an account."}
+            return {"success": False, "message": "Invalid email, registration number, or password."}
 
         stored_hash = target_user.get("password_hash")
         stored_salt = target_user.get("salt")
@@ -190,7 +187,7 @@ class UserService:
             }
 
         if not cls._verify_password(password, stored_salt, stored_hash):
-            return {"success": False, "message": "Incorrect password. Please try again."}
+            return {"success": False, "message": "Invalid email, registration number, or password."}
 
         now = time.time()
         session_token = f"acad_usr_{uuid.uuid4().hex}"
@@ -297,6 +294,11 @@ class UserService:
                     break
 
         if user:
+            # Check session token expiry (strict 7-day lifetime)
+            last_login = user.get("last_login", 0)
+            if last_login > 0 and (time.time() - last_login) > (7 * 86400):
+                return None
+
             # Check if plan expired
             if user.get("plan_expiry", 0) > 0 and time.time() > user["plan_expiry"]:
                 user["is_pro"] = False

@@ -2,7 +2,7 @@
 
 Official smart academic preparation and student assistance platform designed for students of **Lovely Professional University (LPU)**.
 
-Branded as **AcadAssist** (with official visual identity extracted from the poster), this platform provides Vertos with authentic LPU exam pattern simulations, preloaded subject notes from **notes.lpuverto.xyz**, custom course creation, Google Sign-in user accounts, direct UPI monetization to **`7719730804@ptyes`**, and a master Administrator Control Panel (`acadassit0812` / `;Sharma@1290`).
+Branded as **AcadAssist** (with official visual identity extracted from the poster), this platform provides Vertos with authentic LPU exam pattern simulations, preloaded subject notes from **notes.lpuverto.xyz**, custom course creation, Google Sign-in user accounts, direct UPI monetization to **`7719730804@ptyes`**, and a secure Administrator Control Panel.
 
 The website is running live at:
 👉 **http://127.0.0.1:8000**
@@ -89,7 +89,7 @@ Every single subject from `notes.lpuverto.xyz` is scraped, organized, and availa
 ### 8. 🛡️ Master Admin Control Panel
 - **Login Credentials**:
   - **Username**: `acadassit0812` (also supports `acadassist0812`)
-  - **Password**: `;Sharma@1290`
+  - **Password**: Configured securely via Admin Service
 - **Dashboard URL**: Click the shield icon in navbar or `/api/admin/*`
 - **Full Administrator Controls**:
   - 📊 **Real-time Metrics**: Total revenue collected to `7719730804@ptyes`, registered students, mock tests taken, service inquiries, and pending UTRs.
@@ -127,7 +127,8 @@ git push -u origin main
 
 ### 1. Launch FastAPI Server
 ```bash
-cd /Users/sanchisharma/.gemini/antigravity/scratch/lpu-verto-exam-ai
+# Navigate to project root
+cd lpu-verto-exam-ai
 
 # Activate environment and launch uvicorn
 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
@@ -165,7 +166,7 @@ lpu-verto-exam-ai/
 │   ├── main.py                  # FastAPI routes (Auth, Paywall, Admin, Assets, Exam, Database Health)
 │   ├── database.py              # SQLite Relational Database Engine (WAL mode, schemas, indexes, migrations)
 │   └── services/
-│       ├── admin_service.py     # Master admin login (acadassit0812 / ;Sharma@1290) & analytics
+│       ├── admin_service.py     # Master admin login authentication & analytics
 │       ├── user_service.py      # Google auth, PBKDF2 student security, mock test & inquiry CRUD
 │       ├── paywall_service.py   # UPI payments (7719730804@ptyes), ₹49 & ₹29 plans, UTR verification
 │       ├── lpuverto_service.py  # notes.lpuverto.xyz sync & preloaded poster courses

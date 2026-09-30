@@ -33,6 +33,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Security Headers & Hardening Middleware
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    return response
+
 # Initialize Real Relational Database
 @app.on_event("startup")
 async def startup_event():
@@ -690,7 +701,7 @@ async def submit_service_inquiry(req: ServiceInquiryRequest):
         deadline=req.deadline
     )
 
-# ── Admin Panel Endpoints (Username: acadassit0812 | Pass: ;Sharma@1290) ──
+# ── Admin Panel Endpoints (Master Control & Approvals) ─────────────────
 
 class AdminLoginRequest(BaseModel):
     username: str

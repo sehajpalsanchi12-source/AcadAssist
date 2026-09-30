@@ -27,29 +27,25 @@ const PaywallManager = {
   },
 
   loadLocalData() {
-    const token = localStorage.getItem(this.TOKEN_KEY) || localStorage.getItem('lpu_verto_pro_token');
-    const data = localStorage.getItem(this.USER_DATA_KEY);
-    if (token) this.userData.token = token;
-    if (data) {
-      try {
-        const parsed = JSON.parse(data);
-        this.userData = { ...this.userData, ...parsed };
-      } catch (e) {}
-    }
-    // Sync with AuthManager if authenticated
+    // Strictly isolate user data: Only associate user data if AuthManager has an authenticated user
     if (window.AuthManager && window.AuthManager.currentUser) {
       const u = window.AuthManager.currentUser;
       this.userData.name = u.name || '';
       this.userData.regNo = u.lpu_reg_no || '';
       this.userData.phone = u.phone || '';
+      this.userData.token = u.session_token || localStorage.getItem('lpu_verto_pro_token');
+    } else {
+      this.userData = { name: '', regNo: '', phone: '', token: null };
     }
   },
 
   async verifyStatus() {
+    this.loadLocalData();
     const token = this.userData.token || (window.AuthManager?.currentUser?.session_token);
     if (!token) {
       this.isPro = false;
       this.currentPlan = 'free';
+      this.updateUI();
       return;
     }
 
@@ -65,7 +61,10 @@ const PaywallManager = {
       }
     } catch (e) {
       console.warn("Could not verify paywall token:", e);
+      this.isPro = false;
+      this.currentPlan = 'free';
     }
+    this.updateUI();
   },
 
   updateUI() {

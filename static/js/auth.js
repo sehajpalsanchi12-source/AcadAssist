@@ -10,26 +10,17 @@ const AuthManager = {
   currentUser: null,
 
   async init() {
-    this.loadSession();
+    this.setupListeners();
     await this.fetchMe();
     this.renderNavUser();
-    this.setupListeners();
-  },
-
-  loadSession() {
-    try {
-      const stored = localStorage.getItem(this.USER_KEY);
-      if (stored) {
-        this.currentUser = JSON.parse(stored);
-      }
-    } catch (e) {
-      this.currentUser = null;
-    }
   },
 
   async fetchMe() {
-    const token = localStorage.getItem(this.TOKEN_KEY);
-    if (!token) return;
+    const token = localStorage.getItem(this.TOKEN_KEY) || localStorage.getItem('lpu_verto_pro_token');
+    if (!token) {
+      this.clearAllUserData();
+      return;
+    }
 
     try {
       const res = await fetch(`/api/auth/me?token=${encodeURIComponent(token)}`);
@@ -37,20 +28,27 @@ const AuthManager = {
       if (data.authenticated && data.user) {
         this.currentUser = data.user;
         localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
-        if (data.user.session_token) {
-          localStorage.setItem('lpu_verto_pro_token', data.user.session_token);
-        }
+        localStorage.setItem(this.TOKEN_KEY, data.user.session_token || token);
+        localStorage.setItem('lpu_verto_pro_token', data.user.session_token || token);
         this.syncCheckoutFields(data.user);
       } else {
-        // Token invalid or expired
-        this.currentUser = null;
-        localStorage.removeItem(this.USER_KEY);
-        localStorage.removeItem(this.TOKEN_KEY);
-        localStorage.removeItem('lpu_verto_pro_token');
+        // Token invalid, expired, or signed out
+        this.clearAllUserData();
       }
     } catch (e) {
-      console.warn("Auth session verification error:", e);
+      console.warn("Auth verification network error:", e);
+      this.clearAllUserData();
     }
+  },
+
+  clearAllUserData() {
+    this.currentUser = null;
+    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem('lpu_verto_pro_token');
+    localStorage.removeItem('acad_user_data');
+    localStorage.removeItem('acad_user_pro_token');
+    this.clearCheckoutFields();
   },
 
   syncCheckoutFields(user) {
@@ -394,13 +392,14 @@ const AuthManager = {
   },
 
   logout() {
-    this.currentUser = null;
-    localStorage.removeItem(this.USER_KEY);
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem('lpu_verto_pro_token');
-    this.clearCheckoutFields();
+    this.clearAllUserData();
     this.renderNavUser();
-    if (window.PaywallManager) window.PaywallManager.verifyStatus();
+    if (window.PaywallManager) {
+      window.PaywallManager.isPro = false;
+      window.PaywallManager.currentPlan = 'free';
+      window.PaywallManager.userData = { name: '', regNo: '', phone: '', token: null };
+      window.PaywallManager.updateUI();
+    }
   }
 };
 

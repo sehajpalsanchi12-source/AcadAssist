@@ -1,6 +1,6 @@
 /**
  * AcadAssist - Full Admin Portal Controller
- * Username: acadassit0812 | Password: ;Sharma@1290
+ * Authentication handled via secure backend session tokens
  */
 
 const AdminPortal = {

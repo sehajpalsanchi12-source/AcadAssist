@@ -284,13 +284,12 @@ window.openPYQForSubject = function(code) {
 };
 
 window.downloadSubjectPPT = function(code) {
-  const isPro = window.PaywallManager && window.PaywallManager.isPro;
-  const user = window.AuthManager && window.AuthManager.currentUser;
-  const hasSubjectPass = isPro || (user && user.purchased_subjects && user.purchased_subjects.includes(code));
+  const pm = window.PaywallManager;
+  const hasAccess = pm && pm.hasSubjectAccess(code);
 
-  if (!hasSubjectPass && !isPro) {
-    if (window.PaywallManager) {
-      window.PaywallManager.openCheckoutModal('subject_pass_49', code);
+  if (!hasAccess) {
+    if (pm) {
+      pm.openCheckoutModal('subject_pass_49', code);
       return;
     }
   }
@@ -298,16 +297,13 @@ window.downloadSubjectPPT = function(code) {
 };
 
 window.startSubjectMockTest = async function(subjectCode, subjectName, semester = 'Sem2') {
-  const isPro = window.PaywallManager && window.PaywallManager.isPro;
-  const user = window.AuthManager && window.AuthManager.currentUser;
-  const hasSubjectPass = user && user.purchased_subjects && user.purchased_subjects.includes(subjectCode);
-  const currentPlan = window.PaywallManager && window.PaywallManager.currentPlan;
-  const hasMockAccess = isPro && (currentPlan === 'mock_test_29' || currentPlan === 'rush24' || currentPlan === 'semester_pro' || hasSubjectPass);
+  const pm = window.PaywallManager;
+  const hasAccess = pm && pm.hasMockAccess(subjectCode);
 
-  if (!hasMockAccess && !isPro && !hasSubjectPass) {
+  if (!hasAccess) {
     // Open ₹29 Mock Test Paywall Modal with UPI 8053122848@ptyes
-    if (window.PaywallManager) {
-      window.PaywallManager.openCheckoutModal('mock_test_29', subjectCode);
+    if (pm) {
+      pm.openCheckoutModal('mock_test_29', subjectCode);
       return;
     }
   }
@@ -446,13 +442,12 @@ window.launchSubjectFromStudioToPYQ = function() {
 };
 
 window.triggerAssetGeneration = async function(assetType, code, name, sem = 'Sem2', unit = 'Unit1') {
-  const isPro = window.PaywallManager && window.PaywallManager.isPro;
-  const user = window.AuthManager && window.AuthManager.currentUser;
-  const hasSubjectPass = isPro || (user && user.purchased_subjects && user.purchased_subjects.includes(code));
+  const pm = window.PaywallManager;
+  const hasAccess = pm && pm.hasSubjectAccess(code);
 
-  if (!hasSubjectPass && !isPro) {
-    if (window.PaywallManager) {
-      window.PaywallManager.openCheckoutModal('subject_pass_49', code);
+  if (!hasAccess) {
+    if (pm) {
+      pm.openCheckoutModal('subject_pass_49', code);
       return;
     }
   }
@@ -722,13 +717,12 @@ window.launchSlideProjector = async function() {
 };
 
 window.launchSubjectProjector = async function(code) {
-  const isPro = window.PaywallManager && window.PaywallManager.isPro;
-  const user = window.AuthManager && window.AuthManager.currentUser;
-  const hasSubjectPass = isPro || (user && user.purchased_subjects && user.purchased_subjects.includes(code));
+  const pm = window.PaywallManager;
+  const hasAccess = pm && pm.hasSubjectAccess(code);
 
-  if (!hasSubjectPass && !isPro) {
-    if (window.PaywallManager) {
-      window.PaywallManager.openCheckoutModal('subject_pass_49', code);
+  if (!hasAccess) {
+    if (pm) {
+      pm.openCheckoutModal('subject_pass_49', code);
       return;
     }
   }

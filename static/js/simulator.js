@@ -105,6 +105,14 @@ const ExamSimulator = {
     if (elV) elV.textContent = unvisited;
   },
 
+  hasPaperAccess() {
+    if (!this.currentPaper) return false;
+    const code = this.currentPaper.subject_code;
+    const pm = window.PaywallManager;
+    if (!pm) return false;
+    return pm.hasMockAccess(code) || pm.hasSubjectAccess(code);
+  },
+
   renderCurrentQuestion() {
     const container = document.getElementById('mcq-question-area');
     if (!container) return;
@@ -113,7 +121,7 @@ const ExamSimulator = {
     if (this.currentQuestionIndex >= mcqs.length) return;
 
     const q = mcqs[this.currentQuestionIndex];
-    const isLocked = q.is_locked && !window.PaywallManager.isPro;
+    const isLocked = q.is_locked && !this.hasPaperAccess();
     const selectedOpt = this.userAnswers[q.id] || null;
 
     let optionsHtml = '';
@@ -170,7 +178,7 @@ const ExamSimulator = {
               <p class="text-xs text-gray-700 dark:text-slate-300 font-semibold mb-3">
                 Pay ₹29 to 8053122848@ptyes & verify 12-digit UTR to unlock instantly.
               </p>
-              <button onclick="PaywallManager.openCheckoutModal('rush24')" class="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-md transition-all">
+              <button onclick="PaywallManager.openCheckoutModal('mock_test_29', '${this.currentPaper ? this.currentPaper.subject_code : ''}')" class="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-md transition-all">
                 Verify Payment & Unlock (₹29) →
               </button>
             </div>
@@ -309,7 +317,7 @@ const ExamSimulator = {
   renderSubjectiveSections() {
     const shortContainer = document.getElementById('short-questions-list');
     const longContainer = document.getElementById('long-questions-list');
-    const isPro = window.PaywallManager.isPro;
+    const isPro = this.hasPaperAccess();
 
     // Render Section B (Short Answers)
     if (shortContainer) {
@@ -350,7 +358,7 @@ const ExamSimulator = {
                       <img src="/static/images/official_paywall_qr.jpg" alt="Official Paytm UPI QR" class="w-10 h-10 rounded-lg border-2 border-sky-400 bg-white p-0.5 shrink-0">
                       <span class="text-xs font-bold text-amber-500">🔒 5-Mark LPU Model Answer & Rubric Locked</span>
                     </div>
-                    <button onclick="PaywallManager.openCheckoutModal('rush24')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm">
+                    <button onclick="PaywallManager.openCheckoutModal('mock_test_29', '${this.currentPaper ? this.currentPaper.subject_code : ''}')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm">
                       Scan QR & Verify UTR (₹29) →
                     </button>
                   </div>
@@ -416,7 +424,7 @@ const ExamSimulator = {
                     <p class="text-xs text-gray-600 dark:text-slate-400 mb-3 max-w-sm">
                       Get full multi-tier architecture diagrams, Python/C++ code implementations, and evaluator rubrics.
                     </p>
-                    <button onclick="PaywallManager.openCheckoutModal('semester_pro')" class="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-md">
+                    <button onclick="PaywallManager.openCheckoutModal('semester_pro', '${this.currentPaper ? this.currentPaper.subject_code : ''}')" class="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-md">
                       Unlock All 10M Solutions with Verto Pro →
                     </button>
                   </div>
@@ -663,7 +671,7 @@ const ExamSimulator = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paper: this.currentPaper,
-          show_solutions: window.PaywallManager.isPro
+          show_solutions: this.hasPaperAccess()
         })
       });
 

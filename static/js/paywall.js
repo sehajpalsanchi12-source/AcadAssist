@@ -11,8 +11,16 @@ const PaywallManager = {
 
   currentPlan: 'free',
   isPro: false,
+  isSemesterPro: false,
   targetAction: null,
   _pollInterval: null,
+  _initialized: false,
+  _isSubmitting: false,
+  _initialModalHtml: null,
+
+  purchasedSubjects: [],
+  purchasedMockTests: [],
+
   userData: {
     name: '',
     regNo: '',
@@ -21,22 +29,67 @@ const PaywallManager = {
   },
 
   async init() {
+    const modal = document.getElementById('paywall-modal');
+    if (modal && !this._initialModalHtml) {
+      this._initialModalHtml = modal.innerHTML;
+    }
+
     this.loadLocalData();
     await this.verifyStatus();
     this.updateUI();
-    this.setupListeners();
+
+    if (!this._initialized) {
+      this._initialized = true;
+      this.setupListeners();
+      this.bindModalListeners();
+    }
   },
 
   loadLocalData() {
-    // Strictly isolate user data: Only associate user data if AuthManager has an authenticated user
+    this.purchasedSubjects = [];
+    this.purchasedMockTests = [];
+
+    // 1. Scan localStorage for per-subject unlock keys
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('acad_paid_subject_') && localStorage.getItem(key) === 'true') {
+          const sub = key.replace('acad_paid_subject_', '').toUpperCase().trim();
+          if (!this.purchasedSubjects.includes(sub)) this.purchasedSubjects.push(sub);
+        }
+        if (key && key.startsWith('acad_paid_mock_') && localStorage.getItem(key) === 'true') {
+          const sub = key.replace('acad_paid_mock_', '').toUpperCase().trim();
+          if (!this.purchasedMockTests.includes(sub)) this.purchasedMockTests.push(sub);
+        }
+      }
+    } catch (e) {}
+
+    // 2. Load from authenticated user profile
     if (window.AuthManager && window.AuthManager.currentUser) {
       const u = window.AuthManager.currentUser;
       this.userData.name = u.name || '';
       this.userData.regNo = u.lpu_reg_no || '';
       this.userData.phone = u.phone || '';
       this.userData.token = u.session_token || localStorage.getItem('lpu_verto_pro_token');
+      if (Array.isArray(u.purchased_subjects)) {
+        u.purchased_subjects.forEach(s => {
+          const clean = s.toUpperCase().trim();
+          if (!this.purchasedSubjects.includes(clean)) this.purchasedSubjects.push(clean);
+        });
+      }
+      if (Array.isArray(u.purchased_mock_tests)) {
+        u.purchased_mock_tests.forEach(s => {
+          const clean = s.toUpperCase().trim();
+          if (!this.purchasedMockTests.includes(clean)) this.purchasedMockTests.push(clean);
+        });
+      }
     } else {
-      this.userData = { name: '', regNo: '', phone: '', token: null };
+      this.userData = {
+        name: '',
+        regNo: '',
+        phone: '',
+        token: localStorage.getItem('lpu_verto_pro_token') || localStorage.getItem(this.TOKEN_KEY) || null
+      };
     }
   },
 
@@ -45,6 +98,7 @@ const PaywallManager = {
     const token = this.userData.token || (window.AuthManager?.currentUser?.session_token);
     if (!token) {
       this.isPro = false;
+      this.isSemesterPro = false;
       this.currentPlan = 'free';
       this.updateUI();
       return;
@@ -54,18 +108,72 @@ const PaywallManager = {
       const res = await fetch(`/api/paywall/verify?token=${encodeURIComponent(token)}`);
       const data = await res.json();
       if (data.is_pro) {
-        this.isPro = true;
         this.currentPlan = data.plan_id;
+        if (data.plan_id === 'semester_pro' || data.plan_id === 'dev_unlock') {
+          this.isSemesterPro = true;
+          this.isPro = true;
+        } else {
+          this.isSemesterPro = false;
+          // Single subject or mock pass only grants isolated access to that subject, not global pro
+          this.isPro = false;
+        }
+
+        if (Array.isArray(data.purchased_subjects)) {
+          data.purchased_subjects.forEach(s => {
+            const clean = s.toUpperCase().trim();
+            if (!this.purchasedSubjects.includes(clean)) this.purchasedSubjects.push(clean);
+            try { localStorage.setItem('acad_paid_subject_' + clean, 'true'); } catch (e) {}
+          });
+        }
+        if (Array.isArray(data.purchased_mock_tests)) {
+          data.purchased_mock_tests.forEach(s => {
+            const clean = s.toUpperCase().trim();
+            if (!this.purchasedMockTests.includes(clean)) this.purchasedMockTests.push(clean);
+            try { localStorage.setItem('acad_paid_mock_' + clean, 'true'); } catch (e) {}
+          });
+        }
       } else {
         this.isPro = false;
+        this.isSemesterPro = false;
         this.currentPlan = 'free';
       }
     } catch (e) {
       console.warn("Could not verify paywall token:", e);
       this.isPro = false;
+      this.isSemesterPro = false;
       this.currentPlan = 'free';
     }
     this.updateUI();
+  },
+
+  hasSubjectAccess(subjectCode) {
+    if (!subjectCode) return false;
+    const code = subjectCode.toUpperCase().trim();
+    if (this.isSemesterPro || this.currentPlan === 'semester_pro' || this.currentPlan === 'dev_unlock') return true;
+    if (localStorage.getItem(`acad_paid_subject_${code}`) === 'true') return true;
+    if (this.purchasedSubjects && (this.purchasedSubjects.includes(code) || this.purchasedSubjects.includes('ALL'))) return true;
+    const user = window.AuthManager && window.AuthManager.currentUser;
+    if (user && Array.isArray(user.purchased_subjects)) {
+      const up = user.purchased_subjects.map(s => s.toUpperCase().trim());
+      if (up.includes(code) || up.includes('ALL')) return true;
+    }
+    return false;
+  },
+
+  hasMockAccess(subjectCode) {
+    if (!subjectCode) return false;
+    const code = subjectCode.toUpperCase().trim();
+    if (this.isSemesterPro || this.currentPlan === 'semester_pro' || this.currentPlan === 'dev_unlock') return true;
+    // Having full subject access automatically includes mock test access for that subject
+    if (this.hasSubjectAccess(code)) return true;
+    if (localStorage.getItem(`acad_paid_mock_${code}`) === 'true') return true;
+    if (this.purchasedMockTests && (this.purchasedMockTests.includes(code) || this.purchasedMockTests.includes('ALL'))) return true;
+    const user = window.AuthManager && window.AuthManager.currentUser;
+    if (user && Array.isArray(user.purchased_mock_tests)) {
+      const up = user.purchased_mock_tests.map(s => s.toUpperCase().trim());
+      if (up.includes(code) || up.includes('ALL')) return true;
+    }
+    return false;
   },
 
   updateUI() {
@@ -73,15 +181,24 @@ const PaywallManager = {
     const upgradeNavBtn = document.getElementById('nav-upgrade-btn');
     const proBanner = document.getElementById('pro-active-banner');
 
-    if (this.isPro) {
+    if (this.isSemesterPro) {
       if (badge) {
         badge.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-sm shadow-pink-500/20">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          ACTIVE PRO PASS
+          ACTIVE SEMESTER PRO
         </span>`;
       }
       if (upgradeNavBtn) upgradeNavBtn.classList.add('hidden');
       if (proBanner) proBanner.classList.remove('hidden');
+    } else if (this.purchasedSubjects.length > 0 || this.purchasedMockTests.length > 0) {
+      const unlockedCount = new Set([...this.purchasedSubjects, ...this.purchasedMockTests]).size;
+      if (badge) {
+        badge.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+          ✓ ${unlockedCount} COURSE${unlockedCount > 1 ? 'S' : ''} UNLOCKED
+        </span>`;
+      }
+      if (upgradeNavBtn) upgradeNavBtn.classList.remove('hidden');
+      if (proBanner) proBanner.classList.add('hidden');
     } else {
       if (badge) {
         badge.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700">
@@ -101,24 +218,35 @@ const PaywallManager = {
         this.openCheckoutModal(plan, subj);
       });
     });
+  },
 
+  restoreModalStructure() {
+    const modal = document.getElementById('paywall-modal');
+    if (!modal) return;
+    if (this._initialModalHtml && !document.getElementById('checkout-form')) {
+      modal.innerHTML = this._initialModalHtml;
+      this.bindModalListeners();
+    }
+  },
+
+  bindModalListeners() {
     const modal = document.getElementById('paywall-modal');
     const closeBtn = document.getElementById('close-paywall-modal');
     if (closeBtn && modal) {
-      closeBtn.addEventListener('click', () => modal.close());
+      closeBtn.onclick = () => modal.close();
     }
 
     const applyCouponBtn = document.getElementById('apply-coupon-btn');
     if (applyCouponBtn) {
-      applyCouponBtn.addEventListener('click', () => this.applyCoupon());
+      applyCouponBtn.onclick = () => this.applyCoupon();
     }
 
     const payForm = document.getElementById('checkout-form');
     if (payForm) {
-      payForm.addEventListener('submit', (e) => {
+      payForm.onsubmit = (e) => {
         e.preventDefault();
         this.processPayment();
-      });
+      };
     }
   },
 
@@ -128,13 +256,15 @@ const PaywallManager = {
   },
 
   openCheckoutModal(planId = 'mock_test_29', subjectCode = null, targetAction = null) {
+    this.restoreModalStructure();
+
     const modal = document.getElementById('paywall-modal');
     if (!modal) return;
 
     this.targetAction = targetAction || {
       planId: planId,
       subjectCode: subjectCode,
-      type: planId === 'mock_test_29' ? 'mock_test' : (planId === 'subject_pass_49' ? 'subject' : 'general')
+      type: (planId === 'mock_test_29' || planId === 'rush24') ? 'mock_test' : (planId === 'subject_pass_49' ? 'subject' : 'general')
     };
 
     const planTitle = document.getElementById('checkout-plan-title');
@@ -266,6 +396,10 @@ const PaywallManager = {
   },
 
   async processPayment() {
+    // Guard against multiple clicks / double form submissions
+    if (this._isSubmitting) return;
+    this._isSubmitting = true;
+
     const errorBox = document.getElementById('checkout-verification-error');
     if (errorBox) { errorBox.classList.add('hidden'); errorBox.textContent = ''; }
 
@@ -281,15 +415,14 @@ const PaywallManager = {
     // Required details validation
     if (!nameInput) {
       this.showCheckoutError('Please enter your Full Name.');
+      this._isSubmitting = false;
       return;
     }
     if (!regInput) {
       this.showCheckoutError('Please enter your LPU Registration Number.');
+      this._isSubmitting = false;
       return;
     }
-
-    // UTR is optional — if not provided, admin will verify from Paytm dashboard
-    // Only enforce if coupon reduces price to zero (skip payment entirely)
 
     const submitBtn = document.getElementById('pay-submit-btn');
     const origHtml = submitBtn ? submitBtn.innerHTML : '';
@@ -297,7 +430,7 @@ const PaywallManager = {
       submitBtn.disabled = true;
       submitBtn.innerHTML = `
         <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-        <span>Verifying Payment with UPI Switch (${this.UPI_DESTINATION})...</span>
+        <span>Submitting Payment...</span>
       `;
     }
 
@@ -325,12 +458,33 @@ const PaywallManager = {
       }
 
       if (data.verified === true && data.token) {
-        // Coupon / free / test UTR — instant access
+        // Free coupon / test UTR — instant unlock
+        const effectiveSubj = (data.subject_code && data.subject_code !== 'ALL') ? data.subject_code : subjectCode;
+        const effectivePlan = data.plan_id || planId;
+
+        if (effectivePlan === 'semester_pro') {
+          this.isSemesterPro = true;
+          this.isPro = true;
+          this.currentPlan = 'semester_pro';
+        } else if (effectivePlan === 'mock_test_29' || effectivePlan === 'rush24') {
+          if (effectiveSubj && effectiveSubj !== 'ALL') {
+            const cleanSub = effectiveSubj.toUpperCase().trim();
+            localStorage.setItem('acad_paid_mock_' + cleanSub, 'true');
+            if (!this.purchasedMockTests.includes(cleanSub)) this.purchasedMockTests.push(cleanSub);
+          }
+          this.currentPlan = effectivePlan;
+        } else if (effectivePlan === 'subject_pass_49') {
+          if (effectiveSubj && effectiveSubj !== 'ALL') {
+            const cleanSub = effectiveSubj.toUpperCase().trim();
+            localStorage.setItem('acad_paid_subject_' + cleanSub, 'true');
+            if (!this.purchasedSubjects.includes(cleanSub)) this.purchasedSubjects.push(cleanSub);
+          }
+          this.currentPlan = effectivePlan;
+        }
+
         this.userData.token = data.token;
         this.userData.name = nameInput;
         this.userData.regNo = regInput;
-        this.isPro = true;
-        this.currentPlan = planId;
 
         localStorage.setItem(this.TOKEN_KEY, data.token);
         localStorage.setItem('lpu_verto_pro_token', data.token);
@@ -342,11 +496,10 @@ const PaywallManager = {
         }
 
         this.updateUI();
-        this.showVerifiedSuccessView(data, subjectCode, planId);
+        this.showVerifiedSuccessView(data, effectiveSubj, effectivePlan);
 
       } else if (data.pending === true) {
         // Real UPI payment — awaiting admin verification
-        // Automatically open WhatsApp with complete payment details to 8053122848
         const waDetails = 
           `*AcadAssist Payment Verification Request*\n` +
           `👤 *Student Name:* ${nameInput}\n` +
@@ -376,6 +529,7 @@ const PaywallManager = {
     } catch (e) {
       this.showCheckoutError('Network error while verifying payment with server.');
     } finally {
+      this._isSubmitting = false;
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = origHtml;
@@ -397,6 +551,13 @@ const PaywallManager = {
     const modal = document.getElementById('paywall-modal');
     if (!modal) return;
 
+    let buttonActionText = '🚀 Continue to Content →';
+    if (planId === 'mock_test_29' || planId === 'rush24') {
+      buttonActionText = `⚡ Generate & Open ${subjectCode && subjectCode !== 'ALL' ? subjectCode : ''} Mock Test →`;
+    } else if (planId === 'subject_pass_49') {
+      buttonActionText = `📚 Open ${subjectCode && subjectCode !== 'ALL' ? subjectCode : ''} Study Hub →`;
+    }
+
     modal.innerHTML = `
       <div class="p-6 sm:p-8 space-y-5 text-center animate-fade-in-up max-w-lg mx-auto">
         <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
@@ -409,7 +570,7 @@ const PaywallManager = {
           </span>
           <h3 class="text-2xl font-black text-gray-900 dark:text-white">Access Unlocked! 🎉</h3>
           <p class="text-xs text-gray-600 dark:text-slate-300 mt-1">
-            Your transaction has been approved by Admin. You now have full access to <strong>${data.plan}</strong>.
+            Your transaction has been approved by Admin. You now have access to <strong>${data.plan || planId}</strong>${subjectCode && subjectCode !== 'ALL' ? ` for <strong>${subjectCode}</strong>` : ''}.
           </p>
         </div>
 
@@ -422,7 +583,7 @@ const PaywallManager = {
         </div>
 
         <button onclick="PaywallManager.unlockAndNavigateNextPage('${planId}', '${subjectCode}')" class="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2">
-          <span>🚀 Continue to Unlocked Page →</span>
+          <span>${buttonActionText}</span>
         </button>
       </div>
     `;
@@ -430,7 +591,16 @@ const PaywallManager = {
 
   unlockAndNavigateNextPage(planId, subjectCode) {
     const modal = document.getElementById('paywall-modal');
-    if (modal) modal.close();
+    if (modal) {
+      if (typeof modal.close === 'function') modal.close();
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+      setTimeout(() => {
+        modal.classList.remove('hidden');
+        modal.style.display = '';
+        this.restoreModalStructure();
+      }, 500);
+    }
 
     // 1. If currently in the Exam Simulator, unlock all hidden solutions immediately
     if (window.ExamSimulator) {
@@ -439,20 +609,20 @@ const PaywallManager = {
 
     // 2. Navigate to target unlocked section based on action
     const target = this.targetAction || {};
+    const effectivePlan = planId || target.planId;
+    const effectiveSubj = (subjectCode && subjectCode !== 'ALL') ? subjectCode : (target.subjectCode || 'MTH166');
 
-    if (target.type === 'mock_test' || planId === 'mock_test_29' || planId === 'rush24') {
-      const subj = (subjectCode && subjectCode !== 'ALL') ? subjectCode : (target.subjectCode || 'MTH166');
+    if (target.type === 'mock_test' || effectivePlan === 'mock_test_29' || effectivePlan === 'rush24') {
       if (typeof window.startSubjectMockTest === 'function') {
-        window.startSubjectMockTest(subj, subj);
+        window.startSubjectMockTest(effectiveSubj, effectiveSubj);
       } else if (typeof window.switchTab === 'function') {
         window.switchTab('tab-simulator');
       }
     } else if (target.type === 'download_ppt' && target.subjectCode) {
       window.location.href = `/api/subject/${target.subjectCode}/download-pptx`;
-    } else if (target.type === 'subject' || planId === 'subject_pass_49') {
-      const subj = (subjectCode && subjectCode !== 'ALL') ? subjectCode : (target.subjectCode || 'MTH166');
+    } else if (target.type === 'subject' || effectivePlan === 'subject_pass_49') {
       if (typeof window.openPYQForSubject === 'function') {
-        window.openPYQForSubject(subj);
+        window.openPYQForSubject(effectiveSubj);
       } else if (typeof window.switchTab === 'function') {
         window.switchTab('tab-preloaded');
       }
@@ -461,11 +631,7 @@ const PaywallManager = {
         window.switchTab('tab-simulator');
       }
     }
-
-    // Reset modal content for next time
-    setTimeout(() => {
-      window.location.reload();
-    }, 1200);
+    // Clean transition without destructive page reload!
   },
 
   showPendingVerificationView(txData, subjectCode, planId, waUrl = null) {
@@ -523,24 +689,49 @@ const PaywallManager = {
       if (data.is_approved && data.token) {
         clearInterval(this._pollInterval);
         this._pollInterval = null;
-        // Grant access ONLY when admin approved!
+
+        const effectiveSubj = (data.subject_code && data.subject_code !== 'ALL') ? data.subject_code : subjectCode;
+        const effectivePlan = data.plan_id || planId;
+
+        // Record granular permission
+        if (effectivePlan === 'semester_pro') {
+          this.isSemesterPro = true;
+          this.isPro = true;
+          this.currentPlan = 'semester_pro';
+        } else if (effectivePlan === 'mock_test_29' || effectivePlan === 'rush24') {
+          if (effectiveSubj && effectiveSubj !== 'ALL') {
+            const cleanSub = effectiveSubj.toUpperCase().trim();
+            localStorage.setItem('acad_paid_mock_' + cleanSub, 'true');
+            if (!this.purchasedMockTests.includes(cleanSub)) this.purchasedMockTests.push(cleanSub);
+          }
+          this.currentPlan = effectivePlan;
+        } else if (effectivePlan === 'subject_pass_49') {
+          if (effectiveSubj && effectiveSubj !== 'ALL') {
+            const cleanSub = effectiveSubj.toUpperCase().trim();
+            localStorage.setItem('acad_paid_subject_' + cleanSub, 'true');
+            if (!this.purchasedSubjects.includes(cleanSub)) this.purchasedSubjects.push(cleanSub);
+          }
+          this.currentPlan = effectivePlan;
+        }
+
         this.userData.token = data.token;
-        this.isPro = true;
-        this.currentPlan = planId;
         localStorage.setItem(this.TOKEN_KEY, data.token);
         localStorage.setItem('lpu_verto_pro_token', data.token);
         localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(this.userData));
+
         if (window.AuthManager) {
           await window.AuthManager.fetchMe();
           window.AuthManager.renderNavUser();
         }
+
         this.updateUI();
         this.showVerifiedSuccessView({
           transaction_id: txId,
           utr_ref: data.utr_ref,
           plan: data.plan_name,
           amount_paid: data.amount_paid
-        }, subjectCode, planId);
+        }, effectiveSubj, effectivePlan);
+
       } else if (badge) {
         if (data.status === 'rejected') {
           badge.textContent = 'REJECTED — Contact Admin on WhatsApp';

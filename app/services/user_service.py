@@ -376,14 +376,26 @@ class UserService:
         user["active_plan"] = plan_id
         user["plan_name"] = plan_name
         user["plan_expiry"] = time.time() + (duration_days * 86400)
-        user["is_pro"] = True
+        user["is_pro"] = (plan_id == "semester_pro")
         user["total_spent_inr"] = float(user.get("total_spent_inr", 0)) + float(amount_paid)
 
-        if subject_code:
-            purchased = user.get("purchased_subjects", [])
-            if subject_code not in purchased:
-                purchased.append(subject_code)
-            user["purchased_subjects"] = purchased
+        if subject_code and subject_code != "ALL":
+            clean_sub = subject_code.upper().strip()
+            if plan_id in ["mock_test_29", "rush24"]:
+                purchased_mocks = user.get("purchased_mock_tests", [])
+                if clean_sub not in purchased_mocks:
+                    purchased_mocks.append(clean_sub)
+                user["purchased_mock_tests"] = purchased_mocks
+            else:
+                purchased = user.get("purchased_subjects", [])
+                if clean_sub not in purchased:
+                    purchased.append(clean_sub)
+                user["purchased_subjects"] = purchased
+                # Full subject pass also unlocks mock test for this subject
+                purchased_mocks = user.get("purchased_mock_tests", [])
+                if clean_sub not in purchased_mocks:
+                    purchased_mocks.append(clean_sub)
+                user["purchased_mock_tests"] = purchased_mocks
 
         # Persist to Database & JSON
         Database.save_user(user)

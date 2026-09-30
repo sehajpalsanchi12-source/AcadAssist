@@ -463,9 +463,8 @@ async def generate_exam(
     2. Direct text paste
     3. Direct LPU Verto subject code and unit notes from notes.lpuverto.xyz
     """
-    # 1. Verify User Pro Status
-    user_status = PaywallService.verify_token(token)
-    is_pro = user_status.get("is_pro", False)
+    # 1. Verify User Pro Status (per-subject access isolation)
+    is_pro = PaywallService.has_mock_access(token, subject_code)
 
     extracted_text = ""
     # Check if a file was uploaded

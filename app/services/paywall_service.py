@@ -268,6 +268,40 @@ class PaywallService:
             status = "pending"
             final_utr = clean_utr if clean_utr else f"PEND_{uuid.uuid4().hex[:8].upper()}"
 
+        # Deduplication check: if there is an existing pending transaction created within last 45 seconds for same phone/reg_no/user and plan/subject, reuse it
+        if status == "pending":
+            for existing in Database.list_all_transactions():
+                if existing.get("status") == "pending":
+                    same_user = (user_id and user_id != "guest" and existing.get("user_id") == user_id) or \
+                                (phone and existing.get("phone") == phone) or \
+                                (reg_no and existing.get("reg_no") == reg_no)
+                    same_plan = (existing.get("plan_id") == plan_id and existing.get("subject_code", "ALL") == (subject_code or "ALL"))
+                    time_diff = time.time() - float(existing.get("created_at", 0))
+                    if same_user and same_plan and time_diff < 45:
+                        return {
+                            "success": True,
+                            "verified": False,
+                            "unlocked": False,
+                            "pending": True,
+                            "message": "Payment submitted! Awaiting admin verification of your UPI transaction. You will be notified once approved.",
+                            "token": None,
+                            "plan": plan["name"],
+                            "plan_id": plan_id,
+                            "amount_paid": price,
+                            "transaction_id": existing["tx_id"],
+                            "utr_ref": existing["utr_ref"],
+                            "status": "pending",
+                            "upi_destination": cls.UPI_ID,
+                            "receipt": {
+                                "bill_to": f"{user_name} (LPU Reg: {reg_no})",
+                                "service": f"{plan['name']}",
+                                "payment_gateway": f"AcadAssist Direct UPI ({cls.UPI_ID})",
+                                "amount": f"₹{price:.2f}",
+                                "utr_number": existing["utr_ref"],
+                                "status": "PENDING ADMIN VERIFICATION"
+                            }
+                        }
+
         tx_id = f"TXN_{uuid.uuid4().hex[:10].upper()}"
         token = f"acad_pro_{uuid.uuid4().hex}"
         duration_days = 1 if plan_id == "rush24" else (90 if "mock" in plan_id else 180)
@@ -436,13 +470,34 @@ class PaywallService:
                 return {"is_pro": False, "plan_id": "free", "message": "Payment pending admin approval"}
             if time.time() > tx.get("expires_at", 0):
                 return {"is_pro": False, "plan_id": "free", "message": "Subscription expired"}
+
+            user = None
+            try:
+                from app.services.user_service import UserService
+                user = UserService.get_user_by_token(clean_token)
+            except Exception:
+                pass
+
+            purchased_subjects = list(user.get("purchased_subjects", [])) if user else []
+            purchased_mock_tests = list(user.get("purchased_mock_tests", [])) if user else []
+            tx_subj = tx.get("subject_code")
+            if tx_subj and tx_subj != "ALL":
+                if tx.get("plan_id") in ["mock_test_29", "rush24"]:
+                    if tx_subj not in purchased_mock_tests:
+                        purchased_mock_tests.append(tx_subj)
+                else:
+                    if tx_subj not in purchased_subjects:
+                        purchased_subjects.append(tx_subj)
+
             return {
                 "is_pro": True,
                 "plan_id": tx["plan_id"],
                 "plan_name": tx.get("plan_name", "AcadAssist Pro"),
                 "expires_at": tx.get("expires_at"),
                 "user_name": tx.get("user_name", "LPU Student"),
-                "subject_code": tx.get("subject_code", "ALL")
+                "subject_code": tx.get("subject_code", "ALL"),
+                "purchased_subjects": purchased_subjects,
+                "purchased_mock_tests": purchased_mock_tests
             }
 
         # 2. Check JSON records fallback
@@ -453,13 +508,34 @@ class PaywallService:
                     return {"is_pro": False, "plan_id": "free", "message": "Payment pending admin approval"}
                 if time.time() > t.get("expires_at", 0):
                     return {"is_pro": False, "plan_id": "free", "message": "Subscription expired"}
+
+                user = None
+                try:
+                    from app.services.user_service import UserService
+                    user = UserService.get_user_by_token(clean_token)
+                except Exception:
+                    pass
+
+                purchased_subjects = list(user.get("purchased_subjects", [])) if user else []
+                purchased_mock_tests = list(user.get("purchased_mock_tests", [])) if user else []
+                t_subj = t.get("subject_code")
+                if t_subj and t_subj != "ALL":
+                    if t.get("plan_id") in ["mock_test_29", "rush24"]:
+                        if t_subj not in purchased_mock_tests:
+                            purchased_mock_tests.append(t_subj)
+                    else:
+                        if t_subj not in purchased_subjects:
+                            purchased_subjects.append(t_subj)
+
                 return {
                     "is_pro": True,
                     "plan_id": t["plan_id"],
                     "plan_name": t.get("plan_name", "AcadAssist Pro"),
                     "expires_at": t.get("expires_at"),
                     "user_name": t.get("user_name", "LPU Student"),
-                    "subject_code": t.get("subject_code", "ALL")
+                    "subject_code": t.get("subject_code", "ALL"),
+                    "purchased_subjects": purchased_subjects,
+                    "purchased_mock_tests": purchased_mock_tests
                 }
 
         # 3. Check dev / demo token
@@ -469,7 +545,10 @@ class PaywallService:
                 "plan_id": "semester_pro",
                 "plan_name": "AcadAssist Pro (Dev Unlock)",
                 "expires_at": time.time() + (180 * 86400),
-                "user_name": "LPU Verto Pro"
+                "user_name": "LPU Verto Pro",
+                "subject_code": "ALL",
+                "purchased_subjects": ["ALL"],
+                "purchased_mock_tests": ["ALL"]
             }
 
         return {"is_pro": False, "plan_id": "free", "message": "Free tier"}
@@ -487,7 +566,9 @@ class PaywallService:
                     "status": tx.get("status", "pending"),
                     "is_approved": is_approved,
                     "token": tx.get("token") if is_approved else None,
+                    "plan_id": tx.get("plan_id", ""),
                     "plan_name": tx.get("plan_name", ""),
+                    "subject_code": tx.get("subject_code", "ALL"),
                     "utr_ref": tx.get("utr_ref", ""),
                     "amount_paid": tx.get("amount", 0)
                 }
@@ -504,7 +585,9 @@ class PaywallService:
                         "status": tx.get("status", "pending"),
                         "is_approved": is_approved,
                         "token": tx.get("token") if is_approved else None,
+                        "plan_id": tx.get("plan_id", ""),
                         "plan_name": tx.get("plan_name", ""),
+                        "subject_code": tx.get("subject_code", "ALL"),
                         "utr_ref": tx.get("utr_ref", ""),
                         "amount_paid": tx.get("amount", 0)
                     }
@@ -524,8 +607,14 @@ class PaywallService:
         if plan_id in ["semester_pro", "dev_unlock"] or status.get("subject_code") == "ALL":
             return True
 
+        # mock_test_29 pass ONLY gives mock test access, NOT full subject notes/PPT
+        if plan_id in ["mock_test_29", "rush24"]:
+            return False
+
+        clean_sub = subject_code.upper().strip()
+
         # Check if transaction was for this subject code
-        if status.get("subject_code", "").upper() == subject_code.upper():
+        if status.get("subject_code", "").upper().strip() == clean_sub:
             return True
 
         # Check in UserService if token is associated with a user
@@ -535,8 +624,8 @@ class PaywallService:
             if user:
                 if user.get("active_plan") == "semester_pro":
                     return True
-                purchased = [s.upper() for s in user.get("purchased_subjects", [])]
-                if subject_code.upper() in purchased or "ALL" in purchased:
+                purchased = [s.upper().strip() for s in user.get("purchased_subjects", [])]
+                if clean_sub in purchased or "ALL" in purchased:
                     return True
         except Exception:
             pass
@@ -545,17 +634,43 @@ class PaywallService:
 
     @classmethod
     def has_mock_access(cls, token: Optional[str], subject_code: Optional[str] = None) -> bool:
-        """Check if user has paid access to run a Mock Test / Exam Simulator (₹29 pass)."""
+        """Check if user has paid access to run a Mock Test / Exam Simulator for this specific subject."""
         status = cls.verify_token(token)
         if not status.get("is_pro"):
             return False
 
         plan_id = status.get("plan_id", "")
-        if plan_id in ["mock_test_29", "midterm_mock_49", "rush24", "semester_pro"]:
+        if plan_id in ["semester_pro", "dev_unlock"] or status.get("subject_code") == "ALL":
             return True
 
-        if subject_code and cls.has_subject_access(token, subject_code):
+        if not subject_code:
             return True
+
+        clean_sub = subject_code.upper().strip()
+
+        # If transaction was for this subject code
+        if status.get("subject_code", "").upper().strip() == clean_sub:
+            return True
+
+        # A full subject pass also includes mock test for that subject
+        if cls.has_subject_access(token, clean_sub):
+            return True
+
+        # Check in UserService
+        try:
+            from app.services.user_service import UserService
+            user = UserService.get_user_by_token(token)
+            if user:
+                if user.get("active_plan") == "semester_pro":
+                    return True
+                purchased_mocks = [s.upper().strip() for s in user.get("purchased_mock_tests", [])]
+                if clean_sub in purchased_mocks or "ALL" in purchased_mocks:
+                    return True
+                purchased_subs = [s.upper().strip() for s in user.get("purchased_subjects", [])]
+                if clean_sub in purchased_subs or "ALL" in purchased_subs:
+                    return True
+        except Exception:
+            pass
 
         return False
 

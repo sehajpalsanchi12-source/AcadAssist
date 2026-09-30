@@ -176,7 +176,7 @@ const ExamSimulator = {
                 </div>
               </div>
               <p class="text-xs text-gray-700 dark:text-slate-300 font-semibold mb-3">
-                Pay ₹29 to 8053122848@ptyes & verify 12-digit UTR to unlock instantly.
+                Pay ₹29 to mk9817223@okicici & verify 12-digit UTR to unlock instantly.
               </p>
               <button onclick="PaywallManager.openCheckoutModal('mock_test_29', '${this.currentPaper ? this.currentPaper.subject_code : ''}')" class="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold rounded-lg shadow-md transition-all">
                 Verify Payment & Unlock (₹29) →

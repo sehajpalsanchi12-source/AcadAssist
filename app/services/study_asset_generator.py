@@ -471,25 +471,34 @@ Return ONLY a valid JSON object (no markdown, no code fences) with this exact st
 
 Be specific to {subject_name} - use actual topic names, real formula names, real concept terminology. Make questions exam-realistic at LPU difficulty level."""
 
-                async with httpx.AsyncClient(timeout=45) as client:
-                    resp = await client.post(
-                        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}",
-                        json={
-                            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                            "generationConfig": {"maxOutputTokens": 4096, "temperature": 0.4}
-                        }
-                    )
-                result = resp.json()
-                raw = result["candidates"][0]["content"]["parts"][0]["text"]
-                # Strip any markdown fences
-                raw = raw.strip()
-                if raw.startswith("```"):
-                    raw = raw.split("```")[1]
-                    if raw.startswith("json"):
-                        raw = raw[4:]
-                roadmap = json.loads(raw.strip())
-                roadmap["ai_generated"] = True
-                return roadmap
+                models_to_try = ["gemini-3.5-flash", "gemini-3-flash-preview"]
+                roadmap = None
+
+                for model in models_to_try:
+                    try:
+                        async with httpx.AsyncClient(timeout=5.0) as client:
+                            resp = await client.post(
+                                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}",
+                                json={
+                                    "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                                    "generationConfig": {"maxOutputTokens": 4096, "temperature": 0.4}
+                                }
+                            )
+                        if resp.status_code == 200:
+                            result = resp.json()
+                            candidates = result.get("candidates", [])
+                            if candidates:
+                                raw = candidates[0]["content"]["parts"][0]["text"].strip()
+                                if raw.startswith("```"):
+                                    raw = raw.split("```")[1]
+                                    if raw.startswith("json"):
+                                        raw = raw[4:]
+                                roadmap = json.loads(raw.strip())
+                                roadmap["ai_generated"] = True
+                                return roadmap
+                    except Exception as model_err:
+                        print(f"[ROADMAP AI error on {model}]: {model_err}")
+                        continue
             except Exception as e:
                 print(f"[ROADMAP AI ERROR] {e} — falling back to heuristic")
 

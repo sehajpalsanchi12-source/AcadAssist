@@ -190,13 +190,23 @@ class AIChatService:
             "generationConfig": {"maxOutputTokens": 950, "temperature": 0.65}
         }
 
-        async with httpx.AsyncClient(timeout=25) as client:
-            r = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}",
-                json=payload
-            )
-            data = r.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
+        models_to_try = ["gemini-3.5-flash", "gemini-3-flash-preview"]
+        for model in models_to_try:
+            try:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    r = await client.post(
+                        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}",
+                        json=payload
+                    )
+                    if r.status_code == 200:
+                        data = r.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            return candidates[0]["content"]["parts"][0]["text"]
+            except Exception as e:
+                print(f"[AI Chat error on {model}]: {e}")
+                continue
+        return ""
 
     @classmethod
     def _synthesize_academic_response(cls, query: str, subject_code: Optional[str], subject_name: Optional[str]) -> str:

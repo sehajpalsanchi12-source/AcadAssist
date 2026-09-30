@@ -389,18 +389,26 @@ Respond ONLY with valid JSON with this exact schema:
   ]
 }}
 """
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+        models_to_try = ["gemini-3.5-flash", "gemini-3-flash-preview"]
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json"}
         }
 
-        async with httpx.AsyncClient(timeout=45.0) as client:
-            resp = await client.post(url, json=payload)
-            if resp.status_code == 200:
-                result = resp.json()
-                text_out = result["candidates"][0]["content"]["parts"][0]["text"]
-                return json.loads(text_out)
+        for model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            try:
+                async with httpx.AsyncClient(timeout=6.0) as client:
+                    resp = await client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        result = resp.json()
+                        candidates = result.get("candidates", [])
+                        if candidates:
+                            text_out = candidates[0]["content"]["parts"][0]["text"]
+                            return json.loads(text_out)
+            except Exception as e:
+                print(f"[Exam Gen AI error on {model}]: {e}")
+                continue
         return None
 
     @classmethod

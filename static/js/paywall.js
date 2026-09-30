@@ -1,12 +1,12 @@
 /**
- * AcadAssist - Paywall, UPI Payment Gateway (8053122848@ptyes) & Subscription Manager
+ * AcadAssist - Paywall, UPI Payment Gateway (mk9817223@okicici) & Subscription Manager
  * Enforces QR code display and strict payment verification before unlocking next pages.
  */
 
 const PaywallManager = {
   TOKEN_KEY: 'acad_user_pro_token',
   USER_DATA_KEY: 'acad_user_data',
-  UPI_DESTINATION: '8053122848@ptyes',
+  UPI_DESTINATION: 'mk9817223@okicici',
   OFFICIAL_QR_URL: '/static/images/official_paywall_qr.jpg',
 
   currentPlan: 'free',
@@ -661,7 +661,7 @@ const PaywallManager = {
         <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 text-left text-xs space-y-2 font-mono">
           <div class="flex justify-between"><span class="text-gray-400">Transaction ID:</span> <span class="font-bold text-gray-900 dark:text-white">${txId}</span></div>
           <div class="flex justify-between"><span class="text-gray-400">UTR / Ref:</span> <span class="font-bold text-pink-600 dark:text-pink-400">${utrRef}</span></div>
-          <div class="flex justify-between"><span class="text-gray-400">Paytm / UPI:</span> <span class="font-bold text-gray-700 dark:text-slate-300">8053122848@ptyes</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Paytm / UPI:</span> <span class="font-bold text-gray-700 dark:text-slate-300">mk9817223@okicici</span></div>
           <div class="flex justify-between"><span class="text-gray-400">Amount:</span> <span class="font-bold text-emerald-600">₹${amount}</span></div>
           <div class="flex justify-between"><span class="text-gray-400">Status:</span> <span id="pay-status-badge" class="font-bold text-amber-500">PENDING ADMIN APPROVAL</span></div>
         </div>

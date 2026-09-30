@@ -301,7 +301,7 @@ window.startSubjectMockTest = async function(subjectCode, subjectName, semester 
   const hasAccess = pm && pm.hasMockAccess(subjectCode);
 
   if (!hasAccess) {
-    // Open ₹29 Mock Test Paywall Modal with UPI 8053122848@ptyes
+    // Open ₹29 Mock Test Paywall Modal with UPI mk9817223@okicici
     if (pm) {
       pm.openCheckoutModal('mock_test_29', subjectCode);
       return;

@@ -569,3 +569,62 @@ class UserService:
         except Exception:
             pass
         return db_updated or file_updated
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Student Activities & Responses Tracking
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @classmethod
+    def record_user_activity(
+        cls,
+        user_id: str,
+        activity_type: str,
+        title: str,
+        subject_code: Optional[str] = None,
+        details: Optional[Any] = None
+    ) -> Dict[str, Any]:
+        """Record user activities and responses (mock tests, generated assets, AI chats)."""
+        now = time.time()
+        act = {
+            "id": f"act_{uuid.uuid4().hex[:10]}",
+            "user_id": user_id or "guest",
+            "activity_type": activity_type,
+            "title": title,
+            "subject_code": subject_code,
+            "details": details or {},
+            "timestamp": now,
+            "formatted_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
+        }
+        Database.save_activity(act)
+        return act
+
+    @classmethod
+    def get_user_activities(cls, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieve all saved activities and responses for a user."""
+        return Database.list_user_activities(user_id, limit=limit)
+
+    @classmethod
+    def get_user_purchases(cls, user_id: str) -> Dict[str, Any]:
+        """Retrieve user's active plan, purchased subjects, and transaction history."""
+        user = Database.get_user_by_id(user_id)
+        if not user:
+            udata = cls._read_users().get("users", {})
+            user = udata.get(user_id, {})
+
+        txs = Database.get_transactions_by_user(user_id)
+        approved_txs = [t for t in txs if t.get("status") == "approved"]
+        pending_txs = [t for t in txs if t.get("status") == "pending"]
+
+        purchased_subjects = user.get("purchased_subjects", []) if user else []
+
+        return {
+            "user_id": user_id,
+            "is_pro": bool(user.get("is_pro", False)) if user else False,
+            "active_plan": user.get("active_plan", "free") if user else "free",
+            "plan_name": user.get("plan_name", "Free Starter") if user else "Free Starter",
+            "purchased_subjects": purchased_subjects,
+            "approved_purchases": approved_txs,
+            "pending_purchases": pending_txs,
+            "all_transactions": txs
+        }
+

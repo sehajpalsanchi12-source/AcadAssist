@@ -232,6 +232,14 @@ const AcadChat = {
       this.removeTyping();
       this.addMessage('bot', data.reply || 'Sorry, no response received.');
       this.history.push({ role: 'model', text: data.reply || '' });
+      if (window.AuthManager && data.reply) {
+        window.AuthManager.recordActivity(
+          'ai_chat',
+          `AI Chat: "${message.slice(0, 35)}..."`,
+          this.currentSubject,
+          { question: message, reply: data.reply }
+        );
+      }
     } catch (e) {
       this.removeTyping();
       this.addMessage('bot', '⚠️ Network error. Please check your connection and try again!');

@@ -1,6 +1,19 @@
 {
   "inquiries": [
     {
+      "id": "inq_46ea2cbbc8",
+      "service_category": "EduCode Completion Support",
+      "student_name": "Test Student Verto",
+      "phone": "9876543211",
+      "email": "test.verto@lpu.in",
+      "subject_or_topic": "CSE205 DSA",
+      "details": "Need debugging help with DSA graph traversal and dynamic programming project.",
+      "deadline": "2026-10-15",
+      "status": "New",
+      "timestamp": 1790776592.563765,
+      "formatted_time": "2026-09-30 19:26:32"
+    },
+    {
       "id": "inq_f5d0ba9f3f",
       "service_category": "EduCode Completion Support",
       "student_name": "Test Student Verto",

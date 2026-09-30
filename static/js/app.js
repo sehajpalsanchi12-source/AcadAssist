@@ -326,6 +326,14 @@ window.startSubjectMockTest = async function(subjectCode, subjectName, semester 
     if (window.ExamSimulator) {
       window.ExamSimulator.init(paper);
     }
+    if (window.AuthManager && paper) {
+      window.AuthManager.recordActivity(
+        'generated_exam',
+        `Generated Exam: ${subjectCode} (${paper.exam_title || 'Mock Test'})`,
+        subjectCode,
+        { exam_title: paper.exam_title, total_marks: paper.total_marks }
+      );
+    }
   } catch (err) {
     alert("Failed to synthesize mock test for " + subjectCode);
   } finally {
@@ -378,6 +386,14 @@ window.triggerAssetGeneration = async function(assetType, code, name, sem = 'Sem
 
     if (!res.ok) throw new Error('Asset generation failed.');
     const data = await res.json();
+    if (window.AuthManager) {
+      window.AuthManager.recordActivity(
+        `generated_${assetType}`,
+        `${assetType.replace('_', ' ').toUpperCase()}: ${code} (${unit})`,
+        code,
+        { asset_type: assetType, subject_name: name, unit: unit }
+      );
+    }
 
     renderStudyAsset(data);
   } catch (e) {

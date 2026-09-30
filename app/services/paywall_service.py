@@ -363,6 +363,7 @@ class PaywallService:
     def update_transaction_status(cls, tx_id: str, new_status: str) -> bool:
         """Update transaction status in database and sync."""
         db_updated = Database.update_transaction_status(tx_id, new_status)
+        tx = Database.get_transaction_by_id(tx_id)
 
         cls._ensure_files()
         file_updated = False
@@ -385,19 +386,38 @@ class PaywallService:
             if file_updated:
                 with open(TRANSACTIONS_FILE, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2)
-
-                if user_to_grant and user_to_grant != "guest" and plan_to_grant:
-                    from app.services.user_service import UserService
-                    UserService.grant_user_plan(
-                        user_id=user_to_grant,
-                        plan_id=plan_to_grant["plan_id"],
-                        plan_name=plan_to_grant["plan_name"],
-                        duration_days=180,
-                        amount_paid=plan_to_grant["amount"],
-                        subject_code=plan_to_grant.get("subject_code")
-                    )
         except Exception:
             pass
+
+        # If SQLite has the transaction, use that data
+        if tx and new_status == "approved":
+            user_to_grant = user_to_grant or tx.get("user_id")
+            plan_to_grant = plan_to_grant or tx
+
+        if new_status == "approved" and plan_to_grant:
+            from app.services.user_service import UserService
+            # Try to link by reg_no if user_id was guest
+            if (not user_to_grant or user_to_grant == "guest") and plan_to_grant.get("reg_no"):
+                u = Database.get_user_by_reg_no(plan_to_grant.get("reg_no"))
+                if u:
+                    user_to_grant = u.get("id")
+
+            if user_to_grant and user_to_grant != "guest":
+                UserService.grant_user_plan(
+                    user_id=user_to_grant,
+                    plan_id=plan_to_grant["plan_id"],
+                    plan_name=plan_to_grant["plan_name"],
+                    duration_days=180,
+                    amount_paid=float(plan_to_grant.get("amount", 0)),
+                    subject_code=plan_to_grant.get("subject_code")
+                )
+                UserService.record_user_activity(
+                    user_id=user_to_grant,
+                    activity_type="purchase",
+                    title=f"Verified Purchase: {plan_to_grant['plan_name']} (₹{plan_to_grant.get('amount')})",
+                    subject_code=plan_to_grant.get("subject_code"),
+                    details=plan_to_grant
+                )
 
         return db_updated or file_updated
 

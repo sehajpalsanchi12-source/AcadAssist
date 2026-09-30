@@ -557,6 +557,11 @@ const ExamSimulator = {
     // Send mock test results to backend so student profile & admin dashboard record it
     try {
       const u = window.AuthManager?.currentUser;
+      const fullSummary = {
+        ...stats,
+        user_answers: this.userAnswers,
+        completed_at: new Date().toISOString()
+      };
       fetch('/api/mock-test/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -570,9 +575,17 @@ const ExamSimulator = {
           total_marks: totalPossible,
           percentage: parseFloat(percentage),
           grade: grade,
-          summary: stats
+          summary: fullSummary
         })
       });
+      if (window.AuthManager) {
+        window.AuthManager.recordActivity(
+          'mock_test',
+          `Mock Test: ${this.currentPaper.subject_code || 'Exam'} (${score}/${totalPossible} - ${grade})`,
+          this.currentPaper.subject_code,
+          fullSummary
+        );
+      }
     } catch (e) {
       console.warn("Failed to record mock test:", e);
     }

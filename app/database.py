@@ -8,6 +8,7 @@ import os
 import json
 import sqlite3
 import time
+import uuid
 from typing import Dict, List, Optional, Any
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -168,6 +169,22 @@ class Database:
         """)
         cur.execute("CREATE INDEX IF NOT EXISTS idx_visits_time ON analytics_visits(timestamp);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_visits_session ON analytics_visits(session_id);")
+
+        # 7. User Activities & Saved Responses Table
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_activities (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            activity_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            subject_code TEXT,
+            details_json TEXT,
+            timestamp REAL NOT NULL,
+            formatted_time TEXT NOT NULL
+        );
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_act_user ON user_activities(user_id, timestamp DESC);")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_act_type ON user_activities(activity_type);")
 
         conn.commit()
         conn.close()
@@ -535,6 +552,24 @@ class Database:
         conn.close()
         return updated
 
+    @classmethod
+    def get_transaction_by_id(cls, tx_id: str) -> Optional[Dict[str, Any]]:
+        conn = cls.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM transactions WHERE tx_id = ?", (tx_id,))
+        row = cur.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    @classmethod
+    def get_transactions_by_user(cls, user_id: str) -> List[Dict[str, Any]]:
+        conn = cls.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC", (user_id,))
+        rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
     # ─────────────────────────────────────────────────────────────────────────
     # Mock Tests Operations
     # ─────────────────────────────────────────────────────────────────────────
@@ -801,3 +836,59 @@ class Database:
             "active_today": active_24h,
             "recent_visits": recent
         }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # User Activities & Saved Responses Operations
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @classmethod
+    def save_activity(cls, act: Dict[str, Any]):
+        """Save a student's activity and response (mock tests, generated assets, AI chats)."""
+        conn = cls.get_connection()
+        cur = conn.cursor()
+        details = act.get("details", {})
+        details_str = json.dumps(details) if isinstance(details, (dict, list)) else json.dumps({"raw": str(details)})
+        act_id = act.get("id") or f"act_{uuid.uuid4().hex[:10]}"
+        now = float(act.get("timestamp", time.time()))
+        fmt = act.get("formatted_time", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now)))
+        cur.execute("""
+        INSERT OR REPLACE INTO user_activities (
+            id, user_id, activity_type, title, subject_code, details_json, timestamp, formatted_time
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            act_id,
+            act.get("user_id", "guest"),
+            act.get("activity_type", "general"),
+            act.get("title", "Student Activity"),
+            act.get("subject_code"),
+            details_str,
+            now,
+            fmt
+        ))
+        conn.commit()
+        conn.close()
+        return act_id
+
+    @classmethod
+    def list_user_activities(cls, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """List activities and saved responses for a user."""
+        conn = cls.get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+        SELECT * FROM user_activities
+        WHERE user_id = ?
+        ORDER BY timestamp DESC
+        LIMIT ?
+        """, (user_id, limit))
+        rows = cur.fetchall()
+        conn.close()
+        results = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["details"] = json.loads(d.get("details_json") or "{}")
+            except Exception:
+                d["details"] = {}
+            results.append(d)
+        return results
+

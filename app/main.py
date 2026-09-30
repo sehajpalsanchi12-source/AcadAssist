@@ -1,7 +1,7 @@
 import os
 import json
 import httpx
-from typing import Optional
+from typing import Optional, Any, Dict, List
 from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -591,6 +591,38 @@ class UpdateProfileRequest(BaseModel):
 async def update_user_profile(req: UpdateProfileRequest):
     """Update student registration number or phone."""
     return UserService.update_profile(req.user_id, req.lpu_reg_no, req.phone, req.name)
+
+# ── User Activities & Purchases History ───────────────────────────────────
+
+class UserActivityRequest(BaseModel):
+    user_id: Optional[str] = None
+    activity_type: str
+    title: str
+    subject_code: Optional[str] = None
+    details: Optional[Any] = None
+
+@app.post("/api/user/activity")
+async def record_user_activity_endpoint(req: UserActivityRequest):
+    """Record student activity or response (mock tests, study assets, chat)."""
+    act = UserService.record_user_activity(
+        user_id=req.user_id or "guest",
+        activity_type=req.activity_type,
+        title=req.title,
+        subject_code=req.subject_code,
+        details=req.details
+    )
+    return {"success": True, "activity": act}
+
+@app.get("/api/user/activities")
+async def get_user_activities_endpoint(user_id: str = Query(...), limit: int = Query(50)):
+    """Retrieve saved activities and question responses for a student account."""
+    activities = UserService.get_user_activities(user_id, limit=limit)
+    return {"success": True, "activities": activities}
+
+@app.get("/api/user/purchases")
+async def get_user_purchases_endpoint(user_id: str = Query(...)):
+    """Retrieve all verified purchases, subject passes, and transaction receipts."""
+    return UserService.get_user_purchases(user_id)
 
 # ── Paywall & UPI Payment Endpoints (Destination: 7719730804@ptyes) ─────────
 

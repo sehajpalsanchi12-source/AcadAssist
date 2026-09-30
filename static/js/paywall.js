@@ -202,7 +202,7 @@ const PaywallManager = {
     } else {
       if (badge) {
         badge.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700">
-          Mock: ₹29 • Subject: ₹49
+          Mock: ₹29 • Subject: ₹59
         </span>`;
       }
       if (upgradeNavBtn) upgradeNavBtn.classList.remove('hidden');
@@ -280,8 +280,8 @@ const PaywallManager = {
     let price = 29;
     let title = 'Authentic LPU Mock Test Simulator Pass (₹29)';
     if (planId === 'subject_pass_49' || planId === 'midterm_mock_49') {
-      price = 49;
-      title = 'Single Subject Complete Master Pack (₹49)';
+      price = 59;
+      title = 'Single Subject Complete Master Pack (₹59)';
     } else if (planId === 'educode_99') {
       price = 99;
       title = 'EduCode Completion Support Pass (₹99)';

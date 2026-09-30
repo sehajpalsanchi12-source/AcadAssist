@@ -24,10 +24,10 @@ class PaywallService:
         "subject_pass_49": {
             "id": "subject_pass_49",
             "name": "Single Subject Complete Master Pack",
-            "price_inr": 49,
+            "price_inr": 59,
             "original_price_inr": 149,
             "period": "Per Subject (Lifetime Access)",
-            "badge": "Subject Pass 📚 ₹49",
+            "badge": "Subject Pass 📚 ₹59",
             "highlight": True,
             "features": [
                 "Full Comprehensive Notes for all 6 Units",

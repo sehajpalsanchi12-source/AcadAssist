@@ -688,6 +688,7 @@ class CheckoutRequest(BaseModel):
 
 @app.post("/api/paywall/checkout")
 async def checkout(req: CheckoutRequest):
+    import asyncio
     res = PaywallService.process_checkout(
         plan_id=req.plan_id,
         payment_method=req.payment_method,
@@ -701,7 +702,45 @@ async def checkout(req: CheckoutRequest):
     )
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("message"))
+
+    # Auto-notify admin on WhatsApp when a real UPI payment is pending approval
+    if res.get("pending") and not res.get("verified"):
+        asyncio.create_task(_notify_admin_whatsapp(res, req))
+
     return res
+
+async def _notify_admin_whatsapp(res: dict, req):
+    """Send WhatsApp notification to admin (8053122848) when a pending payment needs approval."""
+    try:
+        callmebot_key = os.getenv("CALLMEBOT_API_KEY", "").strip()
+        admin_phone = "918053122848"
+        plan_name = res.get("plan", req.plan_id)
+        amount = res.get("amount_paid", "?")
+        utr = res.get("utr_ref", "N/A")
+        tx_id = res.get("transaction_id", "N/A")
+        student = req.user_name or "Student"
+        reg = req.reg_no or "N/A"
+        subj = req.subject_code or "General"
+
+        msg = (
+            f"🔔 AcadAssist Payment Pending!\n"
+            f"Student: {student} (Reg: {reg})\n"
+            f"Plan: {plan_name} | Subject: {subj}\n"
+            f"Amount: ₹{amount} | UTR: {utr}\n"
+            f"TxID: {tx_id}\n"
+            f"➡️ Login to admin panel to approve."
+        )
+        encoded_msg = msg.replace(" ", "%20").replace("\n", "%0A")
+
+        if callmebot_key:
+            url = f"https://api.callmebot.com/whatsapp.php?phone={admin_phone}&apikey={callmebot_key}&text={encoded_msg}"
+            async with httpx.AsyncClient(timeout=10) as client:
+                await client.get(url)
+        # Always log for admin visibility in server logs
+        print(f"[PAYMENT PENDING] {student} | {plan_name} | ₹{amount} | UTR:{utr} | TxID:{tx_id}")
+    except Exception as e:
+        print(f"[WA NOTIFY ERROR] {e}")
+
 
 @app.get("/api/paywall/verify")
 async def verify_token(token: Optional[str] = Query(None)):

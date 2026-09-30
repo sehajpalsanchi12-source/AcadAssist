@@ -183,13 +183,13 @@ async def run_tests():
         assert "salt" not in me_data.get("user", {})
         print(f"   ✓ Current user verified: {me_data['user']['email']}")
 
-        print("\n12. Testing Paywall Plans: GET /api/paywall/plans (Subject Pass ₹49 & Mock Test ₹29) ...")
+        print("\n12. Testing Paywall Plans: GET /api/paywall/plans (Subject Pass ₹59 & Mock Test ₹29) ...")
         r = await client.get(f"{BASE_URL}/api/paywall/plans")
         assert r.status_code == 200, f"Failed: {r.status_code}"
         plans = r.json()
         assert "subject_pass_49" in plans
-        assert plans["subject_pass_49"]["price_inr"] == 49
-        print(f"   ✓ Verified ₹49 Single Subject Master Pass exists! ({plans['subject_pass_49']['name']})")
+        assert plans["subject_pass_49"]["price_inr"] == 59
+        print(f"   ✓ Verified ₹59 Single Subject Master Pass exists! ({plans['subject_pass_49']['name']})")
         assert "mock_test_29" in plans
         assert plans["mock_test_29"]["price_inr"] == 29
         print(f"   ✓ Verified ₹29 Mock Test Simulator Pass exists! ({plans['mock_test_29']['name']})")
@@ -221,7 +221,7 @@ async def run_tests():
         assert checkout_res["upi_destination"] == "8053122848@ptyes"
         print(f"   ✓ Mock Test Payment recorded: UTR={checkout_res['utr_ref']} | Amount=₹{checkout_res['amount_paid']}")
 
-        print("\n14b. Testing Subject Pass Checkout (₹49) to 8053122848@ptyes: POST /api/paywall/checkout ...")
+        print("\n14b. Testing Subject Pass Checkout (₹59) to 8053122848@ptyes: POST /api/paywall/checkout ...")
         r = await client.post(f"{BASE_URL}/api/paywall/checkout", json={
             "plan_id": "subject_pass_49",
             "payment_method": "upi",
@@ -236,7 +236,7 @@ async def run_tests():
         assert r.status_code == 200, f"Failed: {r.status_code}"
         checkout_sub_res = r.json()
         pro_token = checkout_sub_res.get("token")
-        assert checkout_sub_res["amount_paid"] == 49.0
+        assert checkout_sub_res["amount_paid"] == 59.0
         assert checkout_sub_res["upi_destination"] == "8053122848@ptyes"
         print(f"   ✓ Subject Pass Payment recorded: UTR={checkout_sub_res['utr_ref']} | Amount=₹{checkout_sub_res['amount_paid']} for CSE205")
         print(f"   ✓ Payment recorded: UTR={checkout_res['utr_ref']} | Amount=₹{checkout_res['amount_paid']}")

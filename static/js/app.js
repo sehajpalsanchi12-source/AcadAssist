@@ -227,13 +227,13 @@ function renderFilteredSubjects() {
         </div>
 
         <div class="space-y-2 pt-3 border-t border-gray-100 dark:border-slate-800">
-          <!-- Dual Paywall Buttons: Mock Test ₹29 & Subject Pass ₹49 -->
+          <!-- Dual Paywall Buttons: Mock Test ₹29 & Subject Pass ₹59 -->
           <div class="grid grid-cols-2 gap-2">
             <button onclick="startSubjectMockTest('${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="py-2.5 px-2 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-extrabold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1">
               <span>⚡ Mock Test (₹29)</span>
             </button>
             <button onclick="PaywallManager.openCheckoutModal('subject_pass_49', '${s.code}')" class="py-2.5 px-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1">
-              <span>📚 Subject Pass (₹49)</span>
+              <span>📚 Subject Pass (₹59)</span>
             </button>
           </div>
 

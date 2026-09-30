@@ -196,6 +196,10 @@ const PYQManager = {
     const viewer = document.getElementById("pyq-paper-viewer");
     if (!viewer) return;
 
+    const pm = window.PaywallManager;
+    const hasAccess = Boolean(pm && pm.hasSubjectAccess(p.subject_code));
+    const hasMock = Boolean(pm && (pm.hasMockAccess(p.subject_code) || pm.hasSubjectAccess(p.subject_code)));
+
     const partA = p.part_a || [];
     const partB = p.part_b || [];
     const partC = p.part_c || [];
@@ -235,7 +239,7 @@ const PYQManager = {
           <div class="flex flex-wrap items-center justify-between gap-2 pt-3 no-print border-t border-gray-100 dark:border-slate-800 mt-4">
             <div class="flex items-center gap-2">
               <button onclick="PYQManager.startMockFromPYQ('${p.paper_id}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-1.5">
-                <span>⚡ Test in Exam Simulator</span>
+                <span>⚡ Test in Exam Simulator ${hasMock ? '' : '(₹29)'}</span>
               </button>
               <button onclick="loadSubjectIntoExamGenerator('${p.subject_code}')" class="px-3.5 py-2 rounded-xl bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-xs font-bold text-gray-700 dark:text-slate-200 transition-colors">
                 <span>📝 Generate Variant</span>
@@ -243,13 +247,19 @@ const PYQManager = {
             </div>
 
             <div class="flex items-center gap-2">
-              <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-gray-700 dark:text-slate-200 flex items-center gap-1.5 transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                <span>🖨️ Print Paper</span>
-              </button>
-              <button onclick="PYQManager.toggleAllSolutions()" id="btn-toggle-all-solutions" class="px-3.5 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/40 text-xs font-bold text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800 transition-colors">
-                👁️ Reveal All Model Answers
-              </button>
+              ${hasAccess ? `
+                <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-gray-700 dark:text-slate-200 flex items-center gap-1.5 transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                  <span>🖨️ Print Paper</span>
+                </button>
+                <button onclick="PYQManager.toggleAllSolutions()" id="btn-toggle-all-solutions" class="px-3.5 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/40 text-xs font-bold text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800 transition-colors">
+                  👁️ Reveal All Model Answers
+                </button>
+              ` : `
+                <button onclick="PaywallManager.openCheckoutModal('subject_pass_49', '${p.subject_code}')" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
+                  <span>🔒 Unlock Solutions (₹59)</span>
+                </button>
+              `}
             </div>
           </div>
         </div>
@@ -289,17 +299,49 @@ const PYQManager = {
 
                   <!-- Solution toggle -->
                   <div class="pt-2 pl-6">
-                    <button onclick="PYQManager.toggleSolution('sol-part-a-${idx}')" class="text-xs font-bold text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1">
-                      <span>💡 View Solution & Explanation</span>
-                    </button>
-                    <div id="sol-part-a-${idx}" class="pyq-sol-box hidden mt-2 p-3 rounded-xl bg-pink-50/60 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800 text-xs text-gray-800 dark:text-slate-200 space-y-1">
-                      ${q.correct_option ? `<div><strong>Correct Answer:</strong> <span class="text-pink-600 dark:text-pink-400 font-bold">${q.correct_option}</span></div>` : ''}
-                      <div><strong>Explanation:</strong> ${q.solution}</div>
-                    </div>
+                    ${(hasAccess || idx < 2) ? `
+                      <button onclick="PYQManager.toggleSolution('sol-part-a-${idx}')" class="text-xs font-bold text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1">
+                        <span>💡 View Solution & Explanation</span>
+                      </button>
+                      <div id="sol-part-a-${idx}" class="pyq-sol-box hidden mt-2 p-3 rounded-xl bg-pink-50/60 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800 text-xs text-gray-800 dark:text-slate-200 space-y-1">
+                        ${q.correct_option ? `<div><strong>Correct Answer:</strong> <span class="text-pink-600 dark:text-pink-400 font-bold">${q.correct_option}</span></div>` : ''}
+                        <div><strong>Explanation:</strong> ${q.solution}</div>
+                      </div>
+                    ` : `
+                      <button onclick="PaywallManager.openCheckoutModal('subject_pass_49', '${p.subject_code}')" class="text-xs font-bold text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1">
+                        <span>🔒 Unlock Solution & Explanation (Subject Pass ₹59)</span>
+                      </button>
+                    `}
                   </div>
                 </div>
               `).join("")}
             </div>
+          </div>
+        ` : ''}
+
+        <!-- PAYWALL LOCK CARD FOR NON-SUBSCRIBERS -->
+        ${!hasAccess ? `
+          <div class="my-6 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 text-white border-2 border-indigo-500/50 shadow-2xl text-center space-y-4">
+            <div class="inline-flex p-3.5 rounded-2xl bg-indigo-500/20 text-3xl">🔒</div>
+            <div>
+              <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-pink-500/30 text-pink-300 border border-pink-400/40">
+                Subject Pass Required • ₹59
+              </span>
+              <h3 class="text-xl font-black text-white mt-3">
+                Full ${p.subject_code} Past Examination Solutions & Marking Schemes Locked
+              </h3>
+              <p class="text-xs sm:text-sm text-indigo-200 max-w-xl mx-auto mt-2 leading-relaxed">
+                Part B & Part C questions (5M, 10M & 20M), comprehensive step-by-step model solutions, official LPU evaluator marking rubrics, and high-yield question predictions are locked.
+              </p>
+            </div>
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button onclick="PaywallManager.openCheckoutModal('subject_pass_49', '${p.subject_code}')" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-black text-sm shadow-xl shadow-pink-500/30 transition-all flex items-center justify-center gap-2">
+                <span>⚡ Unlock ${p.subject_code} Pass (₹59)</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-indigo-300">
+              Instant activation via UPI: <strong class="text-white font-mono">mk9817223@okicici</strong> (GPay / PhonePe / Paytm)
+            </p>
           </div>
         ` : ''}
 
@@ -330,17 +372,23 @@ const PYQManager = {
 
                   <!-- Solution toggle -->
                   <div class="pt-2 pl-6">
-                    <button onclick="PYQManager.toggleSolution('sol-part-b-${idx}')" class="text-xs font-bold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
-                      <span>📖 View Step-by-Step Model Answer & Rubric</span>
-                    </button>
-                    <div id="sol-part-b-${idx}" class="pyq-sol-box hidden mt-3 p-4 rounded-xl bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 text-xs text-gray-800 dark:text-slate-200 space-y-2">
-                      <div class="font-semibold whitespace-pre-line">${q.solution}</div>
-                      ${q.rubric ? `
-                        <div class="pt-2 border-t border-orange-200 dark:border-orange-800/50 text-[11px] text-orange-800 dark:text-orange-300">
-                          <strong>LPU Marking Scheme:</strong> ${q.rubric}
-                        </div>
-                      ` : ''}
-                    </div>
+                    ${hasAccess ? `
+                      <button onclick="PYQManager.toggleSolution('sol-part-b-${idx}')" class="text-xs font-bold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
+                        <span>📖 View Step-by-Step Model Answer & Rubric</span>
+                      </button>
+                      <div id="sol-part-b-${idx}" class="pyq-sol-box hidden mt-3 p-4 rounded-xl bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 text-xs text-gray-800 dark:text-slate-200 space-y-2">
+                        <div class="font-semibold whitespace-pre-line">${q.solution}</div>
+                        ${q.rubric ? `
+                          <div class="pt-2 border-t border-orange-200 dark:border-orange-800/50 text-[11px] text-orange-800 dark:text-orange-300">
+                            <strong>LPU Marking Scheme:</strong> ${q.rubric}
+                          </div>
+                        ` : ''}
+                      </div>
+                    ` : `
+                      <button onclick="PaywallManager.openCheckoutModal('subject_pass_49', '${p.subject_code}')" class="text-xs font-bold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
+                        <span>🔒 Unlock Model Answer & Marking Scheme (₹59)</span>
+                      </button>
+                    `}
                   </div>
                 </div>
               `).join("")}
@@ -375,17 +423,23 @@ const PYQManager = {
 
                   <!-- Solution toggle -->
                   <div class="pt-2 pl-6">
-                    <button onclick="PYQManager.toggleSolution('sol-part-c-${idx}')" class="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1">
-                      <span>🔬 View Full Mathematical Proof / Implementation</span>
-                    </button>
-                    <div id="sol-part-c-${idx}" class="pyq-sol-box hidden mt-3 p-4 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 text-xs text-gray-800 dark:text-slate-200 space-y-2">
-                      <div class="font-semibold whitespace-pre-line leading-relaxed">${q.solution}</div>
-                      ${q.rubric ? `
-                        <div class="pt-2 border-t border-purple-200 dark:border-purple-800/50 text-[11px] text-purple-800 dark:text-purple-300">
-                          <strong>Step-by-step Evaluation Rubric:</strong> ${q.rubric}
-                        </div>
-                      ` : ''}
-                    </div>
+                    ${hasAccess ? `
+                      <button onclick="PYQManager.toggleSolution('sol-part-c-${idx}')" class="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1">
+                        <span>🔬 View Full Mathematical Proof / Implementation</span>
+                      </button>
+                      <div id="sol-part-c-${idx}" class="pyq-sol-box hidden mt-3 p-4 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 text-xs text-gray-800 dark:text-slate-200 space-y-2">
+                        <div class="font-semibold whitespace-pre-line leading-relaxed">${q.solution}</div>
+                        ${q.rubric ? `
+                          <div class="pt-2 border-t border-purple-200 dark:border-purple-800/50 text-[11px] text-purple-800 dark:text-purple-300">
+                            <strong>Step-by-step Evaluation Rubric:</strong> ${q.rubric}
+                          </div>
+                        ` : ''}
+                      </div>
+                    ` : `
+                      <button onclick="PaywallManager.openCheckoutModal('subject_pass_49', '${p.subject_code}')" class="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1">
+                        <span>🔒 Unlock Full Proof & Rubric (₹59)</span>
+                      </button>
+                    `}
                   </div>
                 </div>
               `).join("")}
@@ -406,6 +460,15 @@ const PYQManager = {
   startMockFromPYQ(paperId) {
     if (!this.currentPaper || this.currentPaper.paper_id !== paperId) return;
     const p = this.currentPaper;
+
+    const pm = window.PaywallManager;
+    const hasMock = Boolean(pm && (pm.hasMockAccess(p.subject_code) || pm.hasSubjectAccess(p.subject_code)));
+    if (!hasMock) {
+      if (pm) {
+        pm.openCheckoutModal('mock_test_29', p.subject_code);
+      }
+      return;
+    }
 
     if (!window.ExamSimulator) {
       alert("Exam simulator module not ready. Please try again.");
@@ -473,6 +536,15 @@ const PYQManager = {
   },
 
   toggleSolution(elementId) {
+    const pm = window.PaywallManager;
+    const hasAccess = Boolean(pm && this.currentPaper && pm.hasSubjectAccess(this.currentPaper.subject_code));
+    if (!hasAccess) {
+      if (pm && this.currentPaper) {
+        pm.openCheckoutModal('subject_pass_49', this.currentPaper.subject_code);
+      }
+      return;
+    }
+
     const el = document.getElementById(elementId);
     if (el) {
       el.classList.toggle("hidden");
@@ -480,6 +552,15 @@ const PYQManager = {
   },
 
   toggleAllSolutions() {
+    const pm = window.PaywallManager;
+    const hasAccess = Boolean(pm && this.currentPaper && pm.hasSubjectAccess(this.currentPaper.subject_code));
+    if (!hasAccess) {
+      if (pm && this.currentPaper) {
+        pm.openCheckoutModal('subject_pass_49', this.currentPaper.subject_code);
+      }
+      return;
+    }
+
     const boxes = document.querySelectorAll(".pyq-sol-box");
     const anyHidden = Array.from(boxes).some(b => b.classList.contains("hidden"));
     boxes.forEach(b => {

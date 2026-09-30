@@ -98,12 +98,23 @@ class ExamGenerator:
         """Intelligent heuristic generator that extracts key concepts, definitions, and rules."""
 
         # 1. Extract concepts & paragraphs from text
-        sentences = [s.strip() for s in re.split(r"[.\n]+", text_content) if len(s.strip()) > 25]
-        paragraphs = [p.strip() for p in text_content.split("\n\n") if len(p.strip()) > 50]
+        raw_sentences = re.split(r"(?<=[.!?])\s+|\n{2,}", text_content)
+        sentences = []
+        for s in raw_sentences:
+            s_clean = re.sub(r"^[-–—\s*•\d\.\)]+", "", s).strip()
+            if len(s_clean) > 25 and not s_clean.startswith("--- Page") and not s_clean.startswith("Page "):
+                sentences.append(s_clean)
+
+        paragraphs = [p.strip() for p in text_content.split("\n\n") if len(p.strip()) > 50 and not p.strip().startswith("--- Page")]
         
         # Identify key terms (capitalized words, technical terms, acronyms)
         words = re.findall(r"\b[A-Z][a-zA-Z0-9_\-]{2,}\b|\b[a-z]{4,}\b", text_content)
-        common_stops = {"this", "that", "with", "from", "have", "were", "which", "there", "their", "about", "using", "these", "could", "would", "other", "after", "before", "first", "second"}
+        common_stops = {
+            "this", "that", "with", "from", "have", "were", "which", "there", "their", "about", 
+            "using", "these", "could", "would", "other", "after", "before", "first", "second",
+            "page", "section", "chapter", "table", "figure", "total", "notes", "lpu", "the",
+            "and", "for", "all", "any", "not", "are", "can", "was", "but", "into", "also"
+        }
         keywords = [w for w in words if w.lower() not in common_stops]
         top_keywords = list(dict.fromkeys(keywords))[:30]
         if not top_keywords:
@@ -125,29 +136,29 @@ class ExamGenerator:
                     "pyq_tag": item.get("pyq_tag", random.choice(cls.PYQ_YEARS))
                 })
 
-        # Fill remaining MCQs from text analysis
+        # Fill MCQs from document text analysis
         q_idx = len(mcqs) + 1
         for sentence in sentences:
             if len(mcqs) >= mcq_count:
                 break
             
-            # Check for definitional or comparative sentences
-            is_definition = any(k in sentence.lower() for k in [" is defined as", " is a ", " refers to", " used for", " consists of", " responsible for"])
-            if is_definition or len(sentence) > 40:
+            # Check for definitional or informative sentences
+            is_definition = any(k in sentence.lower() for k in [" is ", " are ", " defined as", " refers to", " used for", " consists of", " responsible for", " provides ", " implements "])
+            if is_definition or len(sentence) > 35:
                 # Pick a focus term from sentence
                 matched_terms = [t for t in top_keywords if t.lower() in sentence.lower()]
                 target_term = matched_terms[0] if matched_terms else (top_keywords[q_idx % len(top_keywords)])
                 
-                # Formulate Question
-                question_text = f"In the context of {subject_name}, which statement accurately characterizes '{target_term}'?"
+                # Formulate Question directly from document sentence
+                question_text = f"According to the study material on {subject_name}, which statement accurately describes '{target_term}'?"
                 correct_ans = sentence.strip()
-                if len(correct_ans) > 130:
-                    correct_ans = correct_ans[:127] + "..."
+                if len(correct_ans) > 135:
+                    correct_ans = correct_ans[:132] + "..."
 
                 # Distractors
                 distractors = [
                     f"It primarily executes static sequential validation without {target_term} intervention.",
-                    f"It serves as a deprecated fallback protocol in standard LPU curriculum guidelines.",
+                    f"It serves as a deprecated fallback protocol in standard curriculum guidelines.",
                     f"It strictly invalidates runtime memory bounds without exception logging."
                 ]
                 
@@ -173,7 +184,7 @@ class ExamGenerator:
                     "question": question_text,
                     "options": raw_options,
                     "correct_option": correct_letter,
-                    "explanation": f"Option ({correct_letter}) is correct: '{sentence.strip()}'. The other options represent inaccurate architectural characteristics.",
+                    "explanation": f"Option ({correct_letter}) is correct as stated in the uploaded material: '{sentence.strip()}'.",
                     "difficulty": "Medium" if q_idx % 2 == 0 else "Hard",
                     "topic": target_term,
                     "pyq_tag": random.choice(cls.PYQ_YEARS)
@@ -205,40 +216,43 @@ class ExamGenerator:
         for s_i in range(short_count):
             kw1 = top_keywords[(s_i * 2) % len(top_keywords)]
             kw2 = top_keywords[(s_i * 2 + 1) % len(top_keywords)]
+            matching_sentences = [s for s in sentences if kw1.lower() in s.lower()]
+            doc_excerpt = matching_sentences[0] if matching_sentences else (sentences[s_i % len(sentences)] if sentences else f"{kw1} is a fundamental concept in {subject_name}.")
             
             # Alternate question archetypes common in LPU exams
             if s_i % 3 == 0:
-                q_title = f"Differentiate between {kw1} and {kw2} with suitable examples or diagrams."
+                q_title = f"Differentiate between '{kw1}' and '{kw2}' based on the provided material with suitable examples or diagrams."
                 model_ans = (
-                    f"**1. Core Definition:**\n"
-                    f"• **{kw1}:** Represents the primary structural mechanism designed for systematic state management and execution.\n"
-                    f"• **{kw2}:** Serves as an auxiliary construct optimized for specific operational constraints.\n\n"
+                    f"**1. Core Definition (Document Excerpt):**\n"
+                    f"• **{kw1}:** {doc_excerpt}\n"
+                    f"• **{kw2}:** Serves as a complementary construct for specialized workloads.\n\n"
                     f"**2. Comparison Table:**\n"
                     f"| Parameter | {kw1} | {kw2} |\n"
                     f"|---|---|---|\n"
-                    f"| Time Complexity | O(1) / O(log n) typical | O(n) dependent on workload |\n"
+                    f"| Primary Role | Core functionality | Optimization / Interface |\n"
                     f"| Memory Footprint | Static / Allocated once | Dynamic heap / stack allocation |\n"
                     f"| Usage Scope | Core architectural layer | Extension / client interaction |\n\n"
                     f"**3. Practical Illustration:**\n"
-                    f"In real-world {subject_name} implementations, {kw1} is preferred when predictable throughput is critical, whereas {kw2} provides flexibility during dynamic reconfigurations."
+                    f"In real-world {subject_name} applications, {kw1} provides structural determinism, whereas {kw2} handles runtime variations."
                 )
                 rubric = "• Definition & Conceptual Clarity: 1.5 Marks\n• Comparison Matrix (at least 3 valid points): 2.0 Marks\n• Practical Example / Real-world Context: 1.5 Marks"
             elif s_i % 3 == 1:
-                q_title = f"Explain the working principle and architectural lifecycle of {kw1} in {subject_name}."
+                q_title = f"Explain the working principle and operational characteristics of '{kw1}' as outlined in the study notes."
                 model_ans = (
-                    f"**1. Working Principle:**\n"
-                    f"{kw1} operates by abstracting low-level operations into structured phases: Initialization, Processing, and State Finalization.\n\n"
+                    f"**1. Working Principle & Document Context:**\n"
+                    f"{doc_excerpt}\n\n"
                     f"**2. Step-by-Step Lifecycle:**\n"
                     f"1. **Initialization:** Allocation of necessary resources and boundary checking.\n"
                     f"2. **Execution Phase:** Evaluation of input parameters against validation rules.\n"
                     f"3. **Termination & Cleanup:** Returning status codes and releasing held locks.\n\n"
-                    f"**3. Key Benefits:** Minimizes overhead, avoids deadlock conditions, and guarantees deterministic behavior under high load."
+                    f"**3. Key Benefits:** Minimizes overhead, avoids deadlock conditions, and guarantees deterministic behavior."
                 )
                 rubric = "• Principle explanation: 2.0 Marks\n• Lifecycle flow / diagram steps: 2.0 Marks\n• Significance & LPU exam points: 1.0 Mark"
             else:
-                q_title = f"Analyze the impact of {kw1} on overall system efficiency and error handling."
+                q_title = f"Analyze the impact of '{kw1}' on overall system efficiency and error handling in {subject_name}."
                 model_ans = (
-                    f"**1. System Efficiency:** Incorporating {kw1} reduces latency by caching recurring results and minimizing redundant traversals.\n\n"
+                    f"**1. System Efficiency & Context:**\n"
+                    f"{doc_excerpt}\n\n"
                     f"**2. Exception / Boundary Scenarios:** Robust handling prevents cascade failures, ensuring graceful degradation.\n\n"
                     f"**3. Best Practices:** Adhere to defensive programming, enforce strict type checking, and log anomalous deviations."
                 )
@@ -333,10 +347,14 @@ class ExamGenerator:
         """Call Gemini API if key is provided by user or environment."""
         prompt = f"""
 You are an expert exam paper setter for Lovely Professional University (LPU).
-Generate an examination paper for:
+Generate an authentic examination paper based ON THE PROVIDED STUDY MATERIAL.
+
 Subject Code: {subject_code}
 Subject Name: {subject_name}
 Exam Format: {exam_type.upper()} (aligned with LPU Examination Guidelines & Bloom's Taxonomy)
+
+CRITICAL INSTRUCTION:
+Generate ALL questions, options, step-by-step explanations, short conceptual questions, and long analytical problems EXCLUSIVELY based on the facts, definitions, algorithms, and concepts in the STUDY MATERIAL CONTENT below. Do NOT use generic or out-of-context questions.
 
 STUDY MATERIAL CONTENT:
 \"\"\"
@@ -344,8 +362,8 @@ STUDY MATERIAL CONTENT:
 \"\"\"
 
 Requirements:
-1. Generate exactly {mcq_count} MCQs (Section A). Each MCQ must have 4 options (A, B, C, D), correct option, step-by-step explanation, difficulty, and an LPU PYQ tag.
-2. Generate exactly {short_count} Short conceptual questions (Section B, 5 marks each) with model answers and marking rubric.
+1. Generate exactly {mcq_count} MCQs (Section A). Each MCQ must test a specific concept from the material, have 4 options (A, B, C, D), correct option, step-by-step explanation referencing the text, difficulty, and an LPU PYQ tag.
+2. Generate exactly {short_count} Short conceptual questions (Section B, 5 marks each) directly derived from the material, with model answers and marking rubric.
 3. Generate exactly {long_count} Long analytical questions (Section C, 10 marks each) with Option A and Option B (internal choice), comprehensive model solution and marking rubric.
 
 Respond ONLY with valid JSON with this exact schema:
@@ -389,7 +407,12 @@ Respond ONLY with valid JSON with this exact schema:
   ]
 }}
 """
-        models_to_try = ["gemini-3.5-flash", "gemini-3-flash-preview"]
+        models_to_try = [
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemini-3.8-flash",
+            "gemini-3.5-flash"
+        ]
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json"}
@@ -398,7 +421,7 @@ Respond ONLY with valid JSON with this exact schema:
         for model in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             try:
-                async with httpx.AsyncClient(timeout=6.0) as client:
+                async with httpx.AsyncClient(timeout=25.0) as client:
                     resp = await client.post(url, json=payload)
                     if resp.status_code == 200:
                         result = resp.json()

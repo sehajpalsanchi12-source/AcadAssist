@@ -274,6 +274,16 @@ function renderFilteredSubjects() {
 }
 
 window.openPYQForSubject = function(code) {
+  const pm = window.PaywallManager;
+  const hasAccess = pm && pm.hasSubjectAccess(code);
+
+  if (!hasAccess) {
+    if (pm) {
+      pm.openCheckoutModal('subject_pass_49', code);
+      return;
+    }
+  }
+
   switchTab('tab-pyq');
   if (window.PYQManager) {
     window.PYQManager.selectSubject(code);

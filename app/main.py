@@ -481,9 +481,11 @@ async def generate_exam(
     if text_content and text_content.strip():
         extracted_text = (extracted_text + "\n\n" + text_content.strip()).strip()
 
-    # If no text provided, fetch study notes directly from notes.lpuverto.xyz!
+    has_custom_doc = bool((file and file.filename) or (text_content and text_content.strip()))
+
+    # If no custom text provided, fetch study notes directly from notes.lpuverto.xyz!
     lpu_mcqs = []
-    if fetch_lpuverto_data:
+    if fetch_lpuverto_data and not has_custom_doc:
         try:
             # Try fetching real unit MCQs from notes.lpuverto.xyz
             lpu_mcqs = await LPUVertoService.get_unit_mcqs(semester, subject_code, unit)
@@ -509,7 +511,7 @@ async def generate_exam(
         difficulty=difficulty,
         negative_marking=negative_marking,
         is_pro_user=is_pro,
-        lpu_verto_mcqs=lpu_mcqs if fetch_lpuverto_data else None
+        lpu_verto_mcqs=lpu_mcqs if (fetch_lpuverto_data and not has_custom_doc) else None
     )
 
     return paper

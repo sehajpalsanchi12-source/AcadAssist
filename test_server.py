@@ -438,6 +438,30 @@ async def run_tests():
         assert me_data.get("user", {}).get("email") == unique_email
         print(f"   ✓ New user saved & retrieved from real database instantly: {me_data['user']['email']}")
 
+        # Clean up ephemeral test artifacts so test runs do not artificially inflate real database revenue
+        try:
+            import json
+            import sqlite3
+            from app.database import Database
+            conn = sqlite3.connect("data/acadassist.db")
+            cur = conn.cursor()
+            cur.execute("DELETE FROM transactions WHERE utr_ref IN ('UTR299827361829', 'UTR499827361849')")
+            cur.execute("DELETE FROM users WHERE email = ?", (unique_email,))
+            conn.commit()
+            conn.close()
+            with open("data/transactions.json", "r", encoding="utf-8") as f:
+                tx_data = json.load(f)
+            tx_data["transactions"] = [t for t in tx_data.get("transactions", []) if not (t.get("utr_ref", "").startswith("UTR299") or t.get("utr_ref", "").startswith("UTR499"))]
+            with open("data/transactions.json", "w", encoding="utf-8") as f:
+                json.dump(tx_data, f, indent=2)
+            with open("data/users.json", "r", encoding="utf-8") as f:
+                u_data = json.load(f)
+            u_data["users"] = {k: v for k, v in u_data.get("users", {}).items() if v.get("email") != unique_email}
+            with open("data/users.json", "w", encoding="utf-8") as f:
+                json.dump(u_data, f, indent=2)
+        except Exception as e:
+            print(f"   (Notice: test cleanup: {e})")
+
         print("\n🎉 ALL 30 EXTENSIVE END-TO-END TESTS PASSED WITH 100% SUCCESS!")
 
 if __name__ == "__main__":

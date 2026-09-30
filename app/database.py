@@ -469,6 +469,9 @@ class Database:
     @classmethod
     def _row_to_user(cls, row: sqlite3.Row) -> Dict[str, Any]:
         d = dict(row)
+        d["user_id"] = d.get("id")
+        d["registration_number"] = d.get("lpu_reg_no") or d.get("registration_number")
+        d["reg_no"] = d.get("lpu_reg_no") or d.get("reg_no")
         d["is_pro"] = bool(d.get("is_pro", 0))
         try:
             d["purchased_subjects"] = json.loads(d.get("purchased_subjects") or "[]")
@@ -551,6 +554,16 @@ class Database:
         conn.commit()
         conn.close()
         return updated
+
+    @classmethod
+    def delete_transaction(cls, tx_id: str) -> bool:
+        conn = cls.get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM transactions WHERE tx_id = ?", (tx_id,))
+        deleted = cur.rowcount > 0
+        conn.commit()
+        conn.close()
+        return deleted
 
     @classmethod
     def get_transaction_by_id(cls, tx_id: str) -> Optional[Dict[str, Any]]:
@@ -823,17 +836,12 @@ class Database:
 
         conn.close()
 
-        # Guarantee at least 1 active visitor if admin is on dashboard
-        active_now = max(1, active_15m)
-        active_24h = max(1, active_today)
-        total_v = max(total_visits, 12)
-        unique_v = max(unique_visitors, 8)
-
+        # Real platform visitor counts according to full history
         return {
-            "total_visits": total_v,
-            "unique_visitors": unique_v,
-            "active_now": active_now,
-            "active_today": active_24h,
+            "total_visits": int(total_visits),
+            "unique_visitors": int(unique_visitors),
+            "active_now": int(active_15m),
+            "active_today": int(active_today),
             "recent_visits": recent
         }
 

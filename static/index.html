@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AcadAssist — Simplifying Academic Work | Notes, MCQs, Slides & LPU Exam Prep</title>
-  <meta name="description" content="AcadAssist: Simplifying Academic Work. Preloaded LPU subjects from lpuverto.xyz, custom courses, comprehensive notes, slides, short cram notes, roadmaps, and authentic LPU exam papers.">
+  <meta name="description" content="AcadAssist: Simplifying Academic Work. Preloaded LPU subjects, custom courses, comprehensive notes, slides, short cram notes, roadmaps, and authentic LPU exam papers.">
   <link rel="icon" type="image/png" href="/img/acadassist-icon-transparent.png">
 
   <!-- Tailwind CSS CDN -->
@@ -37,6 +37,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #printable-pyq-paper, #printable-pyq-paper *,
+      #printable-study-material, #printable-study-material * {
+        visibility: visible !important;
+      }
+      #printable-pyq-paper, #printable-study-material {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 24px !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: white !important;
+        color: black !important;
+      }
+      .no-print, nav, header, footer, #chat-fab, #acad-chat-window, .sticky {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
@@ -44,7 +68,7 @@
 
   <!-- ========== TOP BANNER ========== -->
   <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-orange-600 text-white text-xs font-semibold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
-    <span>🎓 <strong>AcadAssist</strong> — Simplifying Academic Work • Powered by <strong>notes.lpuverto.xyz</strong> Data</span>
+    <span>🎓 <strong>AcadAssist</strong> — Simplifying Academic Work • Comprehensive LPU Academic Curriculum &amp; Exam Solutions</span>
     <span class="hidden sm:inline opacity-80">•</span>
     <span class="hidden sm:inline bg-black/20 px-2 py-0.5 rounded-full text-[11px]">Use code <strong>LPUVERTO</strong> for 100% Free Pro Pass</span>
   </div>
@@ -130,23 +154,23 @@
         </button>
         <button data-tab-target="tab-asset-studio" class="tab-btn inline-flex items-center gap-2 py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          3. Study Studio (Notes/Slides/Roadmap)
+          3. 📖 Study Studio (Notes/Slides/Roadmap)
         </button>
         <button data-tab-target="tab-generate" class="tab-btn inline-flex items-center gap-2 py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          3. Generate Exam Paper
+          4. 📝 Generate Exam Paper
         </button>
         <button data-tab-target="tab-simulator" class="tab-btn inline-flex items-center gap-2 py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          4. Exam Simulator & Practice
+          5. ⚡ Exam Simulator & Practice
         </button>
         <button data-tab-target="tab-notebank" class="tab-btn inline-flex items-center gap-2 py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          5. Live LPU Verto Search
+          6. 🔍 Live LPU Search
         </button>
         <button data-tab-target="tab-pricing" class="tab-btn inline-flex items-center gap-2 py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          6. Pro Pass (Paywall)
+          7. 💎 Pro Pass
         </button>
       </nav>
     </div>
@@ -164,7 +188,7 @@
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-gray-200 dark:border-slate-800">
         <div>
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-400">
-            📦 Bundled Directly from notes.lpuverto.xyz
+            📦 Official LPU Academic Course Library (266+ Courses)
           </span>
           <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-1">
             Preloaded LPU Subjects & Notes Catalog
@@ -355,7 +379,7 @@
           </div>
           <h2 class="text-2xl sm:text-3xl font-black mt-1">Official LPU Previous Year Question Papers (PYQs)</h2>
           <p class="text-xs text-slate-300 max-w-2xl mt-1">
-            Authentic past examination papers collected from student community repositories, past ETE/MTE archives, and notes.lpuverto.xyz. Complete with step-by-step marking rubrics and model solutions.
+            Authentic past examination papers collected from student community repositories, past ETE/MTE archives, and official university syllabus archives. Complete with step-by-step marking rubrics and model solutions.
           </p>
         </div>
 
@@ -366,9 +390,17 @@
         </div>
       </div>
 
-      <!-- Subject Filter Pills for PYQs -->
+      <!-- Subject Filter Pills & Dropdown for PYQs -->
       <div class="space-y-2">
-        <label class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Select Course Code:</label>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <label class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Select Course Code:</label>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 font-semibold">Or pick from all 266+ courses:</span>
+            <select id="pyq-subject-dropdown" onchange="PYQManager.selectSubject(this.value)" class="text-xs font-bold py-1.5 px-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 outline-none">
+              <option value="">Select any LPU Course...</option>
+            </select>
+          </div>
+        </div>
         <div class="flex items-center gap-2 overflow-x-auto pb-1" id="pyq-subject-pills">
           <!-- Filled by pyq.js -->
         </div>
@@ -392,31 +424,78 @@
     <section id="tab-asset-studio" class="tab-content hidden space-y-6 animate-fade-in">
       
       <!-- Studio Header -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <span class="text-xs font-bold text-orange-500 uppercase tracking-wider">Multi-Asset Study Material Studio</span>
-          <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white" id="asset-studio-subject-title">
-            Select a subject to view Notes, Slides, or Roadmap
-          </h2>
-          <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-            Switch between full comprehensive notes, cram cheat sheets, interactive slides, and week-by-week roadmaps.
-          </p>
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-5">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-400">
+                Multi-Asset Study Material Studio
+              </span>
+              <span id="studio-active-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-400">
+                CSE101
+              </span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mt-1" id="asset-studio-subject-title">
+              CSE101 — Computer Programming (Unit 1)
+            </h2>
+            <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              Comprehensive notes, cheat sheets, slide decks, and week-by-week roadmaps aligned with LPU syllabus.
+            </p>
+          </div>
+
+          <!-- Course & Unit Selector Controls -->
+          <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div class="flex items-center gap-1.5 flex-1 sm:flex-initial">
+              <label for="studio-course-select" class="text-xs font-bold text-gray-500 whitespace-nowrap">Course:</label>
+              <select id="studio-course-select" onchange="onStudioCourseChange(this.value)" class="text-xs font-bold py-2 px-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none max-w-xs">
+                <option value="CSE101" data-name="Computer Programming">CSE101 — Computer Programming</option>
+                <option value="MTH166" data-name="Differential Equations">MTH166 — Differential Equations</option>
+                <option value="CSE205" data-name="Data Structures & Algorithms">CSE205 — Data Structures & Algorithms</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <label for="studio-unit-select" class="text-xs font-bold text-gray-500">Unit:</label>
+              <select id="studio-unit-select" onchange="onStudioUnitChange(this.value)" class="text-xs font-bold py-2 px-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none">
+                <option value="Unit1">Unit 1</option>
+                <option value="Unit2">Unit 2</option>
+                <option value="Unit3">Unit 3</option>
+                <option value="Unit4">Unit 4</option>
+                <option value="Unit5">Unit 5</option>
+                <option value="Unit6">Unit 6</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <!-- Quick Switcher Buttons -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="triggerAssetGeneration('notes', 'CSE101', 'Computer Programming')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 hover:bg-orange-200">
-            📖 Full Notes
-          </button>
-          <button onclick="triggerAssetGeneration('short_notes', 'CSE101', 'Computer Programming')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 hover:bg-amber-200">
-            ⚡ Short Cram Notes
-          </button>
-          <button onclick="triggerAssetGeneration('slides', 'CSE101', 'Computer Programming')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 hover:bg-blue-200">
-            🖥️ Slide Deck
-          </button>
-          <button onclick="triggerAssetGeneration('roadmap', 'CSE101', 'Computer Programming')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200">
-            🗺️ 9+ CGPA Roadmap
-          </button>
+        <!-- Quick Switcher Buttons & Action Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="triggerCurrentAssetGeneration('notes')" id="btn-studio-notes" class="px-3.5 py-2 rounded-xl text-xs font-black bg-orange-500 text-white hover:bg-orange-600 shadow-sm transition-all flex items-center gap-1.5">
+              <span>📖</span> Full Notes
+            </button>
+            <button onclick="triggerCurrentAssetGeneration('short_notes')" id="btn-studio-cram" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/40 transition-all flex items-center gap-1.5">
+              <span>⚡</span> Cram Cheat Sheet
+            </button>
+            <button onclick="triggerCurrentAssetGeneration('slides')" id="btn-studio-slides" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-all flex items-center gap-1.5">
+              <span>🖥️</span> Slide Deck
+            </button>
+            <button onclick="triggerCurrentAssetGeneration('roadmap')" id="btn-studio-roadmap" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/40 transition-all flex items-center gap-1.5">
+              <span>🗺️</span> 9+ CGPA Roadmap
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-gray-700 dark:text-slate-300 flex items-center gap-1 transition-all" title="Print or save as PDF">
+              <span>🖨️ Print</span>
+            </button>
+            <button onclick="launchSubjectFromStudioToExam()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all">
+              <span>📝 Generate Paper</span>
+            </button>
+            <button onclick="launchSubjectFromStudioToPYQ()" class="px-3 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/40 text-xs font-bold text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800 transition-all">
+              <span>📂 Past PYQs</span>
+            </button>
+          </div>
         </div>
       </div>
 

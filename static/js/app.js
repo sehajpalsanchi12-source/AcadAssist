@@ -103,8 +103,9 @@ function switchTab(tabId) {
   }
 }
 
-// ── Preloaded LPU Subjects Hub (All 266+ Subjects from notes.lpuverto.xyz) ──
+// ── Preloaded LPU Subjects Hub (All 266+ Subjects Catalog) ──
 let allAvailableSubjects = [];
+window.allAvailableSubjects = allAvailableSubjects;
 let activeSemesterFilter = 'all';
 let activeSearchQuery = '';
 
@@ -115,15 +116,22 @@ async function loadSubjectsHub() {
   try {
     const res = await fetch('/api/all-subjects');
     allAvailableSubjects = await res.json();
+    window.allAvailableSubjects = allAvailableSubjects;
     renderFilteredSubjects();
     setupSubjectsSearch();
+    populateStudioCourseDropdown(allAvailableSubjects);
+    if (window.PYQManager && typeof window.PYQManager.loadAllCoursesDropdown === 'function') {
+      window.PYQManager.loadAllCoursesDropdown();
+    }
   } catch (e) {
     console.error("Failed to load all subjects:", e);
     // Fallback to preloaded
     try {
       const resFallback = await fetch('/api/preloaded-subjects');
       allAvailableSubjects = await resFallback.json();
+      window.allAvailableSubjects = allAvailableSubjects;
       renderFilteredSubjects();
+      populateStudioCourseDropdown(allAvailableSubjects);
     } catch (err) {
       hubContainer.innerHTML = '<div class="col-span-full py-12 text-center text-red-500">Failed to load subjects.</div>';
     }
@@ -272,6 +280,7 @@ window.openPYQForSubject = function(code) {
   if (window.PYQManager) {
     window.PYQManager.selectSubject(code);
   }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.downloadSubjectPPT = function(code) {
@@ -341,8 +350,100 @@ window.startSubjectMockTest = async function(subjectCode, subjectName, semester 
   }
 };
 
-// ── Multi-Asset Generation Logic ──────────────────────────────────────
+// ── Multi-Asset Generation Logic & Study Studio Controller ──────────
 window.currentLoadedSlideDeck = null;
+window.currentStudioSubject = {
+  code: 'CSE101',
+  name: 'Computer Programming',
+  sem: 'Sem2',
+  unit: 'Unit1',
+  assetType: 'notes'
+};
+
+function populateStudioCourseDropdown(subjects) {
+  const dropdown = document.getElementById('studio-course-select');
+  if (!dropdown || !subjects || !subjects.length) return;
+
+  const currentVal = dropdown.value || window.currentStudioSubject.code;
+  dropdown.innerHTML = subjects.map(s => {
+    const sName = (s.name || s.title || 'Course Material').replace(/"/g, '&quot;');
+    return `<option value="${s.code}" data-name="${sName}" data-sem="${s.semester || 'Sem2'}">${s.code} — ${s.name || s.title || 'Course Material'}</option>`;
+  }).join('');
+
+  if (currentVal) dropdown.value = currentVal;
+}
+
+window.onStudioCourseChange = function(code) {
+  if (!code) return;
+  const match = (window.allAvailableSubjects || []).find(s => s.code.toUpperCase() === code.toUpperCase());
+  const name = match ? (match.name || match.title || 'Course Material') : 'Course Material';
+  const sem = match ? (match.semester || 'Sem2') : 'Sem2';
+
+  window.currentStudioSubject.code = code.toUpperCase();
+  window.currentStudioSubject.name = name;
+  window.currentStudioSubject.sem = sem;
+
+  updateStudioUI();
+  triggerCurrentAssetGeneration(window.currentStudioSubject.assetType || 'notes');
+};
+
+window.onStudioUnitChange = function(unit) {
+  window.currentStudioSubject.unit = unit || 'Unit1';
+  updateStudioUI();
+  triggerCurrentAssetGeneration(window.currentStudioSubject.assetType || 'notes');
+};
+
+function updateStudioUI() {
+  const s = window.currentStudioSubject;
+  const titleDisplay = document.getElementById('asset-studio-subject-title');
+  const badgeDisplay = document.getElementById('studio-active-badge');
+  const courseDropdown = document.getElementById('studio-course-select');
+  const unitDropdown = document.getElementById('studio-unit-select');
+
+  if (titleDisplay) titleDisplay.textContent = `${s.code} — ${s.name} (${s.unit})`;
+  if (badgeDisplay) badgeDisplay.textContent = s.code;
+  if (courseDropdown && courseDropdown.value !== s.code) courseDropdown.value = s.code;
+  if (unitDropdown && unitDropdown.value !== s.unit) unitDropdown.value = s.unit;
+}
+
+window.triggerCurrentAssetGeneration = function(assetType) {
+  window.currentStudioSubject.assetType = assetType;
+
+  // Update button active states
+  const btnNotes = document.getElementById('btn-studio-notes');
+  const btnCram = document.getElementById('btn-studio-cram');
+  const btnSlides = document.getElementById('btn-studio-slides');
+  const btnRoadmap = document.getElementById('btn-studio-roadmap');
+
+  const allBtns = [
+    { el: btnNotes, type: 'notes', activeClass: 'bg-orange-500 text-white hover:bg-orange-600' },
+    { el: btnCram, type: 'short_notes', activeClass: 'bg-amber-500 text-white hover:bg-amber-600' },
+    { el: btnSlides, type: 'slides', activeClass: 'bg-blue-600 text-white hover:bg-blue-700' },
+    { el: btnRoadmap, type: 'roadmap', activeClass: 'bg-emerald-600 text-white hover:bg-emerald-700' }
+  ];
+
+  allBtns.forEach(b => {
+    if (!b.el) return;
+    if (b.type === assetType) {
+      b.el.className = `px-3.5 py-2 rounded-xl text-xs font-black shadow-sm transition-all flex items-center gap-1.5 ${b.activeClass}`;
+    } else {
+      b.el.className = `px-3.5 py-2 rounded-xl text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1.5`;
+    }
+  });
+
+  const s = window.currentStudioSubject;
+  triggerAssetGeneration(assetType, s.code, s.name, s.sem, s.unit);
+};
+
+window.launchSubjectFromStudioToExam = function() {
+  const code = window.currentStudioSubject ? window.currentStudioSubject.code : 'CSE101';
+  loadSubjectIntoExamGenerator(code);
+};
+
+window.launchSubjectFromStudioToPYQ = function() {
+  const code = window.currentStudioSubject ? window.currentStudioSubject.code : 'CSE101';
+  openPYQForSubject(code);
+};
 
 window.triggerAssetGeneration = async function(assetType, code, name, sem = 'Sem2', unit = 'Unit1') {
   const isPro = window.PaywallManager && window.PaywallManager.isPro;
@@ -356,12 +457,18 @@ window.triggerAssetGeneration = async function(assetType, code, name, sem = 'Sem
     }
   }
 
+  // Update current studio state
+  window.currentStudioSubject = {
+    code: code.toUpperCase(),
+    name: name,
+    sem: sem,
+    unit: unit,
+    assetType: assetType
+  };
+  updateStudioUI();
+
   // Switch to Asset Viewer Tab/Section
   switchTab('tab-asset-studio');
-
-  // Fill in active subject details
-  const titleDisplay = document.getElementById('asset-studio-subject-title');
-  if (titleDisplay) titleDisplay.textContent = `${code} — ${name} (${unit})`;
 
   const loader = document.getElementById('asset-studio-loader');
   const outputContainer = document.getElementById('asset-studio-output');
@@ -398,7 +505,7 @@ window.triggerAssetGeneration = async function(assetType, code, name, sem = 'Sem
     renderStudyAsset(data);
   } catch (e) {
     if (outputContainer) {
-      outputContainer.innerHTML = `<div class="p-6 text-center text-red-500 font-semibold">Failed to generate study asset: ${e.message}</div>`;
+      outputContainer.innerHTML = `<div class="p-6 text-center text-red-500 font-semibold bg-white dark:bg-slate-900 rounded-2xl border border-red-200">Failed to generate study asset: ${e.message}</div>`;
     }
   } finally {
     if (loader) loader.classList.add('hidden');
@@ -437,7 +544,7 @@ function renderStudyAsset(data) {
     `).join('');
 
     container.innerHTML = `
-      <div class="space-y-6 animate-fade-in-up">
+      <div id="printable-study-material" class="space-y-6 animate-fade-in-up">
         <div class="flex items-center justify-between bg-orange-50 dark:bg-orange-950/30 p-4 rounded-2xl border border-orange-200 dark:border-orange-800">
           <div>
             <span class="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Comprehensive Study Notes</span>
@@ -476,7 +583,7 @@ function renderStudyAsset(data) {
     `).join('');
 
     container.innerHTML = `
-      <div class="space-y-6 animate-fade-in-up">
+      <div id="printable-study-material" class="space-y-6 animate-fade-in-up">
         <div class="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-200 dark:border-amber-800 flex items-center justify-between">
           <div>
             <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Revision Cheat Sheet & Flashcards</span>
@@ -529,7 +636,7 @@ function renderStudyAsset(data) {
     `).join('');
 
     container.innerHTML = `
-      <div class="space-y-6 animate-fade-in-up">
+      <div id="printable-study-material" class="space-y-6 animate-fade-in-up">
         <div class="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-2xl border border-blue-200 dark:border-blue-800 flex flex-wrap items-center justify-between gap-4">
           <div>
             <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Presentation Slide Deck</span>
@@ -577,7 +684,7 @@ function renderStudyAsset(data) {
     `).join('');
 
     container.innerHTML = `
-      <div class="space-y-6 animate-fade-in-up">
+      <div id="printable-study-material" class="space-y-6 animate-fade-in-up">
         <div class="bg-emerald-50 dark:bg-emerald-950/30 p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
           <div>
             <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Exam Prep Roadmap & Milestones</span>
@@ -651,18 +758,37 @@ window.launchSubjectProjector = async function(code) {
 };
 
 window.loadSubjectIntoExamGenerator = function(code) {
-  // Pre-select subject in generator tab
+  if (!code) {
+    switchTab('tab-generate');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  const cleanCode = code.toUpperCase().trim();
   const subjSelect = document.getElementById('subject-select');
   if (subjSelect) {
+    let found = false;
     for (let i = 0; i < subjSelect.options.length; i++) {
-      if (subjSelect.options[i].value === code) {
+      if (subjSelect.options[i].value.toUpperCase() === cleanCode) {
         subjSelect.selectedIndex = i;
         subjSelect.dispatchEvent(new Event('change'));
+        found = true;
         break;
       }
     }
+    if (!found) {
+      const match = (window.allAvailableSubjects || []).find(s => s.code.toUpperCase() === cleanCode);
+      const title = match ? (match.name || match.title || 'Course Material') : 'Course Material';
+      const opt = document.createElement('option');
+      opt.value = cleanCode;
+      opt.setAttribute('data-title', title);
+      opt.textContent = `${cleanCode} — ${title}`;
+      subjSelect.prepend(opt);
+      subjSelect.selectedIndex = 0;
+      subjSelect.dispatchEvent(new Event('change'));
+    }
   }
   switchTab('tab-generate');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // ── Custom Subject Modal Logic ────────────────────────────────────────

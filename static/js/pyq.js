@@ -1,17 +1,20 @@
 /**
  * PYQ (Previous Year Questions) Controller for AcadAssist
  * Manages LPU Past Exam Papers (2021-2024) ETE & MTE
+ * Integrated with Exam Simulator, Multi-Course Catalog & Print Engine
  */
 
 const PYQManager = {
   currentSubject: "MTH166",
   currentPaperId: "MTH166-2024-ETE",
   availableSubjects: [],
+  allCoursesList: [],
   papersList: [],
   currentPaper: null,
 
   async init() {
     await this.loadSubjects();
+    await this.loadAllCoursesDropdown();
     this.setupListeners();
   },
 
@@ -23,7 +26,8 @@ const PYQManager = {
         if (q.length >= 3) {
           this.searchQuestions(q);
         } else if (q.length === 0) {
-          document.getElementById("pyq-search-results").classList.add("hidden");
+          const resBox = document.getElementById("pyq-search-results");
+          if (resBox) resBox.classList.add("hidden");
         }
       });
     }
@@ -43,12 +47,37 @@ const PYQManager = {
     }
   },
 
+  async loadAllCoursesDropdown() {
+    const dropdown = document.getElementById("pyq-subject-dropdown");
+    if (!dropdown) return;
+
+    try {
+      let subjects = window.allAvailableSubjects;
+      if (!subjects || !subjects.length) {
+        const res = await fetch("/api/all-subjects");
+        subjects = await res.json();
+      }
+      this.allCoursesList = subjects || [];
+      
+      const currentVal = dropdown.value;
+      dropdown.innerHTML = `
+        <option value="">Select any LPU Course (266+ available)...</option>
+        ${this.allCoursesList.map(s => `
+          <option value="${s.code}">${s.code} — ${s.name || s.title || 'Course Material'}</option>
+        `).join("")}
+      `;
+      if (currentVal) dropdown.value = currentVal;
+    } catch (e) {
+      console.warn("Could not load full courses dropdown for PYQ:", e);
+    }
+  },
+
   renderSubjectSelector() {
     const container = document.getElementById("pyq-subject-pills");
     if (!container) return;
 
     container.innerHTML = this.availableSubjects.map(s => `
-      <button onclick="PYQManager.selectSubject('${s.code}')" id="pyq-pill-${s.code}" class="pyq-sub-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${s.code === this.currentSubject ? 'bg-pink-500 text-white border-pink-500 shadow-sm' : 'bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:border-pink-400'}">
+      <button onclick="PYQManager.selectSubject('${s.code}')" id="pyq-pill-${s.code}" class="pyq-sub-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border whitespace-nowrap ${s.code === this.currentSubject ? 'bg-pink-500 text-white border-pink-500 shadow-sm' : 'bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:border-pink-400'}">
         <span>${s.code}</span>
         <span class="ml-1 text-[10px] opacity-80">(${s.paper_count} papers)</span>
       </button>
@@ -56,15 +85,32 @@ const PYQManager = {
   },
 
   async selectSubject(code) {
+    if (!code) return;
     this.currentSubject = code.toUpperCase();
+
+    // Synchronize dropdown
+    const dropdown = document.getElementById("pyq-subject-dropdown");
+    if (dropdown) dropdown.value = this.currentSubject;
     
-    // Update pills active styling
+    // Update pills active styling or add pill dynamically if not present
     document.querySelectorAll(".pyq-sub-pill").forEach(p => {
       p.classList.remove("bg-pink-500", "text-white", "border-pink-500", "shadow-sm");
       p.classList.add("bg-gray-50", "dark:bg-slate-800", "text-gray-700", "dark:text-slate-300", "border-gray-200", "dark:border-slate-700");
     });
-    const activePill = document.getElementById(`pyq-pill-${this.currentSubject}`);
-    if (activePill) {
+
+    let activePill = document.getElementById(`pyq-pill-${this.currentSubject}`);
+    if (!activePill) {
+      const container = document.getElementById("pyq-subject-pills");
+      if (container) {
+        const btn = document.createElement("button");
+        btn.id = `pyq-pill-${this.currentSubject}`;
+        btn.onclick = () => PYQManager.selectSubject(this.currentSubject);
+        btn.className = "pyq-sub-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border whitespace-nowrap bg-pink-500 text-white border-pink-500 shadow-sm";
+        btn.innerHTML = `<span>${this.currentSubject}</span><span class="ml-1 text-[10px] opacity-80">(Papers)</span>`;
+        container.prepend(btn);
+        activePill = btn;
+      }
+    } else {
       activePill.classList.remove("bg-gray-50", "dark:bg-slate-800", "text-gray-700", "dark:text-slate-300", "border-gray-200", "dark:border-slate-700");
       activePill.classList.add("bg-pink-500", "text-white", "border-pink-500", "shadow-sm");
     }
@@ -77,9 +123,17 @@ const PYQManager = {
       if (this.papersList.length > 0) {
         await this.loadPaper(this.papersList[0].paper_id);
       } else {
-        document.getElementById("pyq-paper-viewer").innerHTML = `
-          <div class="p-8 text-center text-gray-400">No previous papers found for ${this.currentSubject}.</div>
-        `;
+        const viewer = document.getElementById("pyq-paper-viewer");
+        if (viewer) {
+          viewer.innerHTML = `
+            <div class="p-12 text-center text-gray-400 bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-800">
+              <p class="font-bold text-sm">No archive papers found for ${this.currentSubject}.</p>
+              <button onclick="loadSubjectIntoExamGenerator('${this.currentSubject}')" class="mt-4 px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-xs hover:bg-orange-600 transition-all">
+                📝 Synthesize Exam Paper with AI
+              </button>
+            </div>
+          `;
+        }
       }
     } catch (err) {
       console.error(`Error loading papers for ${code}:`, err);
@@ -90,17 +144,26 @@ const PYQManager = {
     const listContainer = document.getElementById("pyq-papers-list");
     if (!listContainer) return;
 
+    if (!this.papersList.length) {
+      listContainer.innerHTML = `
+        <div class="p-6 text-center text-gray-400 bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800">
+          No papers for this course yet.
+        </div>
+      `;
+      return;
+    }
+
     listContainer.innerHTML = this.papersList.map(p => `
-      <div onclick="PYQManager.loadPaper('${p.paper_id}')" class="cursor-pointer p-4 rounded-2xl border transition-all ${p.paper_id === this.currentPaperId ? 'bg-pink-50 dark:bg-pink-950/20 border-pink-500' : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 hover:border-pink-300'}">
+      <div onclick="PYQManager.loadPaper('${p.paper_id}')" class="cursor-pointer p-4 rounded-2xl border transition-all ${p.paper_id === this.currentPaperId ? 'bg-pink-50 dark:bg-pink-950/20 border-pink-500 shadow-sm' : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 hover:border-pink-300'}">
         <div class="flex items-center justify-between gap-2">
           <span class="text-xs font-black uppercase text-pink-600 dark:text-pink-400">${p.year} • ${p.term}</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300">${p.max_marks} Marks</span>
         </div>
-        <h4 class="font-bold text-sm text-gray-900 dark:text-white mt-1">${p.subject_code} — ${p.subject_name}</h4>
+        <h4 class="font-bold text-sm text-gray-900 dark:text-white mt-1 leading-snug">${p.subject_code} — ${p.subject_name}</h4>
         <div class="flex items-center gap-3 text-[11px] text-gray-500 dark:text-slate-400 mt-2">
           <span>⏱️ ${p.duration_minutes} Mins</span>
           <span>📝 ${p.total_questions} Questions</span>
-          <span>🏛️ Paper ${p.paper_code || 'Main'}</span>
+          <span>🏛️ ${p.paper_code || 'Main'}</span>
         </div>
       </div>
     `).join("");
@@ -112,9 +175,9 @@ const PYQManager = {
     if (!viewer) return;
 
     viewer.innerHTML = `
-      <div class="p-12 text-center text-gray-400">
-        <svg class="animate-spin h-8 w-8 text-pink-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        <span>Loading full examination question paper & marking solutions...</span>
+      <div class="p-12 text-center text-gray-400 bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-3">
+        <svg class="animate-spin h-8 w-8 text-pink-500 mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <span class="text-xs font-bold text-gray-600 dark:text-slate-300 block">Loading authentic examination question paper & marking solutions...</span>
       </div>
     `;
 
@@ -125,7 +188,7 @@ const PYQManager = {
       this.renderFullPaper(this.currentPaper);
       this.renderPapersList(); // Re-render to highlight active paper
     } catch (err) {
-      viewer.innerHTML = `<div class="p-8 text-center text-red-500">Failed to load paper: ${err.message}</div>`;
+      viewer.innerHTML = `<div class="p-8 text-center text-red-500 bg-white dark:bg-slate-900 rounded-2xl border border-red-200">Failed to load paper: ${err.message}</div>`;
     }
   },
 
@@ -139,7 +202,7 @@ const PYQManager = {
 
     viewer.innerHTML = `
       <!-- Paper Sheet Container (Authentic LPU Exam Layout) -->
-      <div id="printable-pyq-paper" class="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-800 p-6 sm:p-10 shadow-lg space-y-8">
+      <div id="printable-pyq-paper" class="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-800 p-6 sm:p-10 shadow-lg space-y-8 animate-fade-in">
         
         <!-- Header Section -->
         <div class="border-b-2 border-dashed border-gray-300 dark:border-slate-700 pb-6 text-center space-y-2">
@@ -154,7 +217,7 @@ const PYQManager = {
           <p class="text-xs font-bold text-gray-600 dark:text-slate-300 uppercase tracking-widest">
             ${p.term} — ${p.year}
           </p>
-          <div class="inline-block px-4 py-1 rounded-full bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-800 text-pink-600 dark:text-pink-400 font-black text-sm">
+          <div class="inline-block px-4 py-1.5 rounded-full bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-800 text-pink-600 dark:text-pink-400 font-black text-sm">
             ${p.subject_code} — ${p.subject_name.toUpperCase()}
           </div>
 
@@ -165,18 +228,29 @@ const PYQManager = {
           </div>
 
           <div class="mt-4 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/60 text-left text-xs text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-slate-700">
-            <strong>Instructions:</strong> ${p.instructions}
+            <strong>Instructions:</strong> ${p.instructions || 'Attempt all questions according to internal section choices. Negative marking is applicable to Part A MCQs.'}
           </div>
 
           <!-- Action bar -->
-          <div class="flex items-center justify-end gap-2 pt-2 no-print">
-            <button onclick="window.print()" class="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-gray-700 dark:text-slate-200 flex items-center gap-1.5 transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-              <span>🖨️ Print Paper</span>
-            </button>
-            <button onclick="PYQManager.toggleAllSolutions()" id="btn-toggle-all-solutions" class="px-3 py-1.5 rounded-xl bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/40 text-xs font-bold text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800 transition-colors">
-              👁️ Reveal All Model Answers
-            </button>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-3 no-print border-t border-gray-100 dark:border-slate-800 mt-4">
+            <div class="flex items-center gap-2">
+              <button onclick="PYQManager.startMockFromPYQ('${p.paper_id}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-1.5">
+                <span>⚡ Test in Exam Simulator</span>
+              </button>
+              <button onclick="loadSubjectIntoExamGenerator('${p.subject_code}')" class="px-3.5 py-2 rounded-xl bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-xs font-bold text-gray-700 dark:text-slate-200 transition-colors">
+                <span>📝 Generate Variant</span>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-gray-700 dark:text-slate-200 flex items-center gap-1.5 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>🖨️ Print Paper</span>
+              </button>
+              <button onclick="PYQManager.toggleAllSolutions()" id="btn-toggle-all-solutions" class="px-3.5 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/40 text-xs font-bold text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800 transition-colors">
+                👁️ Reveal All Model Answers
+              </button>
+            </div>
           </div>
         </div>
 
@@ -329,6 +403,75 @@ const PYQManager = {
     `;
   },
 
+  startMockFromPYQ(paperId) {
+    if (!this.currentPaper || this.currentPaper.paper_id !== paperId) return;
+    const p = this.currentPaper;
+
+    if (!window.ExamSimulator) {
+      alert("Exam simulator module not ready. Please try again.");
+      return;
+    }
+
+    const simPaper = {
+      exam_title: `${p.subject_code} — ${p.term} (${p.year}) Real PYQ Paper`,
+      subject_code: p.subject_code,
+      subject_name: p.subject_name,
+      duration_minutes: p.duration_minutes || 60,
+      total_marks: p.max_marks || 100,
+      negative_marking: -0.25,
+      sections: {
+        section_a: {
+          title: "Section A: Objective & Multiple Choice Questions",
+          instructions: "Attempt all questions. Correct MCQ awards marks; -0.25 negative marking applies.",
+          questions: (p.part_a || []).map((q, idx) => ({
+            id: `mcq_${idx + 1}`,
+            question_number: idx + 1,
+            question_text: q.question,
+            options: (q.options && q.options.length) ? q.options : ["Optimal formulation", "Boundary convergence", "State transition", "Arbitrary state"],
+            correct_option: q.correct_option ? (q.correct_option.length === 1 ? q.correct_option : "A") : "A",
+            explanation: q.solution || "Refer to LPU marking rubric.",
+            marks: q.marks || 2,
+            negative_marks: 0.25,
+            unit: "Unit 1",
+            difficulty: "Medium"
+          }))
+        },
+        section_b: {
+          title: "Section B: Analytical & Conceptual Questions",
+          instructions: "Attempt questions with clear steps and diagrams.",
+          questions: (p.part_b || []).map((q, idx) => ({
+            id: `short_${idx + 1}`,
+            question_number: idx + 1,
+            question_text: q.question,
+            solution: q.solution,
+            marking_rubric: q.rubric || "Step-by-step logic: 4M | Accuracy: 6M",
+            marks: q.marks || 10,
+            unit: q.unit || "Core"
+          }))
+        },
+        section_c: {
+          title: "Section C: Comprehensive / Analytical Questions",
+          instructions: "Attempt long-form case studies and comprehensive proofs.",
+          questions: (p.part_c || []).map((q, idx) => ({
+            id: `long_${idx + 1}`,
+            question_number: idx + 1,
+            question_text: q.question,
+            solution: q.solution,
+            marking_rubric: q.rubric || "Full proof: 10M | Edge cases & trade-offs: 10M",
+            marks: q.marks || 20,
+            unit: q.unit || "Specialization"
+          }))
+        }
+      }
+    };
+
+    window.ExamSimulator.init(simPaper);
+    if (typeof switchTab === 'function') {
+      switchTab('tab-simulator');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
+
   toggleSolution(elementId) {
     const el = document.getElementById(elementId);
     if (el) {
@@ -375,7 +518,7 @@ const PYQManager = {
             <div class="p-3 text-xs hover:bg-gray-50 dark:hover:bg-slate-800/60 cursor-pointer" onclick="PYQManager.selectSubject('${h.subject_code}'); document.getElementById('pyq-search-results').classList.add('hidden')">
               <div class="flex items-center justify-between text-[10px] text-gray-400 font-bold mb-1">
                 <span>${h.subject_code} • ${h.year} ${h.term}</span>
-                <span class="text-pink-500">${h.marks}M</span>
+                <span class="text-pink-500 font-bold">${h.marks}M</span>
               </div>
               <p class="font-bold text-gray-800 dark:text-slate-200 line-clamp-2">${h.question}</p>
             </div>

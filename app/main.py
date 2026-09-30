@@ -534,6 +534,14 @@ async def register(req: RegisterRequest):
     )
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("message"))
+    try:
+        Database.record_visit(
+            session_id=res.get("session_token", "reg_sess"),
+            path="/api/auth/register",
+            user_id=req.name or req.email
+        )
+    except Exception:
+        pass
     return res
 
 class LoginRequest(BaseModel):
@@ -549,6 +557,15 @@ async def login(req: LoginRequest):
     )
     if not res.get("success"):
         raise HTTPException(status_code=401, detail=res.get("message"))
+    try:
+        user_name = res.get("user", {}).get("name") or req.identifier
+        Database.record_visit(
+            session_id=res.get("session_token", "login_sess"),
+            path="/api/auth/login",
+            user_id=user_name
+        )
+    except Exception:
+        pass
     return res
 
 class GoogleAuthRequest(BaseModel):
@@ -562,7 +579,7 @@ class GoogleAuthRequest(BaseModel):
 @app.post("/api/auth/google")
 async def google_auth(req: GoogleAuthRequest):
     """Authenticate or register student using Google account details."""
-    return UserService.google_auth(
+    res = UserService.google_auth(
         google_id=req.google_id,
         name=req.name,
         email=req.email,
@@ -570,6 +587,16 @@ async def google_auth(req: GoogleAuthRequest):
         lpu_reg_no=req.lpu_reg_no,
         phone=req.phone
     )
+    if res.get("success") and res.get("session_token"):
+        try:
+            Database.record_visit(
+                session_id=res["session_token"],
+                path="/api/auth/google",
+                user_id=req.name or req.email
+            )
+        except Exception:
+            pass
+    return res
 
 @app.get("/api/auth/me")
 async def get_current_user(token: Optional[str] = Query(None), authorization: Optional[str] = Header(None)):

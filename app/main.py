@@ -651,7 +651,7 @@ async def get_user_purchases_endpoint(user_id: str = Query(...)):
     """Retrieve all verified purchases, subject passes, and transaction receipts."""
     return UserService.get_user_purchases(user_id)
 
-# ── Paywall & UPI Payment Endpoints (Destination: 7719730804@ptyes) ─────────
+# ── Paywall & UPI Payment Endpoints (Destination: 8053122848@ptyes) ─────────
 
 @app.get("/api/paywall/plans")
 async def get_plans():
@@ -659,7 +659,7 @@ async def get_plans():
 
 @app.get("/api/paywall/upi-info")
 async def get_upi_info(amount: float = 49.0, plan_name: str = "Mock Test Pass"):
-    """Get UPI ID (7719730804@ptyes), intent link, and dynamic QR code."""
+    """Get UPI ID (8053122848@ptyes), intent link, and dynamic QR code."""
     return {
         "upi_id": PaywallService.UPI_ID,
         "payee_name": PaywallService.UPI_PAYEE_NAME,

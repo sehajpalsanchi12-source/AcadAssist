@@ -131,7 +131,7 @@ const AdminPortal = {
           <td class="py-3 px-2 font-black text-emerald-600 dark:text-emerald-400">₹${t.amount}</td>
           <td class="py-3 px-2 font-mono text-[11px]">
             <span class="text-gray-800 dark:text-slate-200 font-bold">${t.utr_ref || 'N/A'}</span>
-            <span class="block text-[10px] text-gray-400">UPI: ${t.upi_destination || '7719730804@ptyes'}</span>
+            <span class="block text-[10px] text-gray-400">UPI: ${t.upi_destination || '8053122848@ptyes'}</span>
           </td>
           <td class="py-3 px-2">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${statusClass}">

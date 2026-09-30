@@ -2,7 +2,7 @@
 
 Official smart academic preparation and student assistance platform designed for students of **Lovely Professional University (LPU)**.
 
-Branded as **AcadAssist** (with official visual identity extracted from the poster), this platform provides Vertos with authentic LPU exam pattern simulations, preloaded subject notes from **notes.lpuverto.xyz**, custom course creation, Google Sign-in user accounts, direct UPI monetization to **`7719730804@ptyes`**, and a secure Administrator Control Panel.
+Branded as **AcadAssist** (with official visual identity extracted from the poster), this platform provides Vertos with authentic LPU exam pattern simulations, preloaded subject notes from **notes.lpuverto.xyz**, custom course creation, Google Sign-in user accounts, direct UPI monetization to **`8053122848@ptyes`**, and a secure Administrator Control Panel.
 
 The website is running live at:
 👉 **http://127.0.0.1:8000**
@@ -71,10 +71,10 @@ Every single subject from `notes.lpuverto.xyz` is scraped, organized, and availa
 - **Custom PPT Generation**:
   - Upload notes or input any topic in Study Studio to generate custom PowerPoint files on the fly via `POST /api/generate-custom-pptx`.
 
-### 6. 💳 Direct UPI Payment Gateway (`7719730804@ptyes`)
-- Payment Destination: **`7719730804@ptyes`**
+### 6. 💳 Direct UPI Payment Gateway (`8053122848@ptyes`)
+- Payment Destination: **`8053122848@ptyes`**
 - Payee Name: **AcadAssist**
-- Dynamic QR code generation for PhonePe, Google Pay, Paytm, BHIM (`upi://pay?pa=7719730804@ptyes&pn=AcadAssist&am={price}&cu=INR`)
+- Dynamic QR code generation for PhonePe, Google Pay, Paytm, BHIM (`upi://pay?pa=8053122848@ptyes&pn=AcadAssist&am={price}&cu=INR`)
 - 1-Click UPI ID Copy
 - 12-Digit UTR / Transaction Reference ID tracking & automatic verification
 - Recorded in `data/transactions.json` for real-time admin review.
@@ -92,7 +92,7 @@ Every single subject from `notes.lpuverto.xyz` is scraped, organized, and availa
   - **Password**: Configured securely via Admin Service
 - **Dashboard URL**: Click the shield icon in navbar or `/api/admin/*`
 - **Full Administrator Controls**:
-  - 📊 **Real-time Metrics**: Total revenue collected to `7719730804@ptyes`, registered students, mock tests taken, service inquiries, and pending UTRs.
+  - 📊 **Real-time Metrics**: Total revenue collected to `8053122848@ptyes`, registered students, mock tests taken, service inquiries, and pending UTRs.
   - 💳 **Transaction Approvals**: View student name, plan, amount (₹49, ₹99, ₹199), UTR number, and 1-click "Approve" button to immediately unlock user access.
   - 👥 **Student Management**: View all Google users, registration numbers, phones, and 1-click "+ Grant Plan" or "Delete".
   - 📝 **Mock Test Records**: View student scores, percentage, LPU grade (`O`, `A+`, `A`, etc.), and timestamps.
@@ -141,7 +141,7 @@ cd lpu-verto-exam-ai
 ```bash
 .venv/bin/python test_server.py
 ```
-*(All 30 tests pass 100%, verifying Google auth, PBKDF2 password security, UPI paywall to `7719730804@ptyes` with QR code, strict 12-digit UTR validation, SQLite relational database with WAL mode, admin controls, poster courses, exam simulation, all 266 subjects, and PowerPoint slide generation).*
+*(All 30 tests pass 100%, verifying Google auth, PBKDF2 password security, UPI paywall to `8053122848@ptyes` with QR code, strict 12-digit UTR validation, SQLite relational database with WAL mode, admin controls, poster courses, exam simulation, all 266 subjects, and PowerPoint slide generation).*
 
 ---
 
@@ -168,7 +168,7 @@ lpu-verto-exam-ai/
 │   └── services/
 │       ├── admin_service.py     # Master admin login authentication & analytics
 │       ├── user_service.py      # Google auth, PBKDF2 student security, mock test & inquiry CRUD
-│       ├── paywall_service.py   # UPI payments (7719730804@ptyes), ₹49 & ₹29 plans, UTR verification
+│       ├── paywall_service.py   # UPI payments (8053122848@ptyes), ₹49 & ₹29 plans, UTR verification
 │       ├── lpuverto_service.py  # notes.lpuverto.xyz sync & preloaded poster courses
 │       ├── exam_generator.py    # LPU exam pattern & question generator
 │       ├── study_asset_generator.py # Notes, slides, short notes, roadmaps
@@ -187,7 +187,7 @@ lpu-verto-exam-ai/
 │   ├── css/
 │   │   └── styles.css           # Styling, paywall blurs & print layouts
 │   ├── images/
-│   │   └── official_paywall_qr.jpg # User's official UPI QR code (7719730804@ptyes)
+│   │   └── official_paywall_qr.jpg # User's official UPI QR code (8053122848@ptyes)
 │   └── js/
 │       ├── auth.js              # Google login & student profile controller
 │       ├── admin.js             # Admin dashboard controller (acadassit0812)

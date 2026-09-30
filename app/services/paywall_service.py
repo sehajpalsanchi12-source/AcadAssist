@@ -12,12 +12,12 @@ TRANSACTIONS_FILE = os.path.join(DATA_DIR, "transactions.json")
 
 class PaywallService:
     """
-    Manages monetization, tiers, UPI payments to 7719730804@ptyes,
+    Manages monetization, tiers, UPI payments to 8053122848@ptyes,
     coupon codes, UTR verification, and Pro tokens.
     """
 
     # Official UPI destination specified by user
-    UPI_ID = "7719730804@ptyes"
+    UPI_ID = "8053122848@ptyes"
     UPI_PAYEE_NAME = "AcadAssist"
 
     PLANS = {
@@ -171,7 +171,7 @@ class PaywallService:
 
     @classmethod
     def get_upi_qr_url(cls, amount: float = 49.0, plan_name: str = "Mock Test Pass") -> str:
-        """Return the official user-provided UPI QR code image for 7719730804@ptyes."""
+        """Return the official user-provided UPI QR code image for 8053122848@ptyes."""
         return "/static/images/official_paywall_qr.jpg"
 
     @classmethod

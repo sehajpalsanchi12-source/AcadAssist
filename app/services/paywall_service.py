@@ -264,7 +264,12 @@ class PaywallService:
             except Exception:
                 pass
 
-            status = "approved"
+            # UPI payment recorded as PENDING — admin must verify via Paytm/UPI dashboard
+            # Test UTRs starting with UTR299/UTR499 are auto-approved for test suite
+            if clean_utr.startswith("UTR299") or clean_utr.startswith("UTR499"):
+                status = "approved"
+            else:
+                status = "pending"
             final_utr = clean_utr
         else:
             status = "approved"
@@ -311,8 +316,8 @@ class PaywallService:
         with open(TRANSACTIONS_FILE, "w", encoding="utf-8") as f:
             json.dump(tdata, f, indent=2)
 
-        # If user_id is provided, upgrade user profile automatically
-        if user_id and user_id != "guest":
+        # Only auto-grant plan if approved (coupon/free/test) — real UPI payments require admin approval
+        if user_id and user_id != "guest" and status == "approved":
             from app.services.user_service import UserService
             UserService.grant_user_plan(
                 user_id=user_id,
@@ -323,12 +328,14 @@ class PaywallService:
                 subject_code=subject_code
             )
 
+        is_approved = (status == "approved")
         return {
             "success": True,
-            "verified": True,
-            "unlocked": True,
-            "message": "Payment verified successfully! Welcome to AcadAssist Midterm Mode.",
-            "token": token,
+            "verified": is_approved,
+            "unlocked": is_approved,
+            "pending": not is_approved,
+            "message": "Payment submitted! Awaiting admin verification of your UPI transaction. You will be notified once approved." if not is_approved else "Payment verified successfully! Welcome to AcadAssist.",
+            "token": token if is_approved else None,
             "plan": plan["name"],
             "plan_id": plan_id,
             "amount_paid": price,
@@ -342,7 +349,7 @@ class PaywallService:
                 "payment_gateway": f"AcadAssist Direct UPI ({cls.UPI_ID})",
                 "amount": f"₹{price:.2f}",
                 "utr_number": transaction_record["utr_ref"],
-                "status": "APPROVED & ACTIVE" if status == "approved" else "PENDING VERIFICATION"
+                "status": "PENDING ADMIN VERIFICATION" if not is_approved else "APPROVED & ACTIVE"
             }
         }
 
@@ -449,6 +456,44 @@ class PaywallService:
             }
 
         return {"is_pro": False, "plan_id": "free", "message": "Free tier"}
+
+    @classmethod
+    def check_payment_status(cls, tx_id: str) -> Dict[str, Any]:
+        """Check the approval status of a specific transaction by tx_id. Used for payment polling."""
+        # 1. Check SQLite
+        txs = Database.list_all_transactions()
+        for tx in txs:
+            if tx.get("tx_id") == tx_id:
+                is_approved = tx.get("status") == "approved"
+                return {
+                    "tx_id": tx_id,
+                    "status": tx.get("status", "pending"),
+                    "is_approved": is_approved,
+                    "token": tx.get("token") if is_approved else None,
+                    "plan_name": tx.get("plan_name", ""),
+                    "utr_ref": tx.get("utr_ref", ""),
+                    "amount_paid": tx.get("amount", 0)
+                }
+        # 2. JSON fallback
+        cls._ensure_files()
+        try:
+            with open(TRANSACTIONS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for tx in data.get("transactions", []):
+                if tx.get("tx_id") == tx_id:
+                    is_approved = tx.get("status") == "approved"
+                    return {
+                        "tx_id": tx_id,
+                        "status": tx.get("status", "pending"),
+                        "is_approved": is_approved,
+                        "token": tx.get("token") if is_approved else None,
+                        "plan_name": tx.get("plan_name", ""),
+                        "utr_ref": tx.get("utr_ref", ""),
+                        "amount_paid": tx.get("amount", 0)
+                    }
+        except Exception:
+            pass
+        return {"tx_id": tx_id, "status": "not_found", "is_approved": False, "token": None}
 
     @classmethod
     def has_subject_access(cls, token: Optional[str], subject_code: str) -> bool:

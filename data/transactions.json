@@ -1,3 +1,48 @@
 {
-  "transactions": []
+  "transactions": [
+    {
+      "tx_id": "TXN_6BB9B2A8E6",
+      "token": "acad_pro_d947c15a73e449a198a2963afc387fd7",
+      "plan_id": "subject_pass_49",
+      "plan_name": "Single Subject Complete Master Pack",
+      "subject_code": "CSE205",
+      "amount": 49.0,
+      "original_amount": 49,
+      "discount": 0.0,
+      "applied_coupon": null,
+      "payment_method": "UPI",
+      "upi_destination": "7719730804@ptyes",
+      "utr_ref": "UTR499827361849",
+      "user_id": "user_0449c24502",
+      "user_name": "Test Student Verto",
+      "reg_no": "12299887",
+      "phone": "9876543211",
+      "status": "approved",
+      "created_at": 1790766731.321482,
+      "formatted_time": "2026-09-30 16:42:11",
+      "expires_at": 1806318731.321506
+    },
+    {
+      "tx_id": "TXN_6D5F56D20E",
+      "token": "acad_pro_6b64e6918c9f443988f30f65cde745e2",
+      "plan_id": "mock_test_29",
+      "plan_name": "Authentic LPU Mock Test Simulator Pass",
+      "subject_code": "MTH166",
+      "amount": 29.0,
+      "original_amount": 29,
+      "discount": 0.0,
+      "applied_coupon": null,
+      "payment_method": "UPI",
+      "upi_destination": "7719730804@ptyes",
+      "utr_ref": "UTR299827361829",
+      "user_id": "user_0449c24502",
+      "user_name": "Test Student Verto",
+      "reg_no": "12299887",
+      "phone": "9876543211",
+      "status": "approved",
+      "created_at": 1790766731.313565,
+      "formatted_time": "2026-09-30 16:42:11",
+      "expires_at": 1798542731.3135731
+    }
+  ]
 }

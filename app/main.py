@@ -1,5 +1,6 @@
 import os
 import json
+import httpx
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, Response
@@ -646,6 +647,59 @@ async def checkout(req: CheckoutRequest):
 @app.get("/api/paywall/verify")
 async def verify_token(token: Optional[str] = Query(None)):
     return PaywallService.verify_token(token)
+
+@app.get("/api/paywall/status/{tx_id}")
+async def get_payment_status(tx_id: str):
+    """Poll payment approval status. Returns is_approved=True with token when admin approves."""
+    return PaywallService.check_payment_status(tx_id)
+
+# ── AI Study Chat (Gemini-powered) ──────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    message: str
+    subject_code: Optional[str] = None
+    subject_name: Optional[str] = None
+    history: list = []
+
+@app.post("/api/ai/chat")
+async def ai_study_chat(req: ChatRequest):
+    """Gemini 2.0 Flash powered AI study assistant for LPU Verto students."""
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    system_context = (
+        "You are AcadAssist AI, a smart and friendly academic assistant for students at "
+        "Lovely Professional University (LPU). Help with exam preparation, concept explanations, "
+        "MCQ solving, study strategies, and understanding LPU exam patterns. "
+        f"Subject context: {req.subject_name or 'General LPU Curriculum'} ({req.subject_code or 'General'}). "
+        "LPU exam types: CA (Continuous Assessment 10 marks), MTE (Mid-Term 30 marks), ETE (End-Term 100 marks). "
+        "Negative marking: -0.25 per wrong MCQ. Be concise, exam-focused, and use bullet points where helpful."
+    )
+
+    if not gemini_api_key:
+        return {"reply": "⚠️ AI Chat needs GEMINI_API_KEY configured on the server. Meanwhile explore Study Studio, PYQ Papers and Mock Tests!", "fallback": True}
+
+    try:
+        contents = []
+        for h in req.history[-6:]:
+            contents.append({"role": h.get("role", "user"), "parts": [{"text": str(h.get("text", ""))}]})
+        contents.append({"role": "user", "parts": [{"text": req.message}]})
+
+        payload = {
+            "system_instruction": {"parts": [{"text": system_context}]},
+            "contents": contents,
+            "generationConfig": {"maxOutputTokens": 800, "temperature": 0.7}
+        }
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}",
+                json=payload
+            )
+            result = r.json()
+            reply = result["candidates"][0]["content"]["parts"][0]["text"]
+            return {"reply": reply, "fallback": False}
+    except Exception as e:
+        return {"reply": f"Sorry, I couldn't get a response right now. Please try again! ({str(e)[:60]})", "fallback": True}
+
 
 # ── Mock Test Result Submission ──────────────────────────────────────────
 

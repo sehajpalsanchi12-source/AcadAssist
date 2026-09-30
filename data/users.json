@@ -1,3 +1,69 @@
 {
-  "users": {}
+  "users": {
+    "user_e25e4e044b": {
+      "id": "user_e25e4e044b",
+      "name": "Arjun Singh",
+      "email": "arjun.singh.test@lpu.in",
+      "google_id": null,
+      "lpu_reg_no": "12209988",
+      "phone": "9876543210",
+      "password_hash": "76c2d9ee9e28c9e5621729f1bf37b48e7759e546be5ede354ec919de9e9faf3b",
+      "salt": "2212159b572e0143a7ccc3d0cad87ae1",
+      "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=arjun.singh.test@lpu.in",
+      "active_plan": "free",
+      "plan_name": "Free Starter",
+      "plan_expiry": 0.0,
+      "is_pro": false,
+      "session_token": "acad_usr_a7af789ba2a145a6a4c6d0ce10f0b572",
+      "mock_tests_count": 0,
+      "total_spent_inr": 0.0,
+      "purchased_subjects": [],
+      "created_at": 1790766731.18227,
+      "last_login": 1790766731.295358
+    },
+    "user_0449c24502": {
+      "id": "user_0449c24502",
+      "name": "Test Student Verto",
+      "email": "test.verto@lpu.in",
+      "google_id": "goog_test_987654",
+      "lpu_reg_no": "12299887",
+      "phone": "9876543211",
+      "password_hash": null,
+      "salt": null,
+      "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=student",
+      "active_plan": "subject_pass_49",
+      "plan_name": "Single Subject Complete Master Pack",
+      "plan_expiry": 1806318731.324188,
+      "is_pro": true,
+      "session_token": "acad_usr_fffa7456a241443aa5cbe8d8d496b691",
+      "mock_tests_count": 1,
+      "total_spent_inr": 78.0,
+      "purchased_subjects": [
+        "MTH166",
+        "CSE205"
+      ],
+      "created_at": 1790766731.3007271,
+      "last_login": 1790766731.3007271
+    },
+    "user_fdef36f346": {
+      "id": "user_fdef36f346",
+      "name": "Database Integration Student",
+      "email": "student_1790766733@lpu.in",
+      "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=student_1790766733@lpu.in",
+      "lpu_reg_no": "120766733",
+      "phone": "9876543210",
+      "password_hash": "e216a84253a83e61e35bda39b22187e9bedb338dc13f001676acf08cbb099bae",
+      "salt": "8ad6449f15c9837f84945bf509a55629",
+      "created_at": 1790766733.694037,
+      "last_login": 1790766733.694037,
+      "active_plan": "free",
+      "plan_name": "Free Starter",
+      "plan_expiry": 0,
+      "is_pro": false,
+      "session_token": "acad_usr_af83da7fb7b547a5a0e4ab5d9800a306",
+      "mock_tests_count": 0,
+      "total_spent_inr": 0,
+      "purchased_subjects": []
+    }
+  }
 }

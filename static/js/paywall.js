@@ -12,6 +12,7 @@ const PaywallManager = {
   currentPlan: 'free',
   isPro: false,
   targetAction: null,
+  _pollInterval: null,
   userData: {
     name: '',
     regNo: '',
@@ -324,31 +325,38 @@ const PaywallManager = {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success || !data.verified) {
-        this.showCheckoutError(data.detail || data.message || 'Payment verification failed. Please check your 12-digit UTR.');
+      if (!res.ok || !data.success) {
+        this.showCheckoutError(data.detail || data.message || 'Payment submission failed. Please check your UTR and try again.');
         return;
       }
 
-      // Payment is strictly verified!
-      this.userData.token = data.token;
-      this.userData.name = nameInput;
-      this.userData.regNo = regInput;
-      this.isPro = true;
-      this.currentPlan = planId;
+      if (data.verified === true && data.token) {
+        // Coupon / free / test UTR — instant access
+        this.userData.token = data.token;
+        this.userData.name = nameInput;
+        this.userData.regNo = regInput;
+        this.isPro = true;
+        this.currentPlan = planId;
 
-      localStorage.setItem(this.TOKEN_KEY, data.token);
-      localStorage.setItem('lpu_verto_pro_token', data.token);
-      localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(this.userData));
+        localStorage.setItem(this.TOKEN_KEY, data.token);
+        localStorage.setItem('lpu_verto_pro_token', data.token);
+        localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(this.userData));
 
-      if (window.AuthManager) {
-        await window.AuthManager.fetchMe();
-        window.AuthManager.renderNavUser();
+        if (window.AuthManager) {
+          await window.AuthManager.fetchMe();
+          window.AuthManager.renderNavUser();
+        }
+
+        this.updateUI();
+        this.showVerifiedSuccessView(data, subjectCode, planId);
+
+      } else if (data.pending === true) {
+        // Real UPI payment — awaiting admin verification
+        this.showPendingVerificationView(data, subjectCode, planId);
+
+      } else {
+        this.showCheckoutError(data.message || 'Payment could not be processed. Please contact support.');
       }
-
-      this.updateUI();
-
-      // Show verified receipt and unlock next page button
-      this.showVerifiedSuccessView(data, subjectCode, planId);
 
     } catch (e) {
       this.showCheckoutError('Network error while verifying payment with server.');
@@ -443,6 +451,86 @@ const PaywallManager = {
     setTimeout(() => {
       window.location.reload();
     }, 1200);
+  },
+
+  showPendingVerificationView(txData, subjectCode, planId) {
+    const modal = document.getElementById('paywall-modal');
+    if (!modal) return;
+    if (this._pollInterval) clearInterval(this._pollInterval);
+    const txId = txData.transaction_id || '';
+    const utrRef = txData.utr_ref || 'N/A';
+    const amount = txData.amount_paid || 0;
+    const waMsg = encodeURIComponent(`Hi AcadAssist! I paid ₹${amount} via UPI. UTR: ${utrRef} (TxID: ${txId}). Please verify my payment!`);
+    modal.innerHTML = `
+      <div class="p-6 sm:p-8 space-y-5 text-center animate-fade-in-up max-w-lg mx-auto">
+        <div class="w-16 h-16 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+          <span class="inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-sm mb-2">⏳ PENDING ADMIN VERIFICATION</span>
+          <h3 class="text-xl font-black text-gray-900 dark:text-white">Payment Submitted! 📩</h3>
+          <p class="text-xs text-gray-600 dark:text-slate-300 mt-2">Your UTR <strong class="font-mono text-pink-600 dark:text-pink-400">${utrRef}</strong> has been recorded. Admin will verify your Paytm/UPI payment and unlock your access.</p>
+          <p class="text-xs text-amber-600 dark:text-amber-400 mt-1 font-semibold">⏱️ Usually verified within 5–30 minutes during business hours.</p>
+        </div>
+        <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 text-left text-xs space-y-2 font-mono">
+          <div class="flex justify-between"><span class="text-gray-400">Transaction ID:</span> <span class="font-bold text-gray-900 dark:text-white">${txId}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">UTR / Ref No:</span> <span class="font-bold text-pink-600 dark:text-pink-400">${utrRef}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Paid to UPI:</span> <span class="font-bold text-gray-700 dark:text-slate-300">7719730804@ptyes</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Amount:</span> <span class="font-bold text-emerald-600">₹${amount}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Status:</span> <span id="pay-status-badge" class="font-bold text-amber-500">PENDING VERIFICATION</span></div>
+        </div>
+        <div class="space-y-2">
+          <button onclick="PaywallManager.pollPaymentStatus('${txId}', '${subjectCode}', '${planId}')" class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
+            🔄 Check Approval Status Now
+          </button>
+          <p class="text-[11px] text-gray-400">Auto-checking every 20 seconds...</p>
+          <a href="https://wa.me/918053122848?text=${waMsg}" target="_blank" class="block w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-2xl transition-all text-center">
+            📲 Send UTR on WhatsApp for Faster Verification
+          </a>
+        </div>
+      </div>
+    `;
+    this._pollInterval = setInterval(() => {
+      PaywallManager.pollPaymentStatus(txId, subjectCode, planId);
+    }, 20000);
+  },
+
+  async pollPaymentStatus(txId, subjectCode, planId) {
+    try {
+      const res = await fetch(`/api/paywall/status/${encodeURIComponent(txId)}`);
+      const data = await res.json();
+      const badge = document.getElementById('pay-status-badge');
+      if (data.is_approved && data.token) {
+        clearInterval(this._pollInterval);
+        this._pollInterval = null;
+        // Grant access instantly
+        this.userData.token = data.token;
+        this.isPro = true;
+        this.currentPlan = planId;
+        localStorage.setItem(this.TOKEN_KEY, data.token);
+        localStorage.setItem('lpu_verto_pro_token', data.token);
+        localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(this.userData));
+        if (window.AuthManager) {
+          await window.AuthManager.fetchMe();
+          window.AuthManager.renderNavUser();
+        }
+        this.updateUI();
+        this.showVerifiedSuccessView({
+          transaction_id: txId,
+          utr_ref: data.utr_ref,
+          plan: data.plan_name,
+          amount_paid: data.amount_paid
+        }, subjectCode, planId);
+      } else if (badge) {
+        if (data.status === 'rejected') {
+          badge.textContent = 'REJECTED — Contact Support on WhatsApp';
+          badge.className = 'font-bold text-red-500';
+          clearInterval(this._pollInterval);
+        } else {
+          badge.textContent = 'PENDING VERIFICATION';
+        }
+      }
+    } catch (e) { /* silent poll */ }
   }
 };
 

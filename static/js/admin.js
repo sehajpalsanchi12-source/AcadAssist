@@ -108,41 +108,67 @@ const AdminPortal = {
         return;
       }
 
-      tbody.innerHTML = txs.map(t => `
-        <tr class="border-b border-gray-100 dark:border-slate-800 text-xs">
-          <td class="py-3 px-2 font-mono font-bold text-gray-900 dark:text-white">${t.tx_id}</td>
+      // Sort: pending first, then by time
+      const sorted = [...txs].sort((a, b) => {
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        return (b.created_at || 0) - (a.created_at || 0);
+      });
+
+      tbody.innerHTML = sorted.map(t => {
+        const isPending = t.status === 'pending';
+        const isRejected = t.status === 'rejected';
+        const statusClass = isPending
+          ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'
+          : (t.status === 'approved'
+            ? 'bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-400'
+            : 'bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400');
+        const rowBg = isPending ? 'bg-amber-50 dark:bg-amber-950/10' : '';
+        return `
+        <tr class="border-b border-gray-100 dark:border-slate-800 text-xs ${rowBg}">
+          <td class="py-3 px-2 font-mono font-bold text-gray-900 dark:text-white text-[10px]">${t.tx_id}</td>
           <td class="py-3 px-2">
             <span class="font-bold block">${t.user_name}</span>
             <span class="text-[11px] text-gray-400 font-mono">Reg: ${t.reg_no || 'N/A'}</span>
           </td>
           <td class="py-3 px-2 font-semibold text-orange-600 dark:text-orange-400">${t.plan_name}</td>
           <td class="py-3 px-2 font-black text-emerald-600 dark:text-emerald-400">₹${t.amount}</td>
-          <td class="py-3 px-2 font-mono text-[11px] text-gray-600 dark:text-slate-300">
-            <span>${t.utr_ref || 'N/A'}</span>
-            <span class="block text-[10px] text-gray-400">To: ${t.upi_destination}</span>
+          <td class="py-3 px-2 font-mono text-[11px]">
+            <span class="text-gray-800 dark:text-slate-200 font-bold">${t.utr_ref || 'N/A'}</span>
+            <span class="block text-[10px] text-gray-400">UPI: ${t.upi_destination || '7719730804@ptyes'}</span>
           </td>
           <td class="py-3 px-2">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${t.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'}">
-              ${t.status.toUpperCase()}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${statusClass}">
+              ${(t.status || 'pending').toUpperCase()}
             </span>
+            ${isPending ? '<span class="block text-[10px] text-amber-500 font-semibold mt-0.5">⚠️ Verify in Paytm</span>' : ''}
           </td>
-          <td class="py-3 px-2">
-            ${t.status !== 'approved' ? `
-              <button onclick="AdminPortal.updateTxStatus('${t.tx_id}', 'approved')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-green-500 hover:bg-green-600 text-white transition-colors">
-                Approve
+          <td class="py-3 px-2 space-y-1">
+            ${isPending ? `
+              <button onclick="AdminPortal.updateTxStatus('${t.tx_id}', 'approved')"
+                class="block w-full px-2.5 py-1 rounded-lg text-[11px] font-bold bg-green-500 hover:bg-green-600 text-white transition-colors">
+                ✓ Approve
               </button>
+              <button onclick="AdminPortal.updateTxStatus('${t.tx_id}', 'rejected')"
+                class="block w-full px-2.5 py-1 rounded-lg text-[11px] font-bold bg-red-500 hover:bg-red-600 text-white transition-colors">
+                ✗ Reject
+              </button>
+            ` : (t.status === 'approved' ? `
+              <span class="text-xs text-green-600 font-bold">✓ Active</span>
             ` : `
-              <span class="text-xs text-gray-400">Active</span>
-            `}
+              <span class="text-xs text-red-500 font-bold">✗ Rejected</span>
+            `)}
           </td>
         </tr>
-      `).join('');
+      `}).join('');
     } catch (e) {
       console.warn("Transactions load error:", e);
     }
   },
 
   async updateTxStatus(txId, status) {
+    const label = status === 'approved' ? 'approve' : 'reject';
+    if (!confirm(`Are you sure you want to ${label} this payment?\n\n${status === 'approved' ? '✅ Student will get instant access.' : '❌ Student access will be denied.'}`)) return;
     try {
       const res = await fetch(`/api/admin/transactions/${txId}/status?token=${encodeURIComponent(this.adminToken)}`, {
         method: 'POST',
@@ -153,6 +179,8 @@ const AdminPortal = {
         this.fetchStats();
         this.fetchTransactions();
         this.fetchUsers();
+      } else {
+        alert("Failed to update transaction status. Please try again.");
       }
     } catch (e) {
       alert("Failed to update transaction status.");

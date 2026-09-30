@@ -103,7 +103,60 @@ async def run_tests():
         assert "Slide 1 of" in r.text
         print("   ✓ Interactive Slide Projector HTML generated successfully")
 
-        print("\n10. Testing Google Authentication: POST /api/auth/google ...")
+        print("\n10a. Testing Secure Student Registration: POST /api/auth/register ...")
+        reg_payload = {
+            "name": "Arjun Singh",
+            "email": "arjun.singh.test@lpu.in",
+            "password": "SecurePassword@123",
+            "lpu_reg_no": "12209988",
+            "phone": "9876543210"
+        }
+        r = await client.post(f"{BASE_URL}/api/auth/register", json=reg_payload)
+        # If user exists from previous run, that's fine, otherwise 200
+        if r.status_code == 200:
+            reg_res = r.json()
+            assert reg_res.get("success") is True
+            assert "password_hash" not in reg_res.get("user", {})
+            assert "salt" not in reg_res.get("user", {})
+            print(f"   ✓ New student registered securely with PBKDF2 hashing: {reg_res['user']['name']}")
+        else:
+            print(f"   ✓ Student registration check (already registered): {r.status_code}")
+
+        # Duplicate registration test
+        r_dup = await client.post(f"{BASE_URL}/api/auth/register", json=reg_payload)
+        assert r_dup.status_code == 400, "Duplicate registration should return 400"
+        print("   ✓ Duplicate registration prevented (HTTP 400)")
+
+        print("\n10b. Testing Secure Login with Invalid Password: POST /api/auth/login ...")
+        r_wrong = await client.post(f"{BASE_URL}/api/auth/login", json={
+            "identifier": "arjun.singh.test@lpu.in",
+            "password": "WrongPassword@999"
+        })
+        assert r_wrong.status_code == 401, f"Expected 401, got {r_wrong.status_code}"
+        print("   ✓ Invalid credentials rejected securely (HTTP 401)")
+
+        print("\n10c. Testing Secure Login with Email and Correct Password: POST /api/auth/login ...")
+        r_login = await client.post(f"{BASE_URL}/api/auth/login", json={
+            "identifier": "arjun.singh.test@lpu.in",
+            "password": "SecurePassword@123"
+        })
+        assert r_login.status_code == 200, f"Login failed: {r_login.status_code}"
+        login_res = r_login.json()
+        assert login_res.get("success") is True
+        assert "password_hash" not in login_res.get("user", {})
+        assert "salt" not in login_res.get("user", {})
+        student_token = login_res.get("session_token")
+        print(f"   ✓ Secure login successful: {login_res['user']['email']} (Token: {student_token[:15]}...)")
+
+        print("\n10d. Testing Secure Login with LPU Registration Number: POST /api/auth/login ...")
+        r_login_reg = await client.post(f"{BASE_URL}/api/auth/login", json={
+            "identifier": "12209988",
+            "password": "SecurePassword@123"
+        })
+        assert r_login_reg.status_code == 200
+        print("   ✓ Registration Number login supported and verified!")
+
+        print("\n10e. Testing Google Authentication: POST /api/auth/google ...")
         r = await client.post(f"{BASE_URL}/api/auth/google", json={
             "google_id": "goog_test_987654",
             "name": "Sanchi Sharma (Verto)",
@@ -116,14 +169,18 @@ async def run_tests():
         auth_data = r.json()
         assert auth_data.get("success") is True
         user = auth_data["user"]
+        assert "password_hash" not in user
+        assert "salt" not in user
         user_session_token = auth_data["session_token"]
-        print(f"   ✓ Google user authenticated: {user['name']} (ID: {user['id']})")
+        print(f"   ✓ Google user authenticated without password leakage: {user['name']} (ID: {user['id']})")
 
         print("\n11. Testing Current User Profile: GET /api/auth/me ...")
         r = await client.get(f"{BASE_URL}/api/auth/me?token={user_session_token}")
         assert r.status_code == 200, f"Failed: {r.status_code}"
         me_data = r.json()
         assert me_data.get("authenticated") is True
+        assert "password_hash" not in me_data.get("user", {})
+        assert "salt" not in me_data.get("user", {})
         print(f"   ✓ Current user verified: {me_data['user']['email']}")
 
         print("\n12. Testing Paywall Plans: GET /api/paywall/plans (Subject Pass ₹49 & Mock Test ₹29) ...")

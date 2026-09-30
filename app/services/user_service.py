@@ -2,6 +2,8 @@ import os
 import json
 import time
 import uuid
+import hashlib
+import secrets
 from typing import Dict, List, Optional, Any
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
@@ -10,7 +12,36 @@ MOCK_TESTS_FILE = os.path.join(DATA_DIR, "mock_tests.json")
 SERVICES_FILE = os.path.join(DATA_DIR, "service_inquiries.json")
 
 class UserService:
-    """Manages student profiles, Google Sign-in sessions, mock test submissions, and service requests."""
+    """Manages student profiles, secure authentication, mock test submissions, and service requests."""
+
+    @classmethod
+    def _hash_password(cls, password: str, salt: Optional[str] = None) -> tuple:
+        """Hash a password using PBKDF2-HMAC-SHA256 with 100,000 iterations."""
+        if not salt:
+            salt = secrets.token_hex(16)
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), 100_000)
+        return dk.hex(), salt
+
+    @classmethod
+    def _verify_password(cls, password: str, salt: str, password_hash: str) -> bool:
+        """Securely verify password hash using constant-time comparison."""
+        if not salt or not password_hash:
+            return False
+        try:
+            dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), 100_000)
+            return secrets.compare_digest(dk.hex(), password_hash)
+        except Exception:
+            return False
+
+    @classmethod
+    def safe_user(cls, user: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Strip sensitive credentials (password hash, salt) from user object before sending to clients."""
+        if not user:
+            return None
+        safe = dict(user)
+        safe.pop("password_hash", None)
+        safe.pop("salt", None)
+        return safe
 
     @classmethod
     def _ensure_files(cls):
@@ -39,6 +70,132 @@ class UserService:
         cls._ensure_files()
         with open(USERS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
+
+    @classmethod
+    def register_user(
+        cls,
+        name: str,
+        email: str,
+        password: str,
+        lpu_reg_no: Optional[str] = None,
+        phone: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Register a new student with salted PBKDF2 password hashing."""
+        name = (name or "").strip()
+        email = (email or "").strip().lower()
+        password = (password or "").strip()
+        lpu_reg_no = (lpu_reg_no or "").strip()
+        phone = (phone or "").strip()
+
+        if not name:
+            return {"success": False, "message": "Please enter your full name."}
+        if not email or "@" not in email or "." not in email:
+            return {"success": False, "message": "Please provide a valid email address."}
+        if len(password) < 6:
+            return {"success": False, "message": "Password must be at least 6 characters long."}
+
+        data = cls._read_users()
+        users = data.get("users", {})
+
+        # Check for existing email or reg no
+        for uid, u in users.items():
+            if u.get("email", "").lower() == email:
+                return {"success": False, "message": "An account with this email already exists. Please sign in."}
+            if lpu_reg_no and u.get("lpu_reg_no") and u.get("lpu_reg_no") == lpu_reg_no:
+                return {"success": False, "message": "An account with this LPU Registration Number already exists. Please sign in."}
+
+        now = time.time()
+        session_token = f"acad_usr_{uuid.uuid4().hex}"
+        pwd_hash, salt = cls._hash_password(password)
+        user_id = f"user_{uuid.uuid4().hex[:10]}"
+
+        user = {
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "picture": f"https://api.dicebear.com/7.x/bottts/svg?seed={email}",
+            "lpu_reg_no": lpu_reg_no,
+            "phone": phone,
+            "password_hash": pwd_hash,
+            "salt": salt,
+            "created_at": now,
+            "last_login": now,
+            "active_plan": "free",
+            "plan_name": "Free Starter",
+            "plan_expiry": 0,
+            "is_pro": False,
+            "session_token": session_token,
+            "mock_tests_count": 0,
+            "total_spent_inr": 0,
+            "purchased_subjects": []
+        }
+
+        users[user_id] = user
+        data["users"] = users
+        cls._write_users(data)
+
+        return {
+            "success": True,
+            "message": "Account created successfully.",
+            "user": cls.safe_user(user),
+            "session_token": session_token
+        }
+
+    @classmethod
+    def login_user(cls, identifier: str, password: str) -> Dict[str, Any]:
+        """Authenticate user by Email or LPU Registration Number and verify password."""
+        identifier = (identifier or "").strip().lower()
+        password = (password or "").strip()
+
+        if not identifier:
+            return {"success": False, "message": "Please enter your Email or LPU Registration Number."}
+        if not password:
+            return {"success": False, "message": "Please enter your password."}
+
+        data = cls._read_users()
+        users = data.get("users", {})
+
+        target_user = None
+        target_uid = None
+
+        for uid, u in users.items():
+            u_email = u.get("email", "").lower()
+            u_reg = (u.get("lpu_reg_no") or "").lower()
+            if u_email == identifier or (u_reg and u_reg == identifier):
+                target_user = u
+                target_uid = uid
+                break
+
+        if not target_user:
+            return {"success": False, "message": "No account found with this email or registration number. Please create an account."}
+
+        stored_hash = target_user.get("password_hash")
+        stored_salt = target_user.get("salt")
+
+        if not stored_hash or not stored_salt:
+            return {
+                "success": False,
+                "message": "This account was registered via Google Sign-In. Please sign in with Google or reset your password."
+            }
+
+        if not cls._verify_password(password, stored_salt, stored_hash):
+            return {"success": False, "message": "Incorrect password. Please try again."}
+
+        now = time.time()
+        session_token = f"acad_usr_{uuid.uuid4().hex}"
+        target_user["last_login"] = now
+        target_user["session_token"] = session_token
+
+        users[target_uid] = target_user
+        data["users"] = users
+        cls._write_users(data)
+
+        return {
+            "success": True,
+            "message": "Logged in successfully.",
+            "user": cls.safe_user(target_user),
+            "session_token": session_token
+        }
 
     @classmethod
     def google_auth(
@@ -102,7 +259,7 @@ class UserService:
 
         return {
             "success": True,
-            "user": user,
+            "user": cls.safe_user(user),
             "session_token": session_token
         }
 
@@ -120,13 +277,13 @@ class UserService:
                     u["is_pro"] = False
                     u["active_plan"] = "free"
                     u["plan_name"] = "Free Starter"
-                return u
+                return cls.safe_user(u)
         return None
 
     @classmethod
     def get_user_by_id(cls, user_id: str) -> Optional[Dict[str, Any]]:
         data = cls._read_users()
-        return data.get("users", {}).get(user_id)
+        return cls.safe_user(data.get("users", {}).get(user_id))
 
     @classmethod
     def update_profile(cls, user_id: str, lpu_reg_no: Optional[str] = None, phone: Optional[str] = None, name: Optional[str] = None) -> Dict[str, Any]:
@@ -146,7 +303,7 @@ class UserService:
         users[user_id] = user
         data["users"] = users
         cls._write_users(data)
-        return {"success": True, "user": user}
+        return {"success": True, "user": cls.safe_user(user)}
 
     @classmethod
     def grant_user_plan(
@@ -180,12 +337,12 @@ class UserService:
         users[user_id] = user
         data["users"] = users
         cls._write_users(data)
-        return {"success": True, "user": user}
+        return {"success": True, "user": cls.safe_user(user)}
 
     @classmethod
     def list_all_users(cls) -> List[Dict[str, Any]]:
         data = cls._read_users()
-        return list(data.get("users", {}).values())
+        return [cls.safe_user(u) for u in data.get("users", {}).values()]
 
     @classmethod
     def delete_user(cls, user_id: str) -> bool:

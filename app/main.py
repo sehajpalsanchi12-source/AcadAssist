@@ -483,6 +483,42 @@ async def generate_exam(
 
 # ── User & Google Authentication Endpoints ───────────────────────────────
 
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    lpu_reg_no: Optional[str] = None
+    phone: Optional[str] = None
+
+@app.post("/api/auth/register")
+async def register(req: RegisterRequest):
+    """Securely register a student with salted PBKDF2 password hashing."""
+    res = UserService.register_user(
+        name=req.name,
+        email=req.email,
+        password=req.password,
+        lpu_reg_no=req.lpu_reg_no,
+        phone=req.phone
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message"))
+    return res
+
+class LoginRequest(BaseModel):
+    identifier: str
+    password: str
+
+@app.post("/api/auth/login")
+async def login(req: LoginRequest):
+    """Securely authenticate a student with Email or LPU Reg No and password."""
+    res = UserService.login_user(
+        identifier=req.identifier,
+        password=req.password
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=401, detail=res.get("message"))
+    return res
+
 class GoogleAuthRequest(BaseModel):
     google_id: str
     name: str

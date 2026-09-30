@@ -10,8 +10,8 @@ const PaywallManager = {
   currentPlan: 'free',
   isPro: false,
   userData: {
-    name: 'LPU Student',
-    regNo: '12200001',
+    name: '',
+    regNo: '',
     phone: '',
     token: null
   },
@@ -189,15 +189,19 @@ const PaywallManager = {
       upiLink.href = upiUri;
     }
 
-    // Autofill user details
+    // Autofill user details only if authenticated, otherwise keep cleanly empty
+    const nameInp = document.getElementById('checkout-student-name');
+    const regInp = document.getElementById('checkout-reg-no');
+    const phoneInp = document.getElementById('checkout-phone');
     if (window.AuthManager && window.AuthManager.currentUser) {
       const u = window.AuthManager.currentUser;
-      const nameInp = document.getElementById('checkout-student-name');
-      const regInp = document.getElementById('checkout-reg-no');
-      const phoneInp = document.getElementById('checkout-phone');
-      if (nameInp) nameInp.value = u.name;
-      if (regInp && u.lpu_reg_no) regInp.value = u.lpu_reg_no;
-      if (phoneInp && u.phone) phoneInp.value = u.phone;
+      if (nameInp) nameInp.value = u.name || '';
+      if (regInp) regInp.value = u.lpu_reg_no || '';
+      if (phoneInp) phoneInp.value = u.phone || '';
+    } else {
+      if (nameInp) nameInp.value = '';
+      if (regInp) regInp.value = '';
+      if (phoneInp) phoneInp.value = '';
     }
 
     // Reset coupon & UTR

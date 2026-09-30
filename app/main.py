@@ -775,16 +775,35 @@ class ServiceInquiryRequest(BaseModel):
     details: str
     subject_or_topic: Optional[str] = None
     deadline: Optional[str] = None
+    budget: Optional[str] = None
+    reg_no: Optional[str] = None
+    urgency: Optional[str] = None
+    custom_specs: Optional[Dict[str, Any]] = None
 
 @app.post("/api/services/inquiry")
 async def submit_service_inquiry(req: ServiceInquiryRequest):
     """Receive student service order inquiries and save to database."""
+    full_details = req.details
+    meta_tags = []
+    if req.budget:
+        meta_tags.append(f"Budget: ₹{req.budget}")
+    if req.reg_no:
+        meta_tags.append(f"Reg: {req.reg_no}")
+    if req.urgency:
+        meta_tags.append(f"Urgency: {req.urgency}")
+    if req.custom_specs:
+        specs_str = ", ".join(f"{k}: {v}" for k, v in req.custom_specs.items() if v)
+        if specs_str:
+            meta_tags.append(f"Specs: [{specs_str}]")
+    if meta_tags:
+        full_details = f"[{' | '.join(meta_tags)}]\n{req.details}"
+
     return UserService.record_service_inquiry(
         service_category=req.service_category,
         student_name=req.student_name,
         phone=req.phone,
         email=req.email,
-        details=req.details,
+        details=full_details,
         subject_or_topic=req.subject_or_topic,
         deadline=req.deadline
     )

@@ -60,7 +60,18 @@ Every single subject from `notes.lpuverto.xyz` is scraped, organized, and availa
   - **Live Question Search**: Search questions across all past year papers by keywords (e.g., *QuickSort*, *Stokes Theorem*, *Banker's Algorithm*, *Paging*, *Eutrophication*).
   - **1-Click Print / PDF Export**: Formatted to match authentic LPU examination paper layout with Roll Number and Paper Code headers.
 
-### 4. 💳 Direct UPI Payment Gateway (`7719730804@ptyes`)
+### 5. 🖥️ Automated PowerPoint (.pptx) Presentation Generator for Every Subject
+- User Requirement: *"automativally generate the ppts for every subject as well as well and push all of this websote in my github repo so i can host it"*
+- **Full 266+ Subject PPT Coverage**:
+  - Native 16:9 widescreen `.pptx` presentation slide decks generated for **all 266 subjects** in the catalog.
+  - Pre-generated and cached in `data/ppts/{code}_presentation.pptx` for instant 1-click downloads.
+  - Generated using `python-pptx` with AcadAssist branding (#E11D48 / #0F172A), syllabus outlines, state transitions, algorithms/pseudocode, asymptotic complexity trade-offs, LPU exam blueprints, authentic PYQ spotlights, and speaker notes.
+- **Interactive Projector Mode**:
+  - Fullscreen in-browser slide projector (`/api/export-slides`) with keyboard navigation (←/→ arrow keys), speaker notes toggling, and clean presentation formatting for classroom or group study.
+- **Custom PPT Generation**:
+  - Upload notes or input any topic in Study Studio to generate custom PowerPoint files on the fly via `POST /api/generate-custom-pptx`.
+
+### 6. 💳 Direct UPI Payment Gateway (`7719730804@ptyes`)
 - Payment Destination: **`7719730804@ptyes`**
 - Payee Name: **AcadAssist**
 - Dynamic QR code generation for PhonePe, Google Pay, Paytm, BHIM (`upi://pay?pa=7719730804@ptyes&pn=AcadAssist&am={price}&cu=INR`)
@@ -68,14 +79,14 @@ Every single subject from `notes.lpuverto.xyz` is scraped, organized, and availa
 - 12-Digit UTR / Transaction Reference ID tracking & automatic verification
 - Recorded in `data/transactions.json` for real-time admin review.
 
-### 5. 👤 Google Authentication & Profile Storage
+### 7. 👤 Google Authentication & Profile Storage
 - One-click Google Sign-in (with demo quick-switch or custom student profile)
 - Saves student details properly in `data/users.json`:
   - `id`, `google_id`, `name`, `email`, `picture`, `lpu_reg_no`, `phone`
   - `active_plan`, `plan_expiry`, `is_pro`, `mock_tests_count`, `total_spent_inr`
 - Real-time profile badge in navbar with profile update modal.
 
-### 6. 🛡️ Master Admin Control Panel
+### 8. 🛡️ Master Admin Control Panel
 - **Login Credentials**:
   - **Username**: `acadassit0812` (also supports `acadassist0812`)
   - **Password**: `;Sharma@1290`
@@ -90,7 +101,29 @@ Every single subject from `notes.lpuverto.xyz` is scraped, organized, and availa
 
 ---
 
-## 🚀 How to Run the Website
+## 🌐 How to Host on GitHub & Cloud (Render / Railway / Vercel)
+
+### Pushing to your GitHub Repository:
+```bash
+# 1. Add your GitHub repository remote
+git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY_NAME>.git
+
+# 2. Push all code, data, and PPTs to your main branch
+git push -u origin main
+```
+
+### Free 1-Click Hosting on Render.com:
+1. Go to [dashboard.render.com](https://dashboard.render.com) and click **"New Web Service"**.
+2. Select your newly pushed GitHub repository.
+3. Configure settings:
+   - **Environment**: `Python`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Click **Deploy Web Service** — AcadAssist will be live on a public HTTPS URL (e.g. `https://acadassist.onrender.com`)!
+
+---
+
+## 🚀 How to Run Locally
 
 ### 1. Launch FastAPI Server
 ```bash
@@ -103,11 +136,11 @@ cd /Users/sanchisharma/.gemini/antigravity/scratch/lpu-verto-exam-ai
 ### 2. Open in Browser
 👉 Visit: **http://127.0.0.1:8000**
 
-### 3. Run Automated 19-Stage Test Suite
+### 3. Run Automated 28-Stage Test Suite
 ```bash
 .venv/bin/python test_server.py
 ```
-*(All 19 tests pass 100%, verifying Google auth, UPI paywall to `7719730804@ptyes`, admin controls, poster courses, and exam simulation).*
+*(All 28 tests pass 100%, verifying Google auth, UPI paywall to `7719730804@ptyes`, admin controls, poster courses, exam simulation, all 266 subjects, and PowerPoint slide generation).*
 
 ---
 

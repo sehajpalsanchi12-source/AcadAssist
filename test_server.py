@@ -400,7 +400,45 @@ async def run_tests():
         assert len(r.content) > 20000
         print(f"   ✓ Custom PPT Generated: {len(r.content):,} bytes")
 
-        print("\n🎉 ALL 28 EXTENSIVE END-TO-END TESTS PASSED WITH 100% SUCCESS!")
+        print("\n29. Testing Real Relational Database Health: GET /api/database/status ...")
+        r = await client.get(f"{BASE_URL}/api/database/status")
+        assert r.status_code == 200, f"Database status failed: {r.status_code}"
+        db_res = r.json()
+        assert db_res.get("success") is True, "Database success flag false"
+        db_info = db_res.get("database", {})
+        print(f"   ✓ Database Engine: {db_info.get('database_type')}")
+        print(f"   ✓ Database File: {db_info.get('database_file')}")
+        print(f"   ✓ SQLite Version: {db_info.get('sqlite_version')}")
+        print(f"   ✓ Database Size: {db_info.get('database_size_kb')} KB")
+        print(f"   ✓ Table Counts: {db_info.get('tables')}")
+        assert db_info.get("status") == "HEALTHY & CONNECTED"
+        assert db_info.get("tables", {}).get("users", 0) >= 1
+        assert db_info.get("tables", {}).get("transactions", 0) >= 1
+
+        print("\n30. Testing Database ACID Persistence & Dual-Sync Integrity ...")
+        import time
+        unique_email = f"student_{int(time.time())}@lpu.in"
+        reg_r = await client.post(f"{BASE_URL}/api/auth/register", json={
+            "name": "Database Integration Student",
+            "email": unique_email,
+            "password": "SecurePassword123!",
+            "lpu_reg_no": f"120{int(time.time()) % 1000000}",
+            "phone": "9876543210"
+        })
+        assert reg_r.status_code == 200, f"Registration failed: {reg_r.text}"
+        reg_data = reg_r.json()
+        assert reg_data.get("success") is True
+        token = reg_data.get("session_token")
+
+        # Verify immediate indexed lookup from database via /api/auth/me
+        me_r = await client.get(f"{BASE_URL}/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+        assert me_r.status_code == 200
+        me_data = me_r.json()
+        assert me_data.get("authenticated") is True
+        assert me_data.get("user", {}).get("email") == unique_email
+        print(f"   ✓ New user saved & retrieved from real database instantly: {me_data['user']['email']}")
+
+        print("\n🎉 ALL 30 EXTENSIVE END-TO-END TESTS PASSED WITH 100% SUCCESS!")
 
 if __name__ == "__main__":
     asyncio.run(run_tests())

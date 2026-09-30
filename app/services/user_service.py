@@ -6,6 +6,8 @@ import hashlib
 import secrets
 from typing import Dict, List, Optional, Any
 
+from app.database import Database
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 MOCK_TESTS_FILE = os.path.join(DATA_DIR, "mock_tests.json")
@@ -94,10 +96,15 @@ class UserService:
         if len(password) < 6:
             return {"success": False, "message": "Password must be at least 6 characters long."}
 
+        # Check for existing email or reg no in DB and JSON
+        if Database.get_user_by_email(email):
+            return {"success": False, "message": "An account with this email already exists. Please sign in."}
+        if lpu_reg_no and Database.get_user_by_reg_no(lpu_reg_no):
+            return {"success": False, "message": "An account with this LPU Registration Number already exists. Please sign in."}
+
         data = cls._read_users()
         users = data.get("users", {})
 
-        # Check for existing email or reg no
         for uid, u in users.items():
             if u.get("email", "").lower() == email:
                 return {"success": False, "message": "An account with this email already exists. Please sign in."}
@@ -130,6 +137,10 @@ class UserService:
             "purchased_subjects": []
         }
 
+        # 1. Primary write to SQLite Relational Database
+        Database.save_user(user)
+
+        # 2. Dual-sync write to users.json for backward compatibility
         users[user_id] = user
         data["users"] = users
         cls._write_users(data)
@@ -152,19 +163,19 @@ class UserService:
         if not password:
             return {"success": False, "message": "Please enter your password."}
 
-        data = cls._read_users()
-        users = data.get("users", {})
+        # Query Database first
+        target_user = Database.get_user_by_email(identifier) or Database.get_user_by_reg_no(identifier)
 
-        target_user = None
-        target_uid = None
-
-        for uid, u in users.items():
-            u_email = u.get("email", "").lower()
-            u_reg = (u.get("lpu_reg_no") or "").lower()
-            if u_email == identifier or (u_reg and u_reg == identifier):
-                target_user = u
-                target_uid = uid
-                break
+        if not target_user:
+            # Fallback check in JSON
+            data = cls._read_users()
+            users = data.get("users", {})
+            for uid, u in users.items():
+                u_email = u.get("email", "").lower()
+                u_reg = (u.get("lpu_reg_no") or "").lower()
+                if u_email == identifier or (u_reg and u_reg == identifier):
+                    target_user = u
+                    break
 
         if not target_user:
             return {"success": False, "message": "No account found with this email or registration number. Please create an account."}
@@ -186,7 +197,13 @@ class UserService:
         target_user["last_login"] = now
         target_user["session_token"] = session_token
 
-        users[target_uid] = target_user
+        # Save to SQLite Database
+        Database.save_user(target_user)
+
+        # Dual-sync to JSON
+        data = cls._read_users()
+        users = data.get("users", {})
+        users[target_user["id"]] = target_user
         data["users"] = users
         cls._write_users(data)
 
@@ -208,20 +225,13 @@ class UserService:
         phone: Optional[str] = None
     ) -> Dict[str, Any]:
         """Sign in or register a user with Google credentials."""
-        data = cls._read_users()
-        users = data.get("users", {})
-
-        # Find existing user by google_id or email
-        user_id = None
-        for uid, u in users.items():
-            if u.get("google_id") == google_id or u.get("email", "").lower() == email.lower():
-                user_id = uid
-                break
-
         now = time.time()
         session_token = f"acad_usr_{uuid.uuid4().hex}"
 
-        if not user_id:
+        # Check in Database first
+        user = Database.get_user_by_google_id(google_id) or Database.get_user_by_email(email)
+
+        if not user:
             user_id = f"user_{uuid.uuid4().hex[:10]}"
             user = {
                 "id": user_id,
@@ -243,7 +253,6 @@ class UserService:
                 "purchased_subjects": []
             }
         else:
-            user = users[user_id]
             user["name"] = name or user.get("name")
             user["picture"] = picture or user.get("picture")
             if lpu_reg_no:
@@ -253,7 +262,13 @@ class UserService:
             user["last_login"] = now
             user["session_token"] = session_token
 
-        users[user_id] = user
+        # Save to Database
+        Database.save_user(user)
+
+        # Dual-sync to JSON
+        data = cls._read_users()
+        users = data.get("users", {})
+        users[user["id"]] = user
         data["users"] = users
         cls._write_users(data)
 
@@ -265,34 +280,61 @@ class UserService:
 
     @classmethod
     def get_user_by_token(cls, token: Optional[str]) -> Optional[Dict[str, Any]]:
-        """Look up active user by session token."""
+        """Look up active user by session token from real database (with JSON fallback)."""
         if not token:
             return None
-        data = cls._read_users()
-        users = data.get("users", {})
-        for _, u in users.items():
-            if u.get("session_token") == token:
-                # Check if plan expired
-                if u.get("plan_expiry", 0) > 0 and time.time() > u["plan_expiry"]:
-                    u["is_pro"] = False
-                    u["active_plan"] = "free"
-                    u["plan_name"] = "Free Starter"
-                return cls.safe_user(u)
+
+        # Check SQLite Database first
+        user = Database.get_user_by_token(token)
+
+        # Fallback to JSON if not yet in SQLite
+        if not user:
+            data = cls._read_users()
+            users = data.get("users", {})
+            for _, u in users.items():
+                if u.get("session_token") == token:
+                    user = u
+                    break
+
+        if user:
+            # Check if plan expired
+            if user.get("plan_expiry", 0) > 0 and time.time() > user["plan_expiry"]:
+                user["is_pro"] = False
+                user["active_plan"] = "free"
+                user["plan_name"] = "Free Starter"
+                Database.save_user(user)
+
+                data = cls._read_users()
+                if user.get("id") in data.get("users", {}):
+                    data["users"][user["id"]] = user
+                    cls._write_users(data)
+
+            return cls.safe_user(user)
+
         return None
 
     @classmethod
     def get_user_by_id(cls, user_id: str) -> Optional[Dict[str, Any]]:
-        data = cls._read_users()
-        return cls.safe_user(data.get("users", {}).get(user_id))
+        """Fetch user by primary key ID."""
+        user = Database.get_user_by_id(user_id)
+        if not user:
+            data = cls._read_users()
+            user = data.get("users", {}).get(user_id)
+        return cls.safe_user(user)
 
     @classmethod
     def update_profile(cls, user_id: str, lpu_reg_no: Optional[str] = None, phone: Optional[str] = None, name: Optional[str] = None) -> Dict[str, Any]:
+        """Update student profile details in database."""
+        user = Database.get_user_by_id(user_id)
         data = cls._read_users()
         users = data.get("users", {})
-        if user_id not in users:
+
+        if not user and user_id in users:
+            user = users[user_id]
+
+        if not user:
             return {"success": False, "message": "User not found"}
 
-        user = users[user_id]
         if lpu_reg_no:
             user["lpu_reg_no"] = lpu_reg_no
         if phone:
@@ -300,9 +342,12 @@ class UserService:
         if name:
             user["name"] = name
 
+        # Persist to Database & JSON
+        Database.save_user(user)
         users[user_id] = user
         data["users"] = users
         cls._write_users(data)
+
         return {"success": True, "user": cls.safe_user(user)}
 
     @classmethod
@@ -315,18 +360,22 @@ class UserService:
         amount_paid: float = 0.0,
         subject_code: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Upgrade user to paid plan or subject mock test pass."""
+        """Upgrade user to paid plan or subject mock test pass in database."""
+        user = Database.get_user_by_id(user_id)
         data = cls._read_users()
         users = data.get("users", {})
-        if user_id not in users:
+
+        if not user and user_id in users:
+            user = users[user_id]
+
+        if not user:
             return {"success": False, "message": "User not found"}
 
-        user = users[user_id]
         user["active_plan"] = plan_id
         user["plan_name"] = plan_name
         user["plan_expiry"] = time.time() + (duration_days * 86400)
         user["is_pro"] = True
-        user["total_spent_inr"] = user.get("total_spent_inr", 0) + amount_paid
+        user["total_spent_inr"] = float(user.get("total_spent_inr", 0)) + float(amount_paid)
 
         if subject_code:
             purchased = user.get("purchased_subjects", [])
@@ -334,26 +383,36 @@ class UserService:
                 purchased.append(subject_code)
             user["purchased_subjects"] = purchased
 
+        # Persist to Database & JSON
+        Database.save_user(user)
         users[user_id] = user
         data["users"] = users
         cls._write_users(data)
+
         return {"success": True, "user": cls.safe_user(user)}
 
     @classmethod
     def list_all_users(cls) -> List[Dict[str, Any]]:
+        """List all users from database."""
+        db_users = Database.list_all_users()
+        if db_users:
+            return [cls.safe_user(u) for u in db_users]
         data = cls._read_users()
         return [cls.safe_user(u) for u in data.get("users", {}).values()]
 
     @classmethod
     def delete_user(cls, user_id: str) -> bool:
+        """Delete user by ID from database and file."""
+        deleted_db = Database.delete_user(user_id)
         data = cls._read_users()
         users = data.get("users", {})
+        deleted_json = False
         if user_id in users:
             del users[user_id]
             data["users"] = users
             cls._write_users(data)
-            return True
-        return False
+            deleted_json = True
+        return deleted_db or deleted_json
 
     # ── Mock Tests Storage ──
 
@@ -371,13 +430,7 @@ class UserService:
         grade: str,
         summary: Dict[str, Any]
     ) -> Dict[str, Any]:
-        cls._ensure_files()
-        try:
-            with open(MOCK_TESTS_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception:
-            data = {"tests": []}
-
+        """Save student mock test result into SQLite relational database and JSON."""
         test_record = {
             "id": f"test_{uuid.uuid4().hex[:10]}",
             "user_id": user_id or "guest",
@@ -394,12 +447,27 @@ class UserService:
             "formatted_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         }
 
+        # 1. Primary write to SQLite Relational Database
+        Database.save_mock_test(test_record)
+
+        # 2. Dual-sync write to mock_tests.json
+        cls._ensure_files()
+        try:
+            with open(MOCK_TESTS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = {"tests": []}
         data.setdefault("tests", []).insert(0, test_record)
         with open(MOCK_TESTS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
 
         # Increment user count if registered
         if user_id and user_id != "guest":
+            user = Database.get_user_by_id(user_id)
+            if user:
+                user["mock_tests_count"] = int(user.get("mock_tests_count", 0)) + 1
+                Database.save_user(user)
+
             udata = cls._read_users()
             if user_id in udata.get("users", {}):
                 udata["users"][user_id]["mock_tests_count"] = udata["users"][user_id].get("mock_tests_count", 0) + 1
@@ -409,6 +477,10 @@ class UserService:
 
     @classmethod
     def list_all_mock_tests(cls) -> List[Dict[str, Any]]:
+        """List all mock tests from database."""
+        tests = Database.list_all_mock_tests()
+        if tests:
+            return tests
         cls._ensure_files()
         try:
             with open(MOCK_TESTS_FILE, "r", encoding="utf-8") as f:
@@ -430,13 +502,7 @@ class UserService:
         subject_or_topic: Optional[str] = None,
         deadline: Optional[str] = None
     ) -> Dict[str, Any]:
-        cls._ensure_files()
-        try:
-            with open(SERVICES_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception:
-            data = {"inquiries": []}
-
+        """Save a new service inquiry into SQLite database and JSON."""
         inquiry = {
             "id": f"inq_{uuid.uuid4().hex[:10]}",
             "service_category": service_category,
@@ -451,6 +517,16 @@ class UserService:
             "formatted_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         }
 
+        # 1. Primary write to SQLite Relational Database
+        Database.save_service_inquiry(inquiry)
+
+        # 2. Dual-sync write to service_inquiries.json
+        cls._ensure_files()
+        try:
+            with open(SERVICES_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = {"inquiries": []}
         data.setdefault("inquiries", []).insert(0, inquiry)
         with open(SERVICES_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
@@ -459,6 +535,10 @@ class UserService:
 
     @classmethod
     def list_service_inquiries(cls) -> List[Dict[str, Any]]:
+        """List all service inquiries from database."""
+        inquiries = Database.list_service_inquiries()
+        if inquiries:
+            return inquiries
         cls._ensure_files()
         try:
             with open(SERVICES_FILE, "r", encoding="utf-8") as f:
@@ -469,20 +549,21 @@ class UserService:
 
     @classmethod
     def update_inquiry_status(cls, inquiry_id: str, status: str) -> bool:
+        """Update inquiry status in database and file."""
+        db_updated = Database.update_inquiry_status(inquiry_id, status)
         cls._ensure_files()
+        file_updated = False
         try:
             with open(SERVICES_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            found = False
             for item in data.get("inquiries", []):
                 if item.get("id") == inquiry_id:
                     item["status"] = status
-                    found = True
+                    file_updated = True
                     break
-            if found:
+            if file_updated:
                 with open(SERVICES_FILE, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2)
-                return True
         except Exception:
             pass
-        return False
+        return db_updated or file_updated

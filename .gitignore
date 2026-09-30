@@ -26,3 +26,6 @@ test_output/
 !data/
 !data/*.json
 !data/ppts/
+!data/acadassist.db
+*.db-shm
+*.db-wal

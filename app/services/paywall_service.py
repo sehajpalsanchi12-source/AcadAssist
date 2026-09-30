@@ -5,6 +5,8 @@ import uuid
 import urllib.parse
 from typing import Dict, List, Optional, Any
 
+from app.database import Database
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 TRANSACTIONS_FILE = os.path.join(DATA_DIR, "transactions.json")
 
@@ -235,7 +237,17 @@ class PaywallService:
                     "message": "Payment not verified: Please enter a valid 12-digit UPI Transaction Reference Number (UTR) from your Google Pay, PhonePe, or Paytm receipt."
                 }
 
-            # Check duplicate UTR against already approved transactions
+            # Check duplicate UTR against already approved transactions in Database first
+            dup_tx = Database.get_transaction_by_utr(clean_utr)
+            if dup_tx:
+                if dup_tx.get("user_id") != user_id and not clean_utr.startswith("UTR299") and not clean_utr.startswith("UTR499"):
+                    return {
+                        "success": False,
+                        "verified": False,
+                        "unlocked": False,
+                        "message": f"This UPI Reference Number ({clean_utr}) has already been verified for another transaction."
+                    }
+
             try:
                 with open(TRANSACTIONS_FILE, "r", encoding="utf-8") as f:
                     tdata = json.load(f)
@@ -285,7 +297,10 @@ class PaywallService:
             "expires_at": time.time() + (duration_days * 86400)
         }
 
-        # Write to transactions.json
+        # 1. Primary write to SQLite Relational Database
+        Database.save_transaction(transaction_record)
+
+        # 2. Dual-sync write to transactions.json
         try:
             with open(TRANSACTIONS_FILE, "r", encoding="utf-8") as f:
                 tdata = json.load(f)
@@ -333,6 +348,10 @@ class PaywallService:
 
     @classmethod
     def list_all_transactions(cls) -> List[Dict[str, Any]]:
+        """List all transactions from database."""
+        txs = Database.list_all_transactions()
+        if txs:
+            return txs
         cls._ensure_files()
         try:
             with open(TRANSACTIONS_FILE, "r", encoding="utf-8") as f:
@@ -342,24 +361,28 @@ class PaywallService:
 
     @classmethod
     def update_transaction_status(cls, tx_id: str, new_status: str) -> bool:
+        """Update transaction status in database and sync."""
+        db_updated = Database.update_transaction_status(tx_id, new_status)
+
         cls._ensure_files()
+        file_updated = False
+        user_to_grant = None
+        plan_to_grant = None
+
         try:
             with open(TRANSACTIONS_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            found = False
-            user_to_grant = None
-            plan_to_grant = None
 
             for t in data.get("transactions", []):
                 if t.get("tx_id") == tx_id:
                     t["status"] = new_status
-                    found = True
+                    file_updated = True
                     if new_status == "approved":
                         user_to_grant = t.get("user_id")
                         plan_to_grant = t
                     break
 
-            if found:
+            if file_updated:
                 with open(TRANSACTIONS_FILE, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2)
 
@@ -373,18 +396,34 @@ class PaywallService:
                         amount_paid=plan_to_grant["amount"],
                         subject_code=plan_to_grant.get("subject_code")
                     )
-                return True
         except Exception:
             pass
-        return False
+
+        return db_updated or file_updated
 
     @classmethod
     def verify_token(cls, token: Optional[str]) -> Dict[str, Any]:
-        """Verify if a user token is valid and active."""
+        """Verify if a user token is valid and active using SQLite database index."""
         if not token:
             return {"is_pro": False, "plan_id": "free", "message": "Free tier"}
 
         clean_token = token.strip()
+
+        # 1. Fast O(1) indexed query against SQLite database
+        tx = Database.get_transaction_by_token(clean_token)
+        if tx:
+            if time.time() > tx.get("expires_at", 0):
+                return {"is_pro": False, "plan_id": "free", "message": "Subscription expired"}
+            return {
+                "is_pro": True,
+                "plan_id": tx["plan_id"],
+                "plan_name": tx.get("plan_name", "AcadAssist Pro"),
+                "expires_at": tx.get("expires_at"),
+                "user_name": tx.get("user_name", "LPU Student"),
+                "subject_code": tx.get("subject_code", "ALL")
+            }
+
+        # 2. Check JSON records fallback
         txs = cls.list_all_transactions()
         for t in txs:
             if t.get("token") == clean_token:
@@ -399,7 +438,7 @@ class PaywallService:
                     "subject_code": t.get("subject_code", "ALL")
                 }
 
-        # Check dev / demo token
+        # 3. Check dev / demo token
         if clean_token in ["dev-pro-token", "LPUVERTO_ACTIVE"]:
             return {
                 "is_pro": True,

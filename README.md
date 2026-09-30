@@ -136,11 +136,25 @@ cd /Users/sanchisharma/.gemini/antigravity/scratch/lpu-verto-exam-ai
 ### 2. Open in Browser
 👉 Visit: **http://127.0.0.1:8000**
 
-### 3. Run Automated 28-Stage Test Suite
+### 3. Run Automated 30-Stage Test Suite
 ```bash
 .venv/bin/python test_server.py
 ```
-*(All 28 tests pass 100%, verifying Google auth, UPI paywall to `7719730804@ptyes`, admin controls, poster courses, exam simulation, all 266 subjects, and PowerPoint slide generation).*
+*(All 30 tests pass 100%, verifying Google auth, PBKDF2 password security, UPI paywall to `7719730804@ptyes` with QR code, strict 12-digit UTR validation, SQLite relational database with WAL mode, admin controls, poster courses, exam simulation, all 266 subjects, and PowerPoint slide generation).*
+
+---
+
+## 🗄️ Production Relational Database Layer (`acadassist.db`)
+- **Engine**: SQLite 3 (ACID-Compliant with Write-Ahead Logging `PRAGMA journal_mode = WAL;`)
+- **Optimized Concurrency**: Non-blocking concurrent reads during high-frequency writes.
+- **Relational Tables with B-Tree Indexes**:
+  1. `users` — Student profiles, hashed PBKDF2 passwords, salt, pro subscription expiry, session tokens (`idx_users_email`, `idx_users_regno`, `idx_users_token`).
+  2. `transactions` — Verified ₹49 & ₹29 payments, 12-digit UTR references, plan scopes (`idx_tx_token`, `idx_tx_utr`, `idx_tx_user`).
+  3. `mock_tests` — Completed student exam scores, TCS iON grades, breakdown summaries (`idx_mock_user`, `idx_mock_subject`).
+  4. `service_inquiries` — Student requests for EduCode, NeoBrowser, and assignments (`idx_inq_status`).
+  5. `custom_subjects` — Custom syllabi and course definitions.
+- **Dual Persistence**: Database writes automatically synchronize with JSON files to maintain 100% backward compatibility and seamless export snapshots.
+- **Health & Diagnostic Endpoint**: `GET /api/database/status` provides live uptime metrics, table counts, and file sizes.
 
 ---
 
@@ -148,40 +162,38 @@ cd /Users/sanchisharma/.gemini/antigravity/scratch/lpu-verto-exam-ai
 ```
 lpu-verto-exam-ai/
 ├── app/
-│   ├── main.py                  # FastAPI routes (Auth, Paywall, Admin, Assets, Exam)
+│   ├── main.py                  # FastAPI routes (Auth, Paywall, Admin, Assets, Exam, Database Health)
+│   ├── database.py              # SQLite Relational Database Engine (WAL mode, schemas, indexes, migrations)
 │   └── services/
 │       ├── admin_service.py     # Master admin login (acadassit0812 / ;Sharma@1290) & analytics
-│       ├── user_service.py      # Google auth, student profiles, mock test & inquiry store
-│       ├── paywall_service.py   # UPI payments (7719730804@ptyes), ₹49 plan, UTR tracking
+│       ├── user_service.py      # Google auth, PBKDF2 student security, mock test & inquiry CRUD
+│       ├── paywall_service.py   # UPI payments (7719730804@ptyes), ₹49 & ₹29 plans, UTR verification
 │       ├── lpuverto_service.py  # notes.lpuverto.xyz sync & preloaded poster courses
 │       ├── exam_generator.py    # LPU exam pattern & question generator
 │       ├── study_asset_generator.py # Notes, slides, short notes, roadmaps
+│       ├── ppt_service.py       # Native Microsoft PowerPoint (.pptx) generator
+│       ├── pyq_service.py       # Past year question papers catalog & solutions
 │       └── document_parser.py   # PDF & text parser
 ├── data/
-│   ├── users.json               # Registered Google student profiles
-│   ├── transactions.json        # UPI payments & UTR reference records
-│   ├── mock_tests.json          # Completed student test scorecards & grades
-│   ├── service_inquiries.json   # Service orders (EduCode, NeoBrowser, Handwritten, PPT)
-│   └── custom_subjects.json     # Saved user-created courses
+│   ├── acadassist.db            # Production SQLite Relational Database (WAL mode)
+│   ├── users.json               # Synced student profiles
+│   ├── transactions.json        # Synced UPI payment records
+│   ├── mock_tests.json          # Synced student test scorecards & grades
+│   ├── service_inquiries.json   # Synced service orders (EduCode, NeoBrowser, etc.)
+│   └── custom_subjects.json     # Synced custom courses
 ├── static/
 │   ├── index.html               # AcadAssist UI with Midterm Mode, Admin & Google Login
 │   ├── css/
 │   │   └── styles.css           # Styling, paywall blurs & print layouts
-│   ├── img/
-│   │   ├── acadassist-new-logo-transparent.png # Pink & black official logo
-│   │   ├── acadassist-logo-transparent.png     # Official horizontal brandmark
-│   │   ├── acadassist-icon-transparent.png     # Official favicon/app icon
-│   │   ├── acadassist-poster-new.jpg           # Latest user poster
-│   │   └── acadassist-poster.jpg               # First user poster
+│   ├── images/
+│   │   └── official_paywall_qr.jpg # User's official UPI QR code (7719730804@ptyes)
 │   └── js/
 │       ├── auth.js              # Google login & student profile controller
 │       ├── admin.js             # Admin dashboard controller (acadassit0812)
 │       ├── services.js          # Service booking & inquiry controller
-│       ├── paywall.js           # Paywall modal, ₹49 plan, UPI 7719730804@ptyes, UTR
+│       ├── paywall.js           # Paywall modal, ₹49/₹29 plans, official QR & UTR verification
 │       ├── simulator.js         # TCS iON exam timer, question palette & scoring
 │       └── app.js               # Hub, custom course creator & multi-asset studio
-├── test_samples/
-│   └── sample_notes.txt         # Pre-configured test notes
-├── test_server.py               # 19-stage end-to-end automated test suite (100% passing)
+├── test_server.py               # 30-stage end-to-end automated test suite (100% passing)
 └── README.md
 ```

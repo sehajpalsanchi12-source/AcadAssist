@@ -596,7 +596,11 @@ class LPUVertoService:
 
     @classmethod
     def get_custom_subjects(cls) -> List[Dict[str, Any]]:
-        """Load user-created custom courses from disk."""
+        """Load user-created custom courses from database with file fallback."""
+        from app.database import Database
+        db_subjects = Database.list_custom_subjects()
+        if db_subjects:
+            return db_subjects
         if not os.path.exists(cls._custom_subjects_file):
             return []
         try:
@@ -607,15 +611,25 @@ class LPUVertoService:
 
     @classmethod
     def save_custom_subject(cls, subject_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Save a new custom subject to disk."""
-        data_dir = os.path.dirname(cls._custom_subjects_file)
-        os.makedirs(data_dir, exist_ok=True)
-        current = cls.get_custom_subjects()
-        
-        # Check if already exists; if so, update
+        """Save a new custom subject to SQLite relational database and disk."""
+        from app.database import Database
         code = subject_data.get("code", "CUSTOM101").upper()
         subject_data["code"] = code
         subject_data["is_custom"] = True
+
+        # 1. Primary write to SQLite database
+        Database.save_custom_subject(subject_data)
+
+        # 2. Dual-sync write to JSON file
+        data_dir = os.path.dirname(cls._custom_subjects_file)
+        os.makedirs(data_dir, exist_ok=True)
+        current = []
+        if os.path.exists(cls._custom_subjects_file):
+            try:
+                with open(cls._custom_subjects_file, "r") as f:
+                    current = json.load(f)
+            except Exception:
+                current = []
 
         filtered = [s for s in current if s.get("code") != code]
         filtered.append(subject_data)
@@ -627,14 +641,21 @@ class LPUVertoService:
 
     @classmethod
     def delete_custom_subject(cls, code: str) -> bool:
-        """Delete a custom subject by code."""
-        if not os.path.exists(cls._custom_subjects_file):
-            return False
-        current = cls.get_custom_subjects()
-        filtered = [s for s in current if s.get("code") != code.upper()]
-        with open(cls._custom_subjects_file, "w") as f:
-            json.dump(filtered, f, indent=2)
-        return True
+        """Delete a custom subject by code from database and file."""
+        from app.database import Database
+        db_del = Database.delete_custom_subject(code.upper())
+        file_del = False
+        if os.path.exists(cls._custom_subjects_file):
+            try:
+                with open(cls._custom_subjects_file, "r") as f:
+                    current = json.load(f)
+                filtered = [s for s in current if s.get("code") != code.upper()]
+                with open(cls._custom_subjects_file, "w") as f:
+                    json.dump(filtered, f, indent=2)
+                file_del = True
+            except Exception:
+                pass
+        return db_del or file_del
 
     @classmethod
     def _get_fallback_mcqs(cls, subject: str, unit: str) -> List[Dict[str, Any]]:

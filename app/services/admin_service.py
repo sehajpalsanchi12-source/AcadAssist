@@ -69,6 +69,8 @@ class AdminService:
         inquiries = UserService.list_service_inquiries()
         transactions = PaywallService.list_all_transactions()
 
+        from app.database import Database
+
         total_revenue = sum(t.get("amount", 0.0) for t in transactions if t.get("status") in ["approved", "active"])
         pending_payments = [t for t in transactions if t.get("status") == "pending"]
 
@@ -80,6 +82,7 @@ class AdminService:
             "total_mock_tests": len(mock_tests),
             "total_service_inquiries": len(inquiries),
             "pending_payments_count": len(pending_payments),
+            "database": Database.get_stats(),
             "recent_activity": {
                 "recent_users": users[-5:] if users else [],
                 "recent_transactions": transactions[:5],

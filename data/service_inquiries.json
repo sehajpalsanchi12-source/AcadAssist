@@ -1,6 +1,45 @@
 {
   "inquiries": [
     {
+      "id": "inq_8b19c57d6d",
+      "service_category": "EduCode Completion Support",
+      "student_name": "Sanchi Sharma",
+      "phone": "8053122848",
+      "email": "sanchi@gmail.com",
+      "subject_or_topic": "CSE205 DSA",
+      "details": "Need debugging help with DSA graph traversal and dynamic programming project.",
+      "deadline": "2026-10-15",
+      "status": "New",
+      "timestamp": 1790762828.102377,
+      "formatted_time": "2026-09-30 15:37:08"
+    },
+    {
+      "id": "inq_6dd1cb3899",
+      "service_category": "EduCode Completion Support",
+      "student_name": "Sanchi Sharma",
+      "phone": "8053122848",
+      "email": "sanchi@gmail.com",
+      "subject_or_topic": "CSE205 DSA",
+      "details": "Need debugging help with DSA graph traversal and dynamic programming project.",
+      "deadline": "2026-10-15",
+      "status": "New",
+      "timestamp": 1790762754.4041789,
+      "formatted_time": "2026-09-30 15:35:54"
+    },
+    {
+      "id": "inq_9e8e024ecc",
+      "service_category": "EduCode Completion Support",
+      "student_name": "Sanchi Sharma",
+      "phone": "8053122848",
+      "email": "sanchi@gmail.com",
+      "subject_or_topic": "CSE205 DSA",
+      "details": "Need debugging help with DSA graph traversal and dynamic programming project.",
+      "deadline": "2026-10-15",
+      "status": "New",
+      "timestamp": 1790762714.882483,
+      "formatted_time": "2026-09-30 15:35:14"
+    },
+    {
       "id": "inq_d61e77eb51",
       "service_category": "EduCode Completion Support",
       "student_name": "Sanchi Sharma",

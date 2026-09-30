@@ -16,6 +16,7 @@ from app.services.user_service import UserService
 from app.services.admin_service import AdminService
 from app.services.pyq_service import PYQService
 from app.services.ppt_service import PPTService
+from app.database import Database
 
 app = FastAPI(
     title="LPU Verto AI Exam Prep",
@@ -32,10 +33,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize Real Relational Database
+@app.on_event("startup")
+async def startup_event():
+    """Initialize SQLite Relational Database, migrate existing JSON data, and configure WAL mode."""
+    Database.init_db()
+    print("[Database] SQLite Relational Database connected & initialized with WAL mode.")
+
 # Static directory
 STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
 if not os.path.exists(STATIC_DIR):
     os.makedirs(STATIC_DIR, exist_ok=True)
+
+# ── Database Health & Diagnostics Endpoint ────────────────────────────────
+
+@app.get("/api/database/status")
+async def get_database_status():
+    """Return real-time diagnostic health metrics for SQLite database."""
+    try:
+        stats = Database.get_stats()
+        return JSONResponse(status_code=200, content={"success": True, "database": stats})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 # ── Catalog & LPU Verto API Endpoints ─────────────────────────────────────
 
@@ -540,8 +559,10 @@ async def google_auth(req: GoogleAuthRequest):
     )
 
 @app.get("/api/auth/me")
-async def get_current_user(token: Optional[str] = Query(None)):
+async def get_current_user(token: Optional[str] = Query(None), authorization: Optional[str] = Header(None)):
     """Fetch current logged-in user and active subscription status."""
+    if not token and authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1].strip()
     user = UserService.get_user_by_token(token)
     if not user:
         return {"authenticated": False, "user": None}

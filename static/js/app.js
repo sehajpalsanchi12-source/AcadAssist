@@ -805,6 +805,7 @@ function renderStudyAsset(data) {
 
       </div>
     `;
+  }
 }
 
 window.launchSlideProjector = async function() {

@@ -190,7 +190,7 @@ function renderFilteredSubjects() {
             ${s.code} — ${s.name}
           </h3>
           <p class="text-xs text-gray-600 dark:text-slate-400 mt-2 line-clamp-2">
-            ${s.description || 'Comprehensive syllabus modules, past year question bank, and notes from notes.lpuverto.xyz.'}
+            ${s.description || 'Comprehensive syllabus modules, past year question bank, and verified LPU notes.'}
           </p>
         </div>
 
@@ -237,12 +237,6 @@ function renderFilteredSubjects() {
               <span>🗺️</span> 9+ CGPA Plan
             </button>
           </div>
-
-          ${s.landing_url ? `
-            <a href="${s.landing_url}" target="_blank" class="w-full py-1.5 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white font-medium text-[11px] transition-colors flex items-center justify-center gap-1">
-              <span>🔗 Original notes.lpuverto.xyz Page ↗</span>
-            </a>
-          ` : ''}
         </div>
       </div>
     `;
@@ -384,6 +378,18 @@ function renderStudyAsset(data) {
         <h3 class="text-xl font-extrabold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-800">
           ${sec.heading}
         </h3>
+        ${sec.diagram_image ? `
+          <div class="my-5 p-3 rounded-2xl bg-slate-900/5 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-center">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-gray-200 dark:border-slate-700 text-[11px] font-bold text-gray-500 dark:text-slate-400">
+              <span class="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                AI Architectural Concept Diagram (Image)
+              </span>
+              <span class="text-[10px] text-gray-400">High-Resolution Vector Format</span>
+            </div>
+            <img src="${sec.diagram_image}" alt="${sec.heading} Diagram" class="mx-auto w-full max-h-72 object-contain rounded-xl shadow-sm bg-slate-900" />
+          </div>
+        ` : ''}
         <div class="prose dark:prose-invert max-w-none text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
           ${sec.content}
         </div>
@@ -904,19 +910,19 @@ function setupNoteBankSearch() {
     clearTimeout(debounceTimeout);
     const query = searchInput.value.trim();
     if (query.length < 2) {
-      resultsContainer.innerHTML = '<p class="text-sm text-gray-400 py-6 text-center">Type at least 2 characters to search LPU Verto notes...</p>';
+      resultsContainer.innerHTML = '<p class="text-sm text-gray-400 py-6 text-center">Type at least 2 characters to search LPU course notes...</p>';
       return;
     }
 
     debounceTimeout = setTimeout(async () => {
-      resultsContainer.innerHTML = '<div class="py-6 text-center text-sm text-orange-500 font-medium">Searching notes.lpuverto.xyz catalog...</div>';
+      resultsContainer.innerHTML = '<div class="py-6 text-center text-sm text-orange-500 font-medium">Searching AcadAssist course catalog...</div>';
       try {
         const prog = document.getElementById('program-select')?.value || 'B. Tech. CSE';
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&program=${encodeURIComponent(prog)}`);
         const items = await res.json();
 
         if (items.length === 0) {
-          resultsContainer.innerHTML = '<p class="text-sm text-gray-500 py-6 text-center">No matching subjects found on notes.lpuverto.xyz.</p>';
+          resultsContainer.innerHTML = '<p class="text-sm text-gray-500 py-6 text-center">No matching subjects found in course catalog.</p>';
           return;
         }
 

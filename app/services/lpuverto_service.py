@@ -530,10 +530,10 @@ class LPUVertoService:
                     "description": data.get("description", f"Complete notes, units, and exams for {code}"),
                     "units": unit_strs if unit_strs else [f"Unit {i+1}" for i in range(6)],
                     "units_detail": data.get("units", []),
-                    "landing_url": data.get("landing_url", ""),
+                    "landing_url": "",
                     "has_ete": data.get("has_ete", True),
                     "has_mock": data.get("has_mock", True),
-                    "source": "notes.lpuverto.xyz"
+                    "source": "AcadAssist Curriculum Library"
                 })
 
         # Apply search and filters
@@ -587,10 +587,10 @@ class LPUVertoService:
                 "description": data.get("description", ""),
                 "units": unit_strs if unit_strs else [f"Unit {i+1}" for i in range(6)],
                 "units_detail": data.get("units", []),
-                "landing_url": data.get("landing_url", ""),
+                "landing_url": "",
                 "has_ete": data.get("has_ete", True),
                 "has_mock": data.get("has_mock", True),
-                "source": "notes.lpuverto.xyz"
+                "source": "AcadAssist Curriculum Library"
             }
         return None
 

@@ -17,12 +17,13 @@ from app.services.user_service import UserService
 from app.services.admin_service import AdminService
 from app.services.pyq_service import PYQService
 from app.services.ppt_service import PPTService
+from app.services.ai_chat_service import AIChatService
 from app.database import Database
 
 app = FastAPI(
-    title="LPU Verto AI Exam Prep",
-    description="AI-powered MCQ, Notes, Slides, Short Notes, and Roadmap Generator aligned with LPU Examination Pattern and notes.lpuverto.xyz data",
-    version="1.1.0"
+    title="AcadAssist LPU AI Exam Prep",
+    description="AI-powered MCQ, Notes, Slides, Short Notes, and Roadmap Generator aligned with LPU Examination Pattern",
+    version="1.2.0"
 )
 
 # Enable CORS
@@ -663,42 +664,16 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/ai/chat")
 async def ai_study_chat(req: ChatRequest):
-    """Gemini 2.0 Flash powered AI study assistant for LPU Verto students."""
-    gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
-
-    system_context = (
-        "You are AcadAssist AI, a smart and friendly academic assistant for students at "
-        "Lovely Professional University (LPU). Help with exam preparation, concept explanations, "
-        "MCQ solving, study strategies, and understanding LPU exam patterns. "
-        f"Subject context: {req.subject_name or 'General LPU Curriculum'} ({req.subject_code or 'General'}). "
-        "LPU exam types: CA (Continuous Assessment 10 marks), MTE (Mid-Term 30 marks), ETE (End-Term 100 marks). "
-        "Negative marking: -0.25 per wrong MCQ. Be concise, exam-focused, and use bullet points where helpful."
+    """
+    Intelligent AI study assistant for LPU students.
+    Configured for unlimited usage across multiple users with or without Gemini API key.
+    """
+    return await AIChatService.get_response(
+        message=req.message,
+        subject_code=req.subject_code,
+        subject_name=req.subject_name,
+        history=req.history
     )
-
-    if not gemini_api_key:
-        return {"reply": "⚠️ AI Chat needs GEMINI_API_KEY configured on the server. Meanwhile explore Study Studio, PYQ Papers and Mock Tests!", "fallback": True}
-
-    try:
-        contents = []
-        for h in req.history[-6:]:
-            contents.append({"role": h.get("role", "user"), "parts": [{"text": str(h.get("text", ""))}]})
-        contents.append({"role": "user", "parts": [{"text": req.message}]})
-
-        payload = {
-            "system_instruction": {"parts": [{"text": system_context}]},
-            "contents": contents,
-            "generationConfig": {"maxOutputTokens": 800, "temperature": 0.7}
-        }
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}",
-                json=payload
-            )
-            result = r.json()
-            reply = result["candidates"][0]["content"]["parts"][0]["text"]
-            return {"reply": reply, "fallback": False}
-    except Exception as e:
-        return {"reply": f"Sorry, I couldn't get a response right now. Please try again! ({str(e)[:60]})", "fallback": True}
 
 
 # ── Mock Test Result Submission ──────────────────────────────────────────
@@ -978,7 +953,7 @@ async def export_printable(req: ExportRequest):
         {f'<div class="section-title">SECTION C: COMPREHENSIVE / ANALYTICAL QUESTIONS (With Internal Choices)</div>' + long_html if long_html.strip() else ''}
 
         <div style="margin-top: 40px; text-align: center; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #64748b;">
-            Generated via LPU Verto AI Exam Prep Platform • Powered by notes.lpuverto.xyz and LPU Curriculum Standards
+            Generated via AcadAssist AI Exam Prep Platform • Aligned with LPU Curriculum Standards
         </div>
     </body>
     </html>

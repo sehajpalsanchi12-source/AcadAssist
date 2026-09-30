@@ -66,12 +66,12 @@ const ServiceInquiryManager = {
         
         // Open WhatsApp directly with prefilled order details
         const waMsg = `Hi AcadAssist, I want to book *${category}* for *${topic || 'Coursework'}*.\n\nMy Details:\n• Name: ${name}\n• Phone: ${phone}\n• Deadline: ${deadline || 'Flexible'}\n• Details: ${details}\n\nPlease confirm availability!`;
-        window.open(`https://wa.me/918053122848?text=${encodeURIComponent(waMsg)}`, '_blank');
+        window.open(`https://wa.me/917719730804?text=${encodeURIComponent(waMsg)}`, '_blank');
 
         alert(`✅ Your inquiry for ${category} has been received! Our support team will connect with you on WhatsApp shortly.`);
       }
     } catch (err) {
-      alert("Failed to submit request. Please reach out to us directly on WhatsApp (+91 8053122848).");
+      alert("Failed to submit request. Please reach out to us directly on WhatsApp (+91 7719730804).");
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;

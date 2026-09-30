@@ -412,6 +412,8 @@ class PaywallService:
         # 1. Fast O(1) indexed query against SQLite database
         tx = Database.get_transaction_by_token(clean_token)
         if tx:
+            if tx.get("status") != "approved":
+                return {"is_pro": False, "plan_id": "free", "message": "Payment pending admin approval"}
             if time.time() > tx.get("expires_at", 0):
                 return {"is_pro": False, "plan_id": "free", "message": "Subscription expired"}
             return {
@@ -427,6 +429,8 @@ class PaywallService:
         txs = cls.list_all_transactions()
         for t in txs:
             if t.get("token") == clean_token:
+                if t.get("status") != "approved":
+                    return {"is_pro": False, "plan_id": "free", "message": "Payment pending admin approval"}
                 if time.time() > t.get("expires_at", 0):
                     return {"is_pro": False, "plan_id": "free", "message": "Subscription expired"}
                 return {

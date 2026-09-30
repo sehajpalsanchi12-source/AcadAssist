@@ -126,24 +126,47 @@ async def run_tests():
         assert me_data.get("authenticated") is True
         print(f"   ✓ Current user verified: {me_data['user']['email']}")
 
-        print("\n12. Testing Paywall Plans: GET /api/paywall/plans (Midterm Mock Pass ₹49) ...")
+        print("\n12. Testing Paywall Plans: GET /api/paywall/plans (Subject Pass ₹49 & Mock Test ₹29) ...")
         r = await client.get(f"{BASE_URL}/api/paywall/plans")
         assert r.status_code == 200, f"Failed: {r.status_code}"
         plans = r.json()
-        assert "midterm_mock_49" in plans
-        assert plans["midterm_mock_49"]["price_inr"] == 49
-        print(f"   ✓ Verified ₹49 Midterm Mode Mock Test Plan exists!")
+        assert "subject_pass_49" in plans
+        assert plans["subject_pass_49"]["price_inr"] == 49
+        print(f"   ✓ Verified ₹49 Single Subject Master Pass exists! ({plans['subject_pass_49']['name']})")
+        assert "mock_test_29" in plans
+        assert plans["mock_test_29"]["price_inr"] == 29
+        print(f"   ✓ Verified ₹29 Mock Test Simulator Pass exists! ({plans['mock_test_29']['name']})")
 
         print("\n13. Testing UPI Payment Destination: GET /api/paywall/upi-info ...")
-        r = await client.get(f"{BASE_URL}/api/paywall/upi-info?amount=49.0")
+        r = await client.get(f"{BASE_URL}/api/paywall/upi-info?amount=29.0&plan_name=Mock+Test+Pass")
         assert r.status_code == 200, f"Failed: {r.status_code}"
         upi_info = r.json()
         assert upi_info["upi_id"] == "7719730804@ptyes"
-        print(f"   ✓ Official UPI Destination verified: {upi_info['upi_id']}")
+        assert upi_info["amount"] == 29.0
+        print(f"   ✓ Official UPI Destination verified: {upi_info['upi_id']} for ₹{upi_info['amount']}")
 
-        print("\n14. Testing Mock Test Checkout to 7719730804@ptyes: POST /api/paywall/checkout ...")
+        print("\n14. Testing Mock Test Checkout (₹29) to 7719730804@ptyes: POST /api/paywall/checkout ...")
         r = await client.post(f"{BASE_URL}/api/paywall/checkout", json={
-            "plan_id": "midterm_mock_49",
+            "plan_id": "mock_test_29",
+            "payment_method": "upi",
+            "coupon_code": None,
+            "user_name": "Sanchi Sharma",
+            "reg_no": "12214589",
+            "phone": "8053122848",
+            "utr_ref": "UTR299827361829",
+            "user_id": user["id"],
+            "subject_code": "MTH166"
+        })
+        assert r.status_code == 200, f"Failed: {r.status_code}"
+        checkout_res = r.json()
+        mock_token = checkout_res.get("token")
+        assert checkout_res["amount_paid"] == 29.0
+        assert checkout_res["upi_destination"] == "7719730804@ptyes"
+        print(f"   ✓ Mock Test Payment recorded: UTR={checkout_res['utr_ref']} | Amount=₹{checkout_res['amount_paid']}")
+
+        print("\n14b. Testing Subject Pass Checkout (₹49) to 7719730804@ptyes: POST /api/paywall/checkout ...")
+        r = await client.post(f"{BASE_URL}/api/paywall/checkout", json={
+            "plan_id": "subject_pass_49",
             "payment_method": "upi",
             "coupon_code": None,
             "user_name": "Sanchi Sharma",
@@ -151,13 +174,14 @@ async def run_tests():
             "phone": "8053122848",
             "utr_ref": "UTR499827361849",
             "user_id": user["id"],
-            "subject_code": "MTH166"
+            "subject_code": "CSE205"
         })
         assert r.status_code == 200, f"Failed: {r.status_code}"
-        checkout_res = r.json()
-        pro_token = checkout_res.get("token")
-        assert checkout_res["amount_paid"] == 49.0
-        assert checkout_res["upi_destination"] == "7719730804@ptyes"
+        checkout_sub_res = r.json()
+        pro_token = checkout_sub_res.get("token")
+        assert checkout_sub_res["amount_paid"] == 49.0
+        assert checkout_sub_res["upi_destination"] == "7719730804@ptyes"
+        print(f"   ✓ Subject Pass Payment recorded: UTR={checkout_sub_res['utr_ref']} | Amount=₹{checkout_sub_res['amount_paid']} for CSE205")
         print(f"   ✓ Payment recorded: UTR={checkout_res['utr_ref']} | Amount=₹{checkout_res['amount_paid']}")
 
         print("\n15. Testing Exam Generation: POST /api/generate-exam ...")

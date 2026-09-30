@@ -19,14 +19,48 @@ class PaywallService:
     UPI_PAYEE_NAME = "AcadAssist"
 
     PLANS = {
+        "subject_pass_49": {
+            "id": "subject_pass_49",
+            "name": "Single Subject Complete Master Pack",
+            "price_inr": 49,
+            "original_price_inr": 149,
+            "period": "Per Subject (Lifetime Access)",
+            "badge": "Subject Pass 📚 ₹49",
+            "highlight": True,
+            "features": [
+                "Full Comprehensive Notes for all 6 Units",
+                "High-Yield Cram Notes & Revision Flashcards",
+                "Native PowerPoint (.pptx) Presentations & Slide Decks",
+                "All Authentic PYQ Question Papers with Step-by-Step Model Answers",
+                "High-Yield Formula Sheets & System Architecture Diagrams",
+                "Personalized 9+ CGPA Semester Strategy Roadmap"
+            ]
+        },
+        "mock_test_29": {
+            "id": "mock_test_29",
+            "name": "Authentic LPU Mock Test Simulator Pass",
+            "price_inr": 29,
+            "original_price_inr": 99,
+            "period": "Per Mock Exam Simulation",
+            "badge": "Mock Test ⚡ ₹29",
+            "highlight": True,
+            "features": [
+                "Full 3-Hour Timed Exam Simulation (CA / MTE / ETE Pattern)",
+                "30 High-Probability MCQs with Negative Marking (-0.25)",
+                "Part B (5M) & Part C (10M) with Step-by-Step Model Solutions",
+                "TCS iON Standard Examination UI & Live Countdown Timer",
+                "Instant Scorecard with Official LPU Grade Output (O, A+, A, B+, B, C)",
+                "Official Printable LPU Exam Paper (PDF Format)"
+            ]
+        },
         "midterm_mock_49": {
             "id": "midterm_mock_49",
-            "name": "Midterm Mode / Subject Mock Test Pass",
+            "name": "Midterm Mode / Subject Master Pass",
             "price_inr": 49,
             "original_price_inr": 149,
             "period": "Per Subject / Midterm Season",
             "badge": "Poster Special ⚡ ₹49",
-            "highlight": True,
+            "highlight": False,
             "features": [
                 "Full Authentic Mock Test for Any Subject (CA / MTE / ETE Pattern)",
                 "30 High-Probability MCQs with Distractor Analysis & Explanations",
@@ -109,6 +143,8 @@ class PaywallService:
         "TOPPER100": {"discount_percent": 100, "description": "100% OFF Academic Excellence Grant"},
         "FREEMIUM": {"discount_percent": 100, "description": "100% OFF Developer & Beta Tester Pass"},
         "MIDTERM49": {"discount_percent": 100, "description": "100% OFF Midterm Mock Test Code"},
+        "MOCK29": {"discount_percent": 100, "description": "100% OFF Free Mock Test Code"},
+        "SUBJECT49": {"discount_percent": 100, "description": "100% OFF Free Subject Pack Code"},
         "EXAM50": {"discount_percent": 50, "description": "50% OFF Mid-Term Discount"},
         "VERTOPRO": {"discount_percent": 100, "description": "100% OFF Full Access Token"}
     }
@@ -340,3 +376,50 @@ class PaywallService:
             }
 
         return {"is_pro": False, "plan_id": "free", "message": "Free tier"}
+
+    @classmethod
+    def has_subject_access(cls, token: Optional[str], subject_code: str) -> bool:
+        """Check if user has paid access to this subject's materials (Notes, PPTX, PYQs, Cheat Sheets)."""
+        status = cls.verify_token(token)
+        if not status.get("is_pro"):
+            return False
+
+        plan_id = status.get("plan_id", "")
+        # Full semester pro or dev token has access to everything
+        if plan_id in ["semester_pro", "dev_unlock"] or status.get("subject_code") == "ALL":
+            return True
+
+        # Check if transaction was for this subject code
+        if status.get("subject_code", "").upper() == subject_code.upper():
+            return True
+
+        # Check in UserService if token is associated with a user
+        try:
+            from app.services.user_service import UserService
+            user = UserService.get_user_by_token(token)
+            if user:
+                if user.get("active_plan") == "semester_pro":
+                    return True
+                purchased = [s.upper() for s in user.get("purchased_subjects", [])]
+                if subject_code.upper() in purchased or "ALL" in purchased:
+                    return True
+        except Exception:
+            pass
+
+        return False
+
+    @classmethod
+    def has_mock_access(cls, token: Optional[str], subject_code: Optional[str] = None) -> bool:
+        """Check if user has paid access to run a Mock Test / Exam Simulator (₹29 pass)."""
+        status = cls.verify_token(token)
+        if not status.get("is_pro"):
+            return False
+
+        plan_id = status.get("plan_id", "")
+        if plan_id in ["mock_test_29", "midterm_mock_49", "rush24", "semester_pro"]:
+            return True
+
+        if subject_code and cls.has_subject_access(token, subject_code):
+            return True
+
+        return False

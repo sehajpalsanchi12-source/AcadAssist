@@ -74,7 +74,7 @@ const PaywallManager = {
       if (badge) {
         badge.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-sm shadow-pink-500/20">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          ACTIVE MOCK PASS
+          ACTIVE PRO PASS
         </span>`;
       }
       if (upgradeNavBtn) upgradeNavBtn.classList.add('hidden');
@@ -82,7 +82,7 @@ const PaywallManager = {
     } else {
       if (badge) {
         badge.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700">
-          Mock Test Pass: ₹49
+          Mock: ₹29 • Subject: ₹49
         </span>`;
       }
       if (upgradeNavBtn) upgradeNavBtn.classList.remove('hidden');
@@ -94,7 +94,7 @@ const PaywallManager = {
     // Open Paywall Modal Buttons
     document.querySelectorAll('[data-open-paywall]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const plan = btn.getAttribute('data-plan') || 'midterm_mock_49';
+        const plan = btn.getAttribute('data-plan') || 'mock_test_29';
         const subj = btn.getAttribute('data-subject') || null;
         this.openCheckoutModal(plan, subj);
       });
@@ -123,7 +123,12 @@ const PaywallManager = {
     }
   },
 
-  openCheckoutModal(planId = 'midterm_mock_49', subjectCode = null) {
+  switchModalPlan(planId) {
+    const currentSubj = document.getElementById('checkout-subject-code')?.value || 'ALL';
+    this.openCheckoutModal(planId, currentSubj === 'ALL' ? null : currentSubj);
+  },
+
+  openCheckoutModal(planId = 'mock_test_29', subjectCode = null) {
     const modal = document.getElementById('paywall-modal');
     if (!modal) return;
 
@@ -134,9 +139,12 @@ const PaywallManager = {
     const qrImage = document.getElementById('checkout-upi-qr');
     const upiLink = document.getElementById('checkout-upi-app-link');
 
-    let price = 49;
-    let title = 'Midterm Mode / Subject Mock Test Pass (₹49)';
-    if (planId === 'educode_99') {
+    let price = 29;
+    let title = 'Authentic LPU Mock Test Simulator Pass (₹29)';
+    if (planId === 'subject_pass_49' || planId === 'midterm_mock_49') {
+      price = 49;
+      title = 'Single Subject Complete Master Pack (₹49)';
+    } else if (planId === 'educode_99') {
       price = 99;
       title = 'EduCode Completion Support Pass (₹99)';
     } else if (planId === 'neobrowser_99') {
@@ -158,6 +166,19 @@ const PaywallManager = {
     if (subjInput) subjInput.value = subjectCode || 'ALL';
     if (planTitle) planTitle.textContent = title;
     if (planPrice) planPrice.textContent = `₹${price}`;
+
+    // Update Pill Buttons
+    const mockPill = document.getElementById('modal-tab-mock-29');
+    const subjPill = document.getElementById('modal-tab-subject-49');
+    if (mockPill && subjPill) {
+      if (planId === 'mock_test_29' || planId === 'rush24') {
+        mockPill.className = 'py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all bg-white dark:bg-slate-900 text-pink-600 dark:text-pink-400 shadow-sm flex items-center justify-center gap-1.5 border border-pink-200 dark:border-pink-800/60';
+        subjPill.className = 'py-2.5 px-3 rounded-xl font-bold text-xs transition-all text-gray-600 dark:text-slate-400 hover:text-gray-900 flex items-center justify-center gap-1.5';
+      } else {
+        subjPill.className = 'py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm flex items-center justify-center gap-1.5 border border-blue-200 dark:border-blue-800/60';
+        mockPill.className = 'py-2.5 px-3 rounded-xl font-bold text-xs transition-all text-gray-600 dark:text-slate-400 hover:text-gray-900 flex items-center justify-center gap-1.5';
+      }
+    }
 
     // Generate dynamic QR Code for 7719730804@ptyes
     const upiUri = `upi://pay?pa=${this.UPI_DESTINATION}&pn=AcadAssist&am=${price}.00&cu=INR&tn=${encodeURIComponent(title.slice(0, 30))}`;

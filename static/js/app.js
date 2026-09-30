@@ -195,11 +195,15 @@ function renderFilteredSubjects() {
         </div>
 
         <div class="space-y-2 pt-3 border-t border-gray-100 dark:border-slate-800">
-          <!-- Midterm Mode ₹49 Mock Test Button -->
-          <button onclick="startSubjectMockTest('${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-md shadow-pink-500/20 transition-all flex items-center justify-center gap-2">
-            <span>⚡ Midterm Mock Test (₹49 Pass)</span>
-            <span class="text-[10px] bg-black/20 px-1.5 py-0.5 rounded">30 MCQs + Simulator</span>
-          </button>
+          <!-- Dual Paywall Buttons: Mock Test ₹29 & Subject Pass ₹49 -->
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="startSubjectMockTest('${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="py-2.5 px-2 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-extrabold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1">
+              <span>⚡ Mock Test (₹29)</span>
+            </button>
+            <button onclick="PaywallManager.openCheckoutModal('subject_pass_49', '${s.code}')" class="py-2.5 px-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1">
+              <span>📚 Subject Pass (₹49)</span>
+            </button>
+          </div>
 
           <!-- PYQ Question Papers Button -->
           <button onclick="openPYQForSubject('${s.code}')" class="w-full py-2 rounded-xl bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 dark:hover:bg-pink-900/40 text-pink-600 dark:text-pink-400 font-bold text-xs border border-pink-200 dark:border-pink-800/60 transition-colors flex items-center justify-center gap-1.5">
@@ -209,9 +213,9 @@ function renderFilteredSubjects() {
 
           <!-- Native PowerPoint (.pptx) & Slide Presenter -->
           <div class="grid grid-cols-2 gap-2">
-            <a href="/api/subject/${s.code}/download-pptx" download="${s.code}_presentation.pptx" class="py-2 px-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1 text-center">
+            <button onclick="downloadSubjectPPT('${s.code}')" class="py-2 px-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1 text-center">
               <span>📥 Download .pptx</span>
-            </a>
+            </button>
             <button onclick="launchSubjectProjector('${s.code}')" class="py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[11px] transition-colors flex items-center justify-center gap-1">
               <span>🖥️ View Slides</span>
             </button>
@@ -252,15 +256,31 @@ window.openPYQForSubject = function(code) {
   }
 };
 
+window.downloadSubjectPPT = function(code) {
+  const isPro = window.PaywallManager && window.PaywallManager.isPro;
+  const user = window.AuthManager && window.AuthManager.currentUser;
+  const hasSubjectPass = isPro || (user && user.purchased_subjects && user.purchased_subjects.includes(code));
+
+  if (!hasSubjectPass && !isPro) {
+    if (window.PaywallManager) {
+      window.PaywallManager.openCheckoutModal('subject_pass_49', code);
+      return;
+    }
+  }
+  window.location.href = `/api/subject/${code}/download-pptx`;
+};
+
 window.startSubjectMockTest = async function(subjectCode, subjectName, semester = 'Sem2') {
   const isPro = window.PaywallManager && window.PaywallManager.isPro;
   const user = window.AuthManager && window.AuthManager.currentUser;
   const hasSubjectPass = user && user.purchased_subjects && user.purchased_subjects.includes(subjectCode);
+  const currentPlan = window.PaywallManager && window.PaywallManager.currentPlan;
+  const hasMockAccess = isPro && (currentPlan === 'mock_test_29' || currentPlan === 'rush24' || currentPlan === 'semester_pro' || hasSubjectPass);
 
-  if (!isPro && !hasSubjectPass) {
-    // Open ₹49 Mock Test Paywall Modal with UPI 7719730804@ptyes
+  if (!hasMockAccess && !isPro && !hasSubjectPass) {
+    // Open ₹29 Mock Test Paywall Modal with UPI 7719730804@ptyes
     if (window.PaywallManager) {
-      window.PaywallManager.openCheckoutModal('midterm_mock_49', subjectCode);
+      window.PaywallManager.openCheckoutModal('mock_test_29', subjectCode);
       return;
     }
   }
@@ -299,6 +319,17 @@ window.startSubjectMockTest = async function(subjectCode, subjectName, semester 
 window.currentLoadedSlideDeck = null;
 
 window.triggerAssetGeneration = async function(assetType, code, name, sem = 'Sem2', unit = 'Unit1') {
+  const isPro = window.PaywallManager && window.PaywallManager.isPro;
+  const user = window.AuthManager && window.AuthManager.currentUser;
+  const hasSubjectPass = isPro || (user && user.purchased_subjects && user.purchased_subjects.includes(code));
+
+  if (!hasSubjectPass && !isPro) {
+    if (window.PaywallManager) {
+      window.PaywallManager.openCheckoutModal('subject_pass_49', code);
+      return;
+    }
+  }
+
   // Switch to Asset Viewer Tab/Section
   switchTab('tab-asset-studio');
 
@@ -538,6 +569,17 @@ window.launchSlideProjector = async function() {
 };
 
 window.launchSubjectProjector = async function(code) {
+  const isPro = window.PaywallManager && window.PaywallManager.isPro;
+  const user = window.AuthManager && window.AuthManager.currentUser;
+  const hasSubjectPass = isPro || (user && user.purchased_subjects && user.purchased_subjects.includes(code));
+
+  if (!hasSubjectPass && !isPro) {
+    if (window.PaywallManager) {
+      window.PaywallManager.openCheckoutModal('subject_pass_49', code);
+      return;
+    }
+  }
+
   try {
     const res = await fetch(`/api/subject/${code}/presentation`);
     if (!res.ok) throw new Error('Failed to fetch presentation slides');

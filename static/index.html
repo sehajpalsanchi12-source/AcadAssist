@@ -84,8 +84,12 @@
           <span>Services Desk</span>
         </button>
 
-        <button data-open-paywall data-plan="midterm_mock_49" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white shadow-md shadow-pink-500/20 transition-all">
-          <span>⚡ Midterm Pass (₹49)</span>
+        <button data-open-paywall data-plan="mock_test_29" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white shadow-md shadow-pink-500/20 transition-all">
+          <span>⚡ Mock Test (₹29)</span>
+        </button>
+
+        <button data-open-paywall data-plan="subject_pass_49" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 transition-all">
+          <span>📚 Subject Pass (₹49)</span>
         </button>
 
         <!-- Google User Auth Status Container -->
@@ -1200,8 +1204,18 @@
       </div>
 
       <form id="checkout-form" class="space-y-4 pt-4">
-        <input type="hidden" id="checkout-plan-id" value="midterm_mock_49">
+        <input type="hidden" id="checkout-plan-id" value="mock_test_29">
         <input type="hidden" id="checkout-subject-code" value="ALL">
+
+        <!-- Plan Selector Pills -->
+        <div class="grid grid-cols-2 gap-2 p-1.5 bg-gray-100 dark:bg-slate-800 rounded-2xl">
+          <button type="button" id="modal-tab-mock-29" onclick="PaywallManager.switchModalPlan('mock_test_29')" class="py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all bg-white dark:bg-slate-900 text-pink-600 dark:text-pink-400 shadow-sm flex items-center justify-center gap-1.5 border border-pink-200 dark:border-pink-800/60">
+            <span>⚡ Mock Test (₹29)</span>
+          </button>
+          <button type="button" id="modal-tab-subject-49" onclick="PaywallManager.switchModalPlan('subject_pass_49')" class="py-2.5 px-3 rounded-xl font-bold text-xs transition-all text-gray-600 dark:text-slate-400 hover:text-gray-900 flex items-center justify-center gap-1.5">
+            <span>📚 Subject Pass (₹49)</span>
+          </button>
+        </div>
 
         <!-- Price Banner -->
         <div class="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-pink-50 to-orange-50 dark:from-pink-950/30 dark:to-orange-950/30 border border-pink-200 dark:border-pink-800/60">

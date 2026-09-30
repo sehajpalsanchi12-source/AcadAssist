@@ -1,0 +1,58 @@
+COURSE TITLE: DATA STRUCTURES AND ALGORITHMS (CSE205)
+LOVELY PROFESSIONAL UNIVERSITY (LPU) - SCHOOL OF COMPUTER SCIENCE & ENGINEERING
+UNIT 1 & 2 LECTURE NOTES & SYLLABUS TOPICS
+
+CHAPTER 1: INTRODUCTION TO DATA STRUCTURES AND ASYMPTOTIC NOTATION
+A data structure is a specialized format for organizing, processing, retrieving, and storing data.
+Asymptotic Analysis evaluates the performance of an algorithm in terms of input size (n).
+- Big-O Notation (O): Represents the upper bound or worst-case running time of an algorithm.
+- Big-Omega Notation (Ω): Represents the lower bound or best-case scenario.
+- Big-Theta Notation (Θ): Represents the tight bound where upper and lower bounds coincide.
+
+Time Complexity Hierarchy:
+O(1) Constant Time < O(log n) Logarithmic Time < O(n) Linear Time < O(n log n) Linearithmic Time < O(n^2) Quadratic Time < O(2^n) Exponential Time.
+
+CHAPTER 2: LINEAR DATA STRUCTURES - ARRAYS AND LINKED LISTS
+1. Array Data Structure:
+An array is a collection of elements stored at contiguous memory locations.
+- Advantages: Direct random access in O(1) time using base address formula: Address(A[i]) = Base_Address + i * size_of_element.
+- Disadvantages: Fixed size, expensive insertion and deletion operations requiring O(n) element shifting.
+
+2. Singly Linked List:
+A linear collection of data elements called nodes, where each node contains two parts: Data field and Pointer to the next node (next pointer).
+- Insertion at beginning: O(1) time.
+- Traversal and search: O(n) time.
+- Deletion of a given node: O(n) in singly linked list, O(1) if pointer to predecessor is already available.
+
+3. Doubly Linked List vs Circular Linked List:
+- Doubly Linked List contains two pointers per node: prev and next. It allows bidirectional traversal at the expense of extra memory overhead for the backward pointer.
+- Circular Linked List has the next pointer of the last node pointing back to the first (head) node, eliminating NULL pointers. Used in round-robin CPU scheduling.
+
+CHAPTER 3: STACKS AND QUEUES
+1. Stack (LIFO - Last In First Out):
+A linear data structure where insertions and deletions happen exclusively at one end termed 'Top'.
+- Fundamental operations: push(), pop(), peek(), isEmpty(). All execute in O(1) time.
+- Applications: Expression evaluation (Infix to Postfix conversion), Function call stack (recursion), Undo/Redo operations in text editors, Syntax parsing and balancing parentheses.
+
+2. Queue (FIFO - First In First Out):
+A linear data structure where insertion occurs at the Rear and deletion occurs at the Front.
+- Circular Queue solves the memory wastage problem of linear queue using modulo arithmetic: rear = (rear + 1) % capacity.
+- Deque (Double-Ended Queue): Allows insertion and deletion at both front and rear ends.
+- Priority Queue: Elements are served based on priority rather than arrival order, implemented efficiently using Binary Heaps.
+
+CHAPTER 4: SEARCHING AND SORTING ALGORITHMS
+1. Linear Search vs Binary Search:
+- Linear Search checks every element sequentially. Time complexity is O(n). Works on unsorted arrays.
+- Binary Search operates on sorted arrays by repeatedly dividing the search interval in half. Time complexity is O(log n).
+
+2. Sorting Algorithms Comparison:
+- Bubble Sort: Repeatedly swaps adjacent elements if they are in wrong order. Worst-case O(n^2), Best-case O(n).
+- Insertion Sort: Builds the sorted array one item at a time. Efficient for small or nearly sorted datasets. Worst-case O(n^2), Best-case O(n).
+- Merge Sort: Divide-and-conquer algorithm. Divides array into two halves, recursively sorts them, and merges them. Time complexity is O(n log n) in all cases (best, average, worst). Requires O(n) auxiliary space.
+- Quick Sort: Selects a pivot element, partitions array around pivot, and recursively sorts sub-arrays. Average time complexity is O(n log n), worst-case is O(n^2) when poor pivots are chosen. Space complexity is O(log n).
+
+LPU EXAMINATION PYQ FOCUS POINTS:
+1. Difference between Stack and Queue with memory representations.
+2. Infix to Postfix conversion algorithm using Stack.
+3. Why is Quick Sort preferred over Merge Sort for arrays, and Merge Sort preferred for Linked Lists?
+4. Derivation of worst-case time complexity of Quick Sort.

@@ -1,0 +1,132 @@
+/* LPU Verto AI Exam Prep Custom Styles */
+
+:root {
+  --lpu-primary: #f97316;
+  --lpu-primary-hover: #ea580c;
+  --lpu-accent: #ff6b35;
+  --lpu-dark-bg: #0b1120;
+  --lpu-dark-surface: #1e293b;
+  --lpu-dark-border: #334155;
+  --lpu-dark-text: #f8fafc;
+}
+
+/* Glassmorphism & Paywall Blurs */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.85);
+}
+
+.paywall-blur-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.paywall-blur-content {
+  filter: blur(5px);
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.paywall-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.95) 80%);
+  z-index: 10;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.dark .paywall-overlay {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.95) 80%);
+}
+
+/* Question Palette Indicators */
+.palette-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.palette-answered {
+  background-color: #22c55e !important;
+  color: white !important;
+}
+
+.palette-unanswered {
+  background-color: #ef4444 !important;
+  color: white !important;
+}
+
+.palette-review {
+  background-color: #a855f7 !important;
+  color: white !important;
+}
+
+.palette-unvisited {
+  background-color: #e2e8f0;
+  color: #64748b;
+}
+
+.dark .palette-unvisited {
+  background-color: #334155;
+  color: #94a3b8;
+}
+
+.palette-active {
+  ring: 3px solid #f97316;
+  font-weight: 800;
+}
+
+/* Animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite ease-in-out;
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+
+.scanner-beam {
+  animation: scan-line 2.5s infinite linear;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}

@@ -1,0 +1,975 @@
+[
+  {
+    "paper_id": "MTH166-2024-ETE",
+    "subject_code": "MTH166",
+    "subject_name": "Differential Equations And Vector Calculus",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "11823/A",
+    "source": "LPU Central Examination Division / Archive 2024",
+    "instructions": "Answer ALL questions in Part A (20 Marks). Answer ANY FOUR questions from Part B (40 Marks). Answer ANY TWO questions from Part C (40 Marks). Non-programmable scientific calculators are permitted.",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "A differential equation of the form M(x,y)dx + N(x,y)dy = 0 is exact if and only if:",
+        "options": [
+          "∂M/∂y = ∂N/∂x",
+          "∂M/∂x = ∂N/∂y",
+          "∂M/∂x + ∂N/∂y = 0",
+          "∂M/∂y + ∂N/∂x = 0"
+        ],
+        "correct_option": "∂M/∂y = ∂N/∂x",
+        "marks": 2,
+        "solution": "By Euler-Cauchy reciprocity, the necessary and sufficient condition for M dx + N dy = 0 to be exact is ∂M/∂y = ∂N/∂x."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "The integrating factor for the linear differential equation dy/dx + P(x)y = Q(x) is given by:",
+        "options": [
+          "e^(∫P(x)dx)",
+          "e^(-∫P(x)dx)",
+          "∫P(x)dx",
+          "e^(∫Q(x)dx)"
+        ],
+        "correct_option": "e^(∫P(x)dx)",
+        "marks": 2,
+        "solution": "Multiplying by I.F. = e^(∫P dx) converts the LHS into d/dx (y · e^(∫P dx))."
+      },
+      {
+        "q_no": 3,
+        "type": "mcq",
+        "question": "The general solution of Clairaut's equation y = px + f(p) is obtained by replacing p with:",
+        "options": [
+          "An arbitrary constant c",
+          "Zero",
+          "x",
+          "y"
+        ],
+        "correct_option": "An arbitrary constant c",
+        "marks": 2,
+        "solution": "Differentiating with respect to x gives dp/dx [x + f'(p)] = 0. Setting dp/dx = 0 yields p = c, giving y = cx + f(c)."
+      },
+      {
+        "q_no": 4,
+        "type": "mcq",
+        "question": "A vector field F is conservative (irrotational) if:",
+        "options": [
+          "curl(F) = 0",
+          "div(F) = 0",
+          "grad(F) = 0",
+          "div(grad(F)) = 0"
+        ],
+        "correct_option": "curl(F) = 0",
+        "marks": 2,
+        "solution": "A vector field F is irrotational (conservative) when ∇ × F = 0, meaning F = ∇φ for some scalar potential φ."
+      },
+      {
+        "q_no": 5,
+        "type": "mcq",
+        "question": "According to Gauss's Divergence Theorem, ∬_S F · n̂ dS is equal to:",
+        "options": [
+          "∭_V (div F) dV",
+          "∭_V (curl F) dV",
+          "∮_C F · dr",
+          "∬_S (curl F) · n̂ dS"
+        ],
+        "correct_option": "∭_V (div F) dV",
+        "marks": 2,
+        "solution": "Gauss's theorem transforms a closed surface integral into a volume integral of the divergence: ∬_S F · n̂ dS = ∭_V (∇ · F) dV."
+      },
+      {
+        "q_no": 6,
+        "type": "short",
+        "question": "Find the order and degree of the differential equation: [1 + (dy/dx)^2]^(3/2) = c (d^2y/dx^2).",
+        "marks": 2,
+        "solution": "Squaring both sides eliminates fractional powers: [1 + (dy/dx)^2]^3 = c^2 (d^2y/dx^2)^2. The highest derivative is d^2y/dx^2 (Order = 2) and its power is 2 (Degree = 2)."
+      },
+      {
+        "q_no": 7,
+        "type": "short",
+        "question": "State Green's theorem in a plane relating line integral to double integral.",
+        "marks": 2,
+        "solution": "∮_C (M dx + N dy) = ∬_R (∂N/∂x - ∂M/∂y) dx dy, where C is a positively oriented, piecewise smooth, simple closed curve enclosing region R."
+      },
+      {
+        "q_no": 8,
+        "type": "short",
+        "question": "Find the directional derivative of φ(x,y,z) = x^2 y z + 4 x z^2 at the point (1, -2, -1) in the direction of vector 2i - j - 2k.",
+        "marks": 2,
+        "solution": "∇φ = (2xyz + 4z^2)i + (x^2z)j + (x^2y + 8xz)k. At (1, -2, -1): ∇φ = (4 + 4)i + (-1)j + (-2 - 8)k = 8i - j - 10k. Unit vector û = (2i - j - 2k)/√(4+1+4) = (2i - j - 2k)/3. Directional derivative = ∇φ · û = [8(2) + (-1)(-1) + (-10)(-2)] / 3 = (16 + 1 + 20) / 3 = 37/3."
+      },
+      {
+        "q_no": 9,
+        "type": "short",
+        "question": "Find the complementary function (C.F.) of (D^2 - 4D + 4)y = e^(2x).",
+        "marks": 2,
+        "solution": "Auxiliary equation: m^2 - 4m + 4 = 0 => (m - 2)^2 = 0 => m = 2, 2 (repeated real roots). C.F. = (c1 + c2 x) e^(2x)."
+      },
+      {
+        "q_no": 10,
+        "type": "short",
+        "question": "What is the physical significance of the divergence of a vector field?",
+        "marks": 2,
+        "solution": "The divergence of a vector field represents the rate of outward expansion of fluid volume per unit volume from an infinitesimal region. If div F > 0, the point acts as a source; if div F < 0, it acts as a sink; if div F = 0, the field is solenoidal (incompressible)."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 11,
+        "unit": "Unit 1: Ordinary Differential Equations",
+        "marks": 10,
+        "question": "Solve the initial value problem: (x^2 + y^2) dx - 2xy dy = 0 with the initial condition y(1) = 0.",
+        "solution": "Step 1: Check homogeneity: dy/dx = (x^2 + y^2)/(2xy). Let y = vx => dy/dx = v + x(dv/dx).\nStep 2: Substitute: v + x(dv/dx) = (x^2 + v^2 x^2) / (2x · vx) = (1 + v^2)/(2v).\nStep 3: Separate variables: x(dv/dx) = (1 + v^2 - 2v^2)/(2v) = (1 - v^2)/(2v) => [2v / (1 - v^2)] dv = dx / x.\nStep 4: Integrate: -ln|1 - v^2| = ln|x| + ln C => ln|x(1 - v^2)| = -ln C = ln(k) => x(1 - y^2/x^2) = k => x^2 - y^2 = kx.\nStep 5: Apply y(1) = 0: 1^2 - 0 = k(1) => k = 1.\nParticular Solution: x^2 - y^2 = x (or y^2 = x^2 - x).",
+        "rubric": "Homogeneous form substitution: 2 marks | Separation of variables & integration: 4 marks | General solution: 2 marks | Applying initial condition: 2 marks"
+      },
+      {
+        "q_no": 12,
+        "unit": "Unit 2: Differential Equations of Higher Order",
+        "marks": 10,
+        "question": "Apply the method of Variation of Parameters to find the complete solution of: d^2y/dx^2 + y = sec(x).",
+        "solution": "Step 1: Complementary function: m^2 + 1 = 0 => m = ±i => y_c = c1 cos(x) + c2 sin(x). Here y1 = cos(x), y2 = sin(x).\nStep 2: Wronskian W(y1, y2) = |cos(x) sin(x); -sin(x) cos(x)| = cos^2(x) + sin^2(x) = 1.\nStep 3: Particular Integral y_p = u(x) y1 + v(x) y2, where:\nu(x) = -∫ (y2 R / W) dx = -∫ (sin(x) sec(x) / 1) dx = -∫ tan(x) dx = ln|cos(x)|.\nv(x) = ∫ (y1 R / W) dx = ∫ (cos(x) sec(x) / 1) dx = ∫ 1 dx = x.\nStep 4: Particular solution: y_p = cos(x) ln|cos(x)| + x sin(x).\nStep 5: Complete solution: y = c1 cos(x) + c2 sin(x) + cos(x) ln|cos(x)| + x sin(x).",
+        "rubric": "Complementary function & Wronskian calculation: 3 marks | Calculation of u(x) and v(x): 4 marks | Final complete solution: 3 marks"
+      },
+      {
+        "q_no": 13,
+        "unit": "Unit 4: Partial Differential Equations",
+        "marks": 10,
+        "question": "Solve Lagrange's linear partial differential equation: (y + z) p + (z + x) q = x + y.",
+        "solution": "Step 1: Lagrange's Auxiliary Equations: dx / (y + z) = dy / (z + x) = dz / (x + y).\nStep 2: Multiplier (1, -1, 0): (dx - dy) / [(y + z) - (z + x)] = (dx - dy) / (y - x) = -(dx - dy) / (x - y).\nEquating to (dy - dz) / (z - y): (dx - dy)/(x - y) + (dy - dz)/(y - z) = 0 => ln|x - y| + ln|y - z| = ln c1 => (x - y) / (y - z) = c1.\nStep 3: Using multipliers (1, 1, 1): (dx + dy + dz) / [2(x + y + z)] = (dx - dy) / [-(x - y)].\nIntegrating: (1/2) ln|x + y + z| = -ln|x - y| + ln c2 => (x - y)^2 (x + y + z) = c2.\nStep 4: General Solution: Φ((x - y)/(y - z), (x - y)^2(x + y + z)) = 0.",
+        "rubric": "Formulation of auxiliary equations: 2 marks | Derivation of first independent integral: 4 marks | Derivation of second integral: 3 marks | General solution form: 1 mark"
+      },
+      {
+        "q_no": 14,
+        "unit": "Unit 5: Vector Calculus I",
+        "marks": 10,
+        "question": "Prove that the vector field F = (y^2 cos x + z^3) i + (2y sin x - 4) j + (3x z^2 + 2) k is conservative. Hence, find its scalar potential function φ such that F = ∇φ and find the work done in moving an object from (0, 1, -1) to (π/2, -1, 2).",
+        "solution": "Step 1: Check curl F: ∇ × F = |i j k; ∂/∂x ∂/∂y ∂/∂z; y^2 cos x + z^3, 2y sin x - 4, 3xz^2 + 2|.\ni [0 - 0] - j [3z^2 - 3z^2] + k [2y cos x - 2y cos x] = 0. Therefore, F is conservative.\nStep 2: Find scalar potential φ: ∂φ/∂x = y^2 cos x + z^3 => φ = y^2 sin x + x z^3 + f(y, z).\n∂φ/∂y = 2y sin x + ∂f/∂y = 2y sin x - 4 => ∂f/∂y = -4 => f(y, z) = -4y + g(z).\n∂φ/∂z = 3x z^2 + g'(z) = 3x z^2 + 2 => g'(z) = 2 => g(z) = 2z + C.\nTherefore, φ(x, y, z) = y^2 sin x + x z^3 - 4y + 2z + C.\nStep 3: Work done = φ(π/2, -1, 2) - φ(0, 1, -1):\nφ(π/2, -1, 2) = (-1)^2 sin(π/2) + (π/2)(2^3) - 4(-1) + 2(2) = 1(1) + 4π + 4 + 4 = 9 + 4π.\nφ(0, 1, -1) = 0 + 0 - 4(1) + 2(-1) = -6.\nWork done = (9 + 4π) - (-6) = 15 + 4π units.",
+        "rubric": "Curl evaluation and proving conservative: 3 marks | Step-by-step potential function derivation: 4 marks | Work done line integral calculation: 3 marks"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 15,
+        "unit": "Unit 6: Vector Calculus II (Integral Theorems)",
+        "marks": 20,
+        "question": "Verify Stokes' Theorem for the vector field F = (2x - y) i - y z^2 j - y^2 z k over the upper half of the sphere x^2 + y^2 + z^2 = 1 bounded by the circle in the xy-plane (z = 0).",
+        "solution": "Stokes' Theorem states: ∮_C F · dr = ∬_S (∇ × F) · n̂ dS.\n\nPART 1: Evaluate the Line Integral ∮_C F · dr:\nBoundary curve C: circle x^2 + y^2 = 1, z = 0 traversed counter-clockwise.\nParametric form: x = cos t, y = sin t, z = 0 for t ∈ [0, 2π].\ndr = (-sin t dt) i + (cos t dt) j + 0 k.\nF on C: F = (2 cos t - sin t) i - 0 j - 0 k.\n∮_C F · dr = ∫_0^(2π) (2 cos t - sin t)(-sin t) dt = ∫_0^(2π) (-2 sin t cos t + sin^2 t) dt.\n∫_0^(2π) -sin(2t) dt = 0.\n∫_0^(2π) sin^2 t dt = ∫_0^(2π) [(1 - cos 2t)/2] dt = [t/2 - sin(2t)/4]_0^(2π) = π.\nThus, ∮_C F · dr = π.\n\nPART 2: Evaluate the Surface Integral ∬_S (∇ × F) · n̂ dS:\nCalculate curl F:\n∇ × F = |i j k; ∂/∂x ∂/∂y ∂/∂z; 2x - y, -y z^2, -y^2 z|\n= i [-2yz - (-2yz)] - j [0 - 0] + k [0 - (-1)] = 0 i + 0 j + 1 k = k.\nFor surface S: upper hemisphere, outward normal unit vector n̂.\n(∇ × F) · n̂ = k · n̂ = n_z.\nUsing projection on xy-plane: dS = dx dy / |n_z|.\n∬_S (∇ × F) · n̂ dS = ∬_R k · n̂ (dx dy / |n_z|) = ∬_R dx dy, where R is the disk x^2 + y^2 ≤ 1.\n∬_R dx dy = Area of circle of radius 1 = π(1^2) = π.\n\nCONCLUSION: LHS = ∮_C F · dr = π. RHS = ∬_S (∇ × F) · n̂ dS = π. Both sides are equal to π. Hence, Stokes' Theorem is verified.",
+        "rubric": "Statement of Stokes' Theorem: 2 marks | Parametrization of boundary curve C: 3 marks | Correct evaluation of line integral (π): 5 marks | Curl calculation (curl F = k): 3 marks | Surface integral projection and area evaluation (π): 5 marks | Final verification conclusion: 2 marks"
+      },
+      {
+        "q_no": 16,
+        "unit": "Unit 3: Linear Differential Equations with Variable Coefficients",
+        "marks": 20,
+        "question": "Solve the Cauchy-Euler differential equation: x^2 (d^2y/dx^2) - 3x (dy/dx) + 4y = 2 x^2 + ln(x).",
+        "solution": "Step 1: Transformation to constant coefficients.\nPut x = e^z, so z = ln x. Let D = d/dz.\nThen x (dy/dx) = Dy, and x^2 (d^2y/dx^2) = D(D - 1)y.\n\nStep 2: Transformed Equation:\n[D(D - 1) - 3D + 4] y = 2 e^(2z) + z\n[D^2 - 4D + 4] y = 2 e^(2z) + z.\n\nStep 3: Complementary Function (y_c):\nAuxiliary equation: m^2 - 4m + 4 = 0 => (m - 2)^2 = 0 => m = 2, 2.\ny_c = (c1 + c2 z) e^(2z).\n\nStep 4: Particular Integral y_p1 for 2 e^(2z):\ny_p1 = [1 / (D - 2)^2] (2 e^(2z)) = 2 e^(2z) · [1 / D^2](1) = 2 e^(2z) · (z^2 / 2) = z^2 e^(2z).\n\nStep 5: Particular Integral y_p2 for z:\ny_p2 = [1 / (D^2 - 4D + 4)] z = (1/4) [1 - (D - D^2/4)]^(-1) z\n= (1/4) [1 + D + ...] z = (1/4) [z + 1] = z/4 + 1/4.\n\nStep 6: Total solution in z:\ny(z) = (c1 + c2 z) e^(2z) + z^2 e^(2z) + z/4 + 1/4.\n\nStep 7: Back substitute z = ln x and e^(2z) = x^2:\ny(x) = (c1 + c2 ln x) x^2 + (ln x)^2 x^2 + (ln x)/4 + 1/4.\nFinal General Solution: y = [c1 + c2 ln x + (ln x)^2] x^2 + (1/4) ln x + 1/4.",
+        "rubric": "Euler-Cauchy transformation substitution: 4 marks | Transformed differential equation: 2 marks | Complementary function: 4 marks | Particular Integral for exponential part (resonance case): 5 marks | Particular Integral for algebraic polynomial part: 3 marks | Final solution with back-substitution: 2 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "CSE101-2024-ETE",
+    "subject_code": "CSE101",
+    "subject_name": "Computer Programming",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "10412/B",
+    "source": "LPU Central Examination Division / School of Computer Science 2024",
+    "instructions": "All questions in Part A are compulsory. Answer ANY FOUR from Part B and ANY TWO from Part C. Write proper syntactically correct C programs with comments.",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "What will be the output of the following C code snippet?\nint a = 5, b = 2;\nprintf(\"%f\", (float)(a / b));",
+        "options": [
+          "2.000000",
+          "2.500000",
+          "2",
+          "Compilation error"
+        ],
+        "correct_option": "2.000000",
+        "marks": 2,
+        "solution": "Since 'a' and 'b' are integers, integer division 'a / b' evaluates first to 2 before being cast to float 2.000000."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "Which header file is required to use dynamic memory allocation functions like malloc() and calloc() in C?",
+        "options": [
+          "<stdlib.h>",
+          "<stdio.h>",
+          "<memory.h>",
+          "<alloc.h>"
+        ],
+        "correct_option": "<stdlib.h>",
+        "marks": 2,
+        "solution": "The dynamic memory allocation prototypes (malloc, calloc, realloc, free) reside in the standard library header <stdlib.h>."
+      },
+      {
+        "q_no": 3,
+        "type": "mcq",
+        "question": "What is the size of a pointer variable in a 64-bit architecture in C?",
+        "options": [
+          "8 bytes",
+          "4 bytes",
+          "2 bytes",
+          "Depends on data type pointed to"
+        ],
+        "correct_option": "8 bytes",
+        "marks": 2,
+        "solution": "In 64-bit architectures, memory addresses are 64 bits (8 bytes) wide regardless of the pointed data type."
+      },
+      {
+        "q_no": 4,
+        "type": "mcq",
+        "question": "In a union in C containing an int (4 bytes), char (1 byte), and double (8 bytes), what is the total memory allocated?",
+        "options": [
+          "8 bytes",
+          "13 bytes",
+          "4 bytes",
+          "16 bytes"
+        ],
+        "correct_option": "8 bytes",
+        "marks": 2,
+        "solution": "A union shares memory among all its members; the total size equals the size of its largest member (double = 8 bytes)."
+      },
+      {
+        "q_no": 5,
+        "type": "mcq",
+        "question": "Which storage class variable in C retains its value between function calls?",
+        "options": [
+          "static",
+          "auto",
+          "register",
+          "extern"
+        ],
+        "correct_option": "static",
+        "marks": 2,
+        "solution": "Static local variables persist in the data segment throughout the lifetime of the program, retaining their values between function invocations."
+      },
+      {
+        "q_no": 6,
+        "type": "short",
+        "question": "Explain the difference between call by value and call by reference in C.",
+        "marks": 2,
+        "solution": "In call by value, copies of actual arguments are passed; changes made inside the function do not affect caller variables. In call by reference (using pointers), memory addresses are passed; changes directly modify original variables."
+      },
+      {
+        "q_no": 7,
+        "type": "short",
+        "question": "What is a dangling pointer and how can it be prevented in C?",
+        "marks": 2,
+        "solution": "A dangling pointer points to a memory location that has been deallocated (freed). It is prevented by assigning NULL to the pointer immediately after calling free(ptr)."
+      },
+      {
+        "q_no": 8,
+        "type": "short",
+        "question": "Write the difference between structure and union in C with respect to memory allocation.",
+        "marks": 2,
+        "solution": "In a structure, each member gets its own distinct memory space (total size = sum of member sizes + padding). In a union, all members share the same memory location (total size = size of largest member)."
+      },
+      {
+        "q_no": 9,
+        "type": "short",
+        "question": "What does the function fopen(\"test.txt\", \"a+\") do in C?",
+        "marks": 2,
+        "solution": "It opens 'test.txt' in append and read mode. If the file exists, writes occur at the end without truncating; if it does not exist, a new file is created."
+      },
+      {
+        "q_no": 10,
+        "type": "short",
+        "question": "Write the output of: printf(\"%d\", 10 >> 2); and explain the bitwise shift operator.",
+        "marks": 2,
+        "solution": "10 in binary is 00001010. Right shifting by 2 bits results in 00000010 which is 2 in decimal. Bitwise right shift divides by 2^2 = 4 (floor division)."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 11,
+        "unit": "Unit 4: Arrays and Strings",
+        "marks": 10,
+        "question": "Write a complete C program to multiply two matrices of dimensions m x n and n x p. Validate matrix compatibility before multiplying.",
+        "solution": "#include <stdio.h>\n\nint main() {\n    int r1, c1, r2, c2;\n    printf(\"Enter rows and cols for Matrix A: \");\n    scanf(\"%d %d\", &r1, &c1);\n    printf(\"Enter rows and cols for Matrix B: \");\n    scanf(\"%d %d\", &r2, &c2);\n\n    if (c1 != r2) {\n        printf(\"Error: Multiplication not possible! Col1 (%d) != Row2 (%d)\\n\", c1, r2);\n        return 1;\n    }\n\n    int A[r1][c1], B[r2][c2], C[r1][c2];\n    printf(\"Enter elements of Matrix A:\\n\");\n    for(int i=0; i<r1; i++)\n        for(int j=0; j<c1; j++)\n            scanf(\"%d\", &A[i][j]);\n\n    printf(\"Enter elements of Matrix B:\\n\");\n    for(int i=0; i<r2; i++)\n        for(int j=0; j<c2; j++)\n            scanf(\"%d\", &B[i][j]);\n\n    for(int i=0; i<r1; i++) {\n        for(int j=0; j<c2; j++) {\n            C[i][j] = 0;\n            for(int k=0; k<c1; k++) {\n                C[i][j] += A[i][k] * B[k][j];\n            }\n        }\n    }\n\n    printf(\"Resultant Matrix C (%d x %d):\\n\", r1, c2);\n    for(int i=0; i<r1; i++) {\n        for(int j=0; j<c2; j++)\n            printf(\"%d\\t\", C[i][j]);\n        printf(\"\\n\");\n    }\n    return 0;\n}",
+        "rubric": "Input and compatibility validation: 2 marks | Matrix entry reading: 2 marks | Correct 3-nested loop multiplication logic: 4 marks | Output formatting: 2 marks"
+      },
+      {
+        "q_no": 12,
+        "unit": "Unit 5: Pointers and Dynamic Memory Allocation",
+        "marks": 10,
+        "question": "Explain the four dynamic memory allocation functions in C (malloc, calloc, realloc, free) with syntax and memory representation diagrams.",
+        "solution": "1. malloc(size_t size):\nAllocates a contiguous block of specified bytes in the heap memory. Memory is uninitialized (contains garbage values).\nSyntax: ptr = (cast_type*) malloc(byte_size);\n\n2. calloc(size_t n, size_t size):\nAllocates memory for an array of n elements, each of size bytes. Initializes all allocated bits to zero.\nSyntax: ptr = (cast_type*) calloc(n, element_size);\n\n3. realloc(void *ptr, size_t new_size):\nResizes an existing dynamically allocated memory block pointed to by ptr. May move the block if adjacent memory is unavailable.\nSyntax: ptr = (cast_type*) realloc(ptr, new_size);\n\n4. free(void *ptr):\nDeallocates dynamically allocated memory block back to the heap pool to prevent memory leaks.\nSyntax: free(ptr); ptr = NULL;",
+        "rubric": "malloc explanation and syntax: 2.5 marks | calloc explanation and syntax: 2.5 marks | realloc explanation and syntax: 2.5 marks | free explanation and memory leak prevention: 2.5 marks"
+      },
+      {
+        "q_no": 13,
+        "unit": "Unit 6: Structures and File Handling",
+        "marks": 10,
+        "question": "Define a structure Student with fields (roll_no, name, marks in 3 subjects, total_marks, grade). Write a C program to read records of 5 students, calculate total and assign grades ('O', 'A', 'B', 'C') and write student records to a binary file 'students.dat'.",
+        "solution": "#include <stdio.h>\n\nstruct Student {\n    int roll_no;\n    char name[50];\n    float marks[3];\n    float total;\n    char grade;\n};\n\nchar calculateGrade(float total) {\n    float pct = total / 3.0;\n    if (pct >= 90) return 'O';\n    if (pct >= 75) return 'A';\n    if (pct >= 60) return 'B';\n    return 'C';\n}\n\nint main() {\n    struct Student s[5];\n    FILE *fp = fopen(\"students.dat\", \"wb\");\n    if (!fp) {\n        printf(\"File open failed!\\n\");\n        return 1;\n    }\n    for(int i=0; i<5; i++) {\n        printf(\"Enter Roll No and Name: \");\n        scanf(\"%d %s\", &s[i].roll_no, s[i].name);\n        s[i].total = 0;\n        printf(\"Enter marks for 3 subjects: \");\n        for(int j=0; j<3; j++) {\n            scanf(\"%f\", &s[i].marks[j]);\n            s[i].total += s[i].marks[j];\n        }\n        s[i].grade = calculateGrade(s[i].total);\n    }\n    fwrite(s, sizeof(struct Student), 5, fp);\n    fclose(fp);\n    printf(\"Successfully written 5 student records to students.dat!\\n\");\n    return 0;\n}",
+        "rubric": "Structure definition: 2 marks | Grade calculation logic: 2 marks | Data entry and calculation loop: 3 marks | Binary file write (fwrite) and file close: 3 marks"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 14,
+        "unit": "Unit 3 & 5: Recursion and Advanced Pointers",
+        "marks": 20,
+        "question": "Implement the classic Tower of Hanoi problem using recursion in C for N disks. Provide the complete code, recurrence relation for number of moves, and trace the execution for N = 3 disks showing move-by-move rod state.",
+        "solution": "Complete C Implementation:\n#include <stdio.h>\n\nvoid towerOfHanoi(int n, char from_rod, char to_rod, char aux_rod) {\n    if (n == 1) {\n        printf(\"Move disk 1 from rod %c to rod %c\\n\", from_rod, to_rod);\n        return;\n    }\n    // Step 1: Move top n-1 disks from source to auxiliary rod\n    towerOfHanoi(n - 1, from_rod, aux_rod, to_rod);\n    // Step 2: Move the nth disk from source to destination rod\n    printf(\"Move disk %d from rod %c to rod %c\\n\", n, from_rod, to_rod);\n    // Step 3: Move n-1 disks from auxiliary to destination rod\n    towerOfHanoi(n - 1, aux_rod, to_rod, from_rod);\n}\n\nint main() {\n    int n = 3;\n    printf(\"Tower of Hanoi solution for %d disks:\\n\", n);\n    towerOfHanoi(n, 'A', 'C', 'B');\n    return 0;\n}\n\nRecurrence Relation:\nT(n) = 2 T(n - 1) + 1, with T(1) = 1.\nSolution: T(n) = 2^n - 1 moves. For n = 3: 2^3 - 1 = 7 moves.\n\nTrace for N = 3 (Rods A, B, C):\nMove 1: Disk 1 from A to C\nMove 2: Disk 2 from A to B\nMove 3: Disk 1 from C to B\nMove 4: Disk 3 from A to C\nMove 5: Disk 1 from B to A\nMove 6: Disk 2 from B to C\nMove 7: Disk 1 from A to C.",
+        "rubric": "Recursive function implementation: 6 marks | Recurrence relation derivation: 4 marks | Mathematical proof (2^n - 1): 4 marks | Detailed move-by-move trace for N=3: 6 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "PHY109-2024-MTE",
+    "subject_code": "PHY109",
+    "subject_name": "Engineering Physics",
+    "year": 2024,
+    "term": "Mid-Term Examination (MTE)",
+    "duration_minutes": 90,
+    "max_marks": 60,
+    "paper_code": "PHY109/MTE-24",
+    "source": "LPU Department of Physics Midterm Archive 2024",
+    "instructions": "Attempt all questions in Section A (15 Marks). Attempt any THREE questions from Section B (45 Marks). Use Planck's constant h = 6.626 x 10^-34 J·s, mass of electron m = 9.1 x 10^-31 kg.",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "The de Broglie wavelength associated with a particle of mass m moving with velocity v is given by:",
+        "options": [
+          "λ = h / (mv)",
+          "λ = mv / h",
+          "λ = h mv",
+          "λ = h / (2mv)"
+        ],
+        "correct_option": "λ = h / (mv)",
+        "marks": 2,
+        "solution": "De Broglie hypothesis states λ = h / p = h / (mv)."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "In quantum mechanics, the probability density of finding a particle in state Ψ is given by:",
+        "options": [
+          "|Ψ|^2",
+          "Ψ",
+          "dΨ/dx",
+          "∫ Ψ dx"
+        ],
+        "correct_option": "|Ψ|^2",
+        "marks": 2,
+        "solution": "Born's statistical interpretation states that P(x) = |Ψ(x,t)|^2 = Ψ* Ψ represents the probability per unit length/volume."
+      },
+      {
+        "q_no": 3,
+        "type": "short",
+        "question": "State Heisenberg's Uncertainty Principle for position and momentum.",
+        "marks": 3,
+        "solution": "Δx · Δp ≥ ℏ / 2 (or h / 4π). It is physically impossible to simultaneously determine both the exact position and exact momentum of a microscopic particle."
+      },
+      {
+        "q_no": 4,
+        "type": "short",
+        "question": "What is the physical condition for an optical wave function to be normalized?",
+        "marks": 3,
+        "solution": "∫_{-∞}^{+∞} |Ψ(x,t)|^2 dx = 1. This represents that the total probability of finding the particle anywhere in all space is exactly 1 (certainty)."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 5,
+        "unit": "Unit 1: Quantum Mechanics Basics",
+        "marks": 15,
+        "question": "Derive the Time-Independent Schrödinger Wave Equation (TISE) in one dimension. Explain the physical significance of the wavefunction Ψ.",
+        "solution": "Step 1: Classical wave equation: ∂^2 y / ∂x^2 = (1/v^2) ∂^2 y / ∂t^2.\nLet Ψ(x,t) = ψ(x) e^(-iωt). Then ∂^2 Ψ / ∂x^2 = (d^2 ψ / dx^2) e^(-iωt).\nAlso d^2 ψ / dx^2 + (ω^2 / v^2) ψ = 0 => d^2 ψ / dx^2 + (4π^2 / λ^2) ψ = 0.\nStep 2: Incorporate de Broglie wavelength: λ = h / p => 1/λ^2 = p^2 / h^2.\nTotal Energy E = Kinetic Energy + Potential Energy = p^2 / (2m) + V(x) => p^2 = 2m(E - V).\nStep 3: Substitute: d^2 ψ / dx^2 + [4π^2 (2m)(E - V) / h^2] ψ = 0.\nSince ℏ = h / (2π), we obtain:\n-(ℏ^2 / 2m) (d^2 ψ / dx^2) + V(x) ψ = E ψ.\nSignificance: |ψ|^2 is probability density; ψ must be single-valued, continuous, and normalizable.",
+        "rubric": "Wave function formulation: 3 marks | Introduction of de Broglie relation: 3 marks | Energy relations & substitution: 5 marks | Final standard form: 2 marks | Wave function properties: 2 marks"
+      },
+      {
+        "q_no": 6,
+        "unit": "Unit 2: Particle in an Infinite Potential Well",
+        "marks": 15,
+        "question": "A particle of mass m is trapped in a one-dimensional infinite potential box of width L (0 ≤ x ≤ L). Derive the expressions for the normalized energy eigenfunctions and quantized energy eigenvalues.",
+        "solution": "Boundary conditions: V(x) = 0 for 0 < x < L, and V(x) = ∞ for x ≤ 0, x ≥ L.\nInside box: d^2 ψ / dx^2 + k^2 ψ = 0, where k^2 = 2mE / ℏ^2.\nGeneral solution: ψ(x) = A sin(kx) + B cos(kx).\nAt x = 0: ψ(0) = 0 => B = 0 => ψ(x) = A sin(kx).\nAt x = L: ψ(L) = 0 => A sin(kL) = 0. Since A ≠ 0, sin(kL) = 0 => kL = nπ => k = nπ / L (n = 1, 2, 3...).\nQuantized Energy: E_n = ℏ^2 k^2 / (2m) = n^2 π^2 ℏ^2 / (2m L^2) = (n^2 h^2) / (8m L^2).\nNormalization: ∫_0^L |ψ_n(x)|^2 dx = 1 => A^2 ∫_0^L sin^2(nπx / L) dx = A^2 (L / 2) = 1 => A = √(2 / L).\nNormalized Eigenfunctions: ψ_n(x) = √(2 / L) sin(nπx / L).",
+        "rubric": "Formulation of boundary value problem: 3 marks | Application of boundary conditions: 4 marks | Energy eigenvalue derivation (E_n): 4 marks | Normalization constant derivation (√(2/L)): 4 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "ECE131-2024-ETE",
+    "subject_code": "ECE131",
+    "subject_name": "Basic Electrical And Electronics Engineering",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "ECE131/ETE-24",
+    "source": "LPU School of Electronics & Electrical Engineering Archive",
+    "instructions": "Answer ALL questions in Part A (20 Marks). Answer ANY FOUR questions from Part B (40 Marks). Answer ANY TWO questions from Part C (40 Marks).",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "Thevenin's equivalent resistance R_th is found by:",
+        "options": [
+          "Replacing voltage sources with short circuits and current sources with open circuits",
+          "Short circuiting all sources",
+          "Open circuiting all sources",
+          "Replacing with load resistance"
+        ],
+        "correct_option": "Replacing voltage sources with short circuits and current sources with open circuits",
+        "marks": 2,
+        "solution": "Independent ideal voltage sources have zero internal impedance (short), while independent current sources have infinite internal impedance (open)."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "In a series RLC circuit at resonance, the power factor is:",
+        "options": [
+          "1.0 (Unity)",
+          "0 (Zero)",
+          "0.5 lagging",
+          "0.5 leading"
+        ],
+        "correct_option": "1.0 (Unity)",
+        "marks": 2,
+        "solution": "At resonance, inductive reactance X_L equals capacitive reactance X_C, making total impedance purely resistive (Z = R) and voltage in phase with current (cos φ = 1)."
+      },
+      {
+        "q_no": 3,
+        "type": "mcq",
+        "question": "The ripple factor of a full-wave bridge rectifier without filter is:",
+        "options": [
+          "0.48",
+          "1.21",
+          "0.812",
+          "0.50"
+        ],
+        "correct_option": "0.48",
+        "marks": 2,
+        "solution": "Ripple factor γ = √( (I_rms / I_dc)^2 - 1 ). For a full-wave rectifier, γ = √( (π / (2√2))^2 - 1 ) ≈ 0.482."
+      },
+      {
+        "q_no": 4,
+        "type": "short",
+        "question": "State Kirchhoff's Current Law (KCL) and Kirchhoff's Voltage Law (KVL).",
+        "marks": 2,
+        "solution": "KCL: The algebraic sum of currents entering a node is zero (Conservation of Charge). KVL: The algebraic sum of potential differences in any closed loop is zero (Conservation of Energy)."
+      },
+      {
+        "q_no": 5,
+        "type": "short",
+        "question": "What is the condition for Maximum Power Transfer in a DC circuit?",
+        "marks": 2,
+        "solution": "Maximum power is transferred from a source to a load when the load resistance R_L equals the Thevenin internal resistance of the network (R_L = R_th). Maximum efficiency is 50%."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 6,
+        "unit": "Unit 1: DC Circuit Analysis",
+        "marks": 10,
+        "question": "State Norton's theorem. Convert a given circuit with V_th = 24V and R_th = 6Ω across terminals A-B into its Norton equivalent circuit and calculate load current for R_L = 18Ω.",
+        "solution": "Norton's Theorem states that any linear two-terminal bilateral DC network can be replaced by an equivalent circuit consisting of a constant current source I_N in parallel with an internal resistance R_N.\nStep 1: Norton current I_N = V_th / R_th = 24V / 6Ω = 4 A.\nStep 2: Norton resistance R_N = R_th = 6 Ω.\nStep 3: Load current I_L using current divider formula:\nI_L = I_N × [R_N / (R_N + R_L)] = 4 A × [6 / (6 + 18)] = 4 × (6 / 24) = 4 × 0.25 = 1.0 A.\nStep 4: Load voltage V_L = I_L × R_L = 1.0 A × 18 Ω = 18 V.",
+        "rubric": "Statement of Norton's Theorem: 2 marks | Calculation of I_N: 2 marks | Calculation of R_N: 2 marks | Load current calculation: 3 marks | Conclusion & circuit diagram: 1 mark"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 7,
+        "unit": "Unit 5: Semiconductor Devices & BJT",
+        "marks": 20,
+        "question": "Explain the working of an NPN Bipolar Junction Transistor (BJT) in Common Emitter (CE) configuration. Draw the input and output characteristics, defining Cut-off, Active, and Saturation regions.",
+        "solution": "1. Working Principle:\nIn CE mode, the emitter is common to both input (base-emitter) and output (collector-emitter) circuits. The base-emitter junction is forward-biased, and collector-base junction is reverse-biased.\nElectrons from heavily doped emitter are injected into the thin, lightly doped p-type base. Most electrons (>95-98%) diffuse across base and are swept into the collector by reverse bias voltage V_CE.\nRelation: I_E = I_B + I_C, and I_C = β I_B + I_CEO.\n\n2. Input Characteristics (I_B vs V_BE at constant V_CE):\nResembles forward-biased diode characteristic. As V_BE exceeds cut-in voltage (~0.7V for Silicon), base current I_B rises exponentially.\n\n3. Output Characteristics (I_C vs V_CE at constant I_B):\n- Active Region: V_BE forward biased, V_CB reverse biased. I_C is almost flat and controlled by I_B (amplification region).\n- Saturation Region: Both junctions forward biased. V_CE drops below ~0.2V, I_C drops rapidly. Transistor acts as closed switch.\n- Cut-off Region: Both junctions reverse biased. I_B = 0, only tiny leakage current I_CEO flows. Transistor acts as open switch.",
+        "rubric": "Circuit diagram of CE configuration: 4 marks | Working principle explanation: 5 marks | Input characteristics explanation: 3 marks | Output characteristics graph: 4 marks | Operating regions defined: 4 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "CSE205-2024-ETE",
+    "subject_code": "CSE205",
+    "subject_name": "Data Structures And Algorithms",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "CSE205/ETE-24",
+    "source": "LPU School of Computer Science & Engineering 2024 Archive",
+    "instructions": "Answer ALL questions in Part A (20 Marks). Answer ANY FOUR from Part B (40 Marks). Answer ANY TWO from Part C (40 Marks).",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "What is the worst-case time complexity of QuickSort?",
+        "options": [
+          "O(n^2)",
+          "O(n log n)",
+          "O(n)",
+          "O(log n)"
+        ],
+        "correct_option": "O(n^2)",
+        "marks": 2,
+        "solution": "QuickSort degrades to O(n^2) when the chosen pivot is consistently the smallest or largest element (such as when already sorted)."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "Which data structure is primarily used to implement Breadth-First Search (BFS) on a graph?",
+        "options": [
+          "Queue",
+          "Stack",
+          "Priority Queue",
+          "Binary Search Tree"
+        ],
+        "correct_option": "Queue",
+        "marks": 2,
+        "solution": "BFS explores level by level in FIFO order, requiring a Queue data structure."
+      },
+      {
+        "q_no": 3,
+        "type": "mcq",
+        "question": "What is the balance factor of a node in an AVL tree?",
+        "options": [
+          "Height(Left) - Height(Right) ∈ {-1, 0, +1}",
+          "Height(Left) + Height(Right)",
+          "Number of left nodes - right nodes",
+          "Depth of node"
+        ],
+        "correct_option": "Height(Left) - Height(Right) ∈ {-1, 0, +1}",
+        "marks": 2,
+        "solution": "AVL trees maintain the invariant that for every node, |height(left) - height(right)| ≤ 1."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 4,
+        "unit": "Unit 2: Stacks and Applications",
+        "marks": 10,
+        "question": "Convert the following infix expression to postfix using the Stack algorithm showing step-by-step stack contents: (A + B) * (C - D) / E ^ F",
+        "solution": "Expression: (A + B) * (C - D) / E ^ F\nStep-by-step trace:\n1. '(' -> Stack: ['(']\n2. 'A' -> Output: A\n3. '+' -> Stack: ['(', '+']\n4. 'B' -> Output: A B\n5. ')' -> Pop until '(': Output: A B +, Stack: []\n6. '*' -> Stack: ['*']\n7. '(' -> Stack: ['*', '(']\n8. 'C' -> Output: A B + C\n9. '-' -> Stack: ['*', '(', '-']\n10. 'D' -> Output: A B + C D\n11. ')' -> Pop until '(': Output: A B + C D -, Stack: ['*']\n12. '/' -> Same precedence as '*', left associative, pop '*': Output: A B + C D - *, Stack: ['/']\n13. 'E' -> Output: A B + C D - * E\n14. '^' -> Higher precedence than '/': Stack: ['/', '^']\n15. 'F' -> Output: A B + C D - * E F\n16. End of input: Pop remaining stack: '^', then '/':\nFinal Postfix: A B + C D - * E F ^ /",
+        "rubric": "Algorithm rules statement: 2 marks | Correct trace of operator precedence: 4 marks | Stack snapshots: 2 marks | Final postfix expression: 2 marks"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 5,
+        "unit": "Unit 5: Graphs and Shortest Path",
+        "marks": 20,
+        "question": "Explain Dijkstra's Single Source Shortest Path algorithm. Apply Dijkstra's algorithm to find shortest distances from source vertex 'A' to all other vertices in a directed weighted graph with vertices {A, B, C, D, E} and edges (A->B: 4, A->C: 2, B->C: 3, B->D: 2, B->E: 3, C->B: 1, C->D: 4, C->E: 5, E->D: 1).",
+        "solution": "Dijkstra's Algorithm Overview:\nGreedy algorithm to find shortest paths from source vertex s to all other vertices in a graph with non-negative edge weights.\nTime complexity with Min-Heap: O((V + E) log V).\n\nStep 1: Initialization:\nDistances: D[A] = 0, D[B] = ∞, D[C] = ∞, D[D] = ∞, D[E] = ∞. Visited set S = {}\n\nIteration 1: Pick vertex with min distance -> A (dist = 0). S = {A}\nRelax neighbors of A:\n- B: min(∞, 0 + 4) = 4\n- C: min(∞, 0 + 2) = 2\nDistances: A:0, B:4, C:2, D:∞, E:∞\n\nIteration 2: Pick unvisited with min dist -> C (dist = 2). S = {A, C}\nRelax neighbors of C:\n- B: min(4, 2 + 1) = 3 (Updated!)\n- D: min(∞, 2 + 4) = 6\n- E: min(∞, 2 + 5) = 7\nDistances: A:0, B:3, C:2, D:6, E:7\n\nIteration 3: Pick unvisited with min dist -> B (dist = 3). S = {A, B, C}\nRelax neighbors of B:\n- D: min(6, 3 + 2) = 5 (Updated!)\n- E: min(7, 3 + 3) = 6 (Updated!)\nDistances: A:0, B:3, C:2, D:5, E:6\n\nIteration 4: Pick unvisited with min dist -> D (dist = 5). S = {A, B, C, D}\nNeighbors of D: None.\n\nIteration 5: Pick E (dist = 6). S = {A, B, C, D, E}\nRelax neighbors of E:\n- D: min(5, 6 + 1) = 5 (No change)\n\nFinal Shortest Distances from A:\n- A -> A: 0 (Path: A)\n- A -> B: 3 (Path: A -> C -> B)\n- A -> C: 2 (Path: A -> C)\n- A -> D: 5 (Path: A -> C -> B -> D)\n- A -> E: 6 (Path: A -> C -> B -> E)",
+        "rubric": "Algorithm explanation & pseudocode: 4 marks | Initial configuration: 2 marks | Step-by-step relaxation trace: 8 marks | Final distance table & shortest paths: 6 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "INT108-2024-ETE",
+    "subject_code": "INT108",
+    "subject_name": "Python Programming",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "INT108/ETE-24",
+    "source": "LPU School of Computer Science / Python Question Bank",
+    "instructions": "Answer ALL in Part A (20 Marks). Answer ANY FOUR from Part B (40 Marks). Answer ANY TWO from Part C (40 Marks).",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "What is the output of print(type(lambda x: x * 2)) in Python?",
+        "options": [
+          "<class 'function'>",
+          "<class 'lambda'>",
+          "<class 'builtin_function'>",
+          "SyntaxError"
+        ],
+        "correct_option": "<class 'function'>",
+        "marks": 2,
+        "solution": "Lambda expressions create anonymous function objects belonging to the standard 'function' class in Python."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "Which of the following data structures in Python is immutable?",
+        "options": [
+          "tuple",
+          "list",
+          "dict",
+          "set"
+        ],
+        "correct_option": "tuple",
+        "marks": 2,
+        "solution": "Tuples cannot be altered once created; attempting to assign to an element raises a TypeError."
+      },
+      {
+        "q_no": 3,
+        "type": "mcq",
+        "question": "What is the time complexity of dictionary key lookup in Python on average?",
+        "options": [
+          "O(1)",
+          "O(n)",
+          "O(log n)",
+          "O(n log n)"
+        ],
+        "correct_option": "O(1)",
+        "marks": 2,
+        "solution": "Python dictionaries are implemented as hash tables with open addressing, providing amortized O(1) average lookup."
+      },
+      {
+        "q_no": 4,
+        "type": "short",
+        "question": "Explain the difference between deepcopy and shallow copy in Python.",
+        "marks": 2,
+        "solution": "Shallow copy creates a new collection object but copies references to nested objects. Deepcopy recursively duplicates the container and all nested objects independently."
+      },
+      {
+        "q_no": 5,
+        "type": "short",
+        "question": "What is the purpose of *args and **kwargs in Python function definitions?",
+        "marks": 2,
+        "solution": "*args captures arbitrary positional arguments as a tuple. **kwargs captures arbitrary keyword arguments as a dictionary."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 6,
+        "unit": "Unit 3: Functions, Modules & List Comprehensions",
+        "marks": 10,
+        "question": "Write a Python script using list comprehension and lambda to process a list of student dictionaries [{ 'name': 'Amit', 'marks': 84 }, ...] to filter students scoring >= 75 and compute their average score.",
+        "solution": "students = [\n    {'name': 'Aman', 'marks': 88},\n    {'name': 'Priya', 'marks': 72},\n    {'name': 'Rahul', 'marks': 94},\n    {'name': 'Sneha', 'marks': 76}\n]\n\nhonors = [s for s in students if s['marks'] >= 75]\nprint('Eligible students:', [s['name'] for s in honors])\n\navg_score = sum([s['marks'] for s in honors]) / len(honors)\nprint(f'Average marks of honors students: {avg_score:.2f}')",
+        "rubric": "Correct list comprehension syntax: 3 marks | Filtering logic: 3 marks | Average calculation: 2 marks | Output formatting: 2 marks"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 7,
+        "unit": "Unit 5: Object Oriented Programming in Python",
+        "marks": 20,
+        "question": "Design a complete BankAccount system in Python demonstrating encapsulation, inheritance, and polymorphism. Implement SavingsAccount (with interest calculation) and CurrentAccount (with overdraft limit). Include deposit, withdraw, and transaction logging.",
+        "solution": "class BankAccount:\n    def __init__(self, acc_no, holder, balance=0.0):\n        self._acc_no = acc_no\n        self._holder = holder\n        self._balance = balance\n        self._history = []\n\n    def deposit(self, amount):\n        if amount > 0:\n            self._balance += amount\n            self._history.append(f'Deposit: +{amount}')\n            return True\n        return False\n\n    def withdraw(self, amount):\n        if 0 < amount <= self._balance:\n            self._balance -= amount\n            self._history.append(f'Withdraw: -{amount}')\n            return True\n        return False\n\nclass SavingsAccount(BankAccount):\n    def __init__(self, acc_no, holder, balance=0.0, interest_rate=0.04):\n        super().__init__(acc_no, holder, balance)\n        self.interest_rate = interest_rate\n\n    def apply_interest(self):\n        interest = self._balance * self.interest_rate\n        self.deposit(interest)\n        self._history.append(f'Interest added: +{interest}')\n\nclass CurrentAccount(BankAccount):\n    def __init__(self, acc_no, holder, balance=0.0, overdraft_limit=10000.0):\n        super().__init__(acc_no, holder, balance)\n        self.overdraft_limit = overdraft_limit\n\n    def withdraw(self, amount):\n        if 0 < amount <= (self._balance + self.overdraft_limit):\n            self._balance -= amount\n            self._history.append(f'Current Withdraw: -{amount} (Bal: {self._balance})')\n            return True\n        return False",
+        "rubric": "Base class design & encapsulation: 5 marks | Inheritance for Savings & Current: 6 marks | Overdraft method overriding (polymorphism): 5 marks | Transaction history & error checking: 4 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "CSE316-2024-ETE",
+    "subject_code": "CSE316",
+    "subject_name": "Operating Systems",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "CSE316/ETE-24",
+    "source": "LPU Central Examination Division / OS Archives",
+    "instructions": "Answer ALL questions in Part A. Answer ANY FOUR in Part B and ANY TWO in Part C.",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "Which CPU scheduling algorithm may lead to starvation for longer processes?",
+        "options": [
+          "Shortest Job First (SJF)",
+          "Round Robin (RR)",
+          "First Come First Served (FCFS)",
+          "Multilevel Feedback Queue with Aging"
+        ],
+        "correct_option": "Shortest Job First (SJF)",
+        "marks": 2,
+        "solution": "In non-preemptive or preemptive SJF, a steady arrival of short processes prevents long burst processes from acquiring the CPU."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "What are the four necessary conditions for a deadlock to occur in an operating system?",
+        "options": [
+          "Mutual exclusion, Hold & wait, No preemption, Circular wait",
+          "Mutual exclusion, Preemption, Paging, Segmentation",
+          "Deadlock, Starvation, Race condition, Thrashing",
+          "Semaphore, Mutex, Monitor, Spinlock"
+        ],
+        "correct_option": "Mutual exclusion, Hold & wait, No preemption, Circular wait",
+        "marks": 2,
+        "solution": "Coffman conditions: 1) Mutual Exclusion, 2) Hold and Wait, 3) No Preemption, 4) Circular Wait."
+      },
+      {
+        "q_no": 3,
+        "type": "short",
+        "question": "What is Thrashing in an operating system, and how does the Working Set model resolve it?",
+        "marks": 2,
+        "solution": "Thrashing occurs when the OS spends more time swapping pages in and out of secondary storage than executing user instructions due to over-allocated memory. The Working Set Model allocates each process sufficient frames to house its current active locality of reference."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 4,
+        "unit": "Unit 3: Synchronization and Deadlocks",
+        "marks": 10,
+        "question": "Consider a system with 5 processes (P0 to P4) and 3 resource types (A, B, C with 10, 5, 7 instances). Given Allocation and Max matrices, determine if the system is in a safe state using Banker's Algorithm and find the safe sequence.",
+        "solution": "Step 1: Compute Need Matrix = Max - Allocation for each process.\nStep 2: Available = Total - Sum(Allocated).\nStep 3: Test each process: Need_i <= Available. If true, process finishes and releases its allocated resources to Available: Available = Available + Allocation_i.\nStep 4: If all processes finish, system is safe. Safe sequence: <P1, P3, P4, P0, P2>.",
+        "rubric": "Need matrix calculation: 3 marks | Available resources tracking: 2 marks | Safe sequence determination: 4 marks | State verification: 1 mark"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 5,
+        "unit": "Unit 4: Memory Management and Virtual Memory",
+        "marks": 20,
+        "question": "Explain Paging hardware with Translation Lookaside Buffer (TLB). Calculate Effective Memory Access Time (EMAT) if memory access time is 100ns, TLB search time is 20ns, and TLB hit ratio is 95%.",
+        "solution": "1. Paging Hardware with TLB:\nLogical address consists of Page Number (p) and Offset (d).\nTLB is a fast associative cache storing recently accessed page-to-frame translations.\n\nLookup Process:\n1. CPU generates logical address (p, d).\n2. Hardware checks TLB for page p in parallel.\n3. If TLB Hit: Frame number f is retrieved in TLB search time t_TLB. Physical address is formed as (f, d) and memory accessed.\n4. If TLB Miss: Page table in main memory is accessed (cost: 1 memory access), translation retrieved, TLB updated, then final physical address memory access occurs (cost: 2 memory accesses total).\n\n2. EMAT Calculation:\nFormula: EMAT = Hit_Ratio * (t_TLB + t_mem) + (1 - Hit_Ratio) * (t_TLB + 2 * t_mem)\nGiven: Hit ratio = 0.95, t_TLB = 20 ns, t_mem = 100 ns\nEMAT = 0.95 * (20 + 100) + 0.05 * (20 + 200) = 114 + 11 = 125 ns.",
+        "rubric": "TLB architecture & address translation diagram: 6 marks | Hit and miss flow explanation: 4 marks | EMAT formula derivation: 4 marks | Correct numerical calculation (125 ns): 6 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "CSE408-2024-ETE",
+    "subject_code": "CSE408",
+    "subject_name": "Design And Analysis Of Algorithms",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "CSE408/ETE-24",
+    "source": "LPU Central Examination Division / DAA Archives",
+    "instructions": "Answer ALL questions in Part A (20 Marks). Answer ANY FOUR from Part B (40 Marks). Answer ANY TWO from Part C (40 Marks).",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "What is the time complexity of the Floyd-Warshall all-pairs shortest paths algorithm?",
+        "options": [
+          "O(V^3)",
+          "O(V^2 log V)",
+          "O(V E)",
+          "O(E log V)"
+        ],
+        "correct_option": "O(V^3)",
+        "marks": 2,
+        "solution": "Floyd-Warshall uses three nested loops over vertices V to compute D[i][j] = min(D[i][j], D[i][k] + D[k][j]), giving O(V^3) time."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "Which algorithm design technique solves 0/1 Knapsack problem optimally?",
+        "options": [
+          "Dynamic Programming",
+          "Greedy Method",
+          "Divide and Conquer",
+          "Backtracking only"
+        ],
+        "correct_option": "Dynamic Programming",
+        "marks": 2,
+        "solution": "0/1 Knapsack exhibits overlapping subproblems and optimal substructure, solved in O(n*W) pseudo-polynomial time using Dynamic Programming."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 3,
+        "unit": "Unit 3: Dynamic Programming",
+        "marks": 10,
+        "question": "Given two sequences X = 'ABCBDAB' and Y = 'BDCABA', find the Longest Common Subsequence (LCS) using dynamic programming. Draw the DP table and trace the backtrack path.",
+        "solution": "DP Recurrence: c[i,j] = c[i-1,j-1] + 1 if X[i] == Y[j], else max(c[i-1,j], c[i,j-1]).\nLength of LCS is 4.\nBacktracking yields LCS: 'BCBA' (or 'BDAB').",
+        "rubric": "Recurrence relation: 2 marks | DP table construction: 4 marks | Backtracking path: 2 marks | Final LCS string: 2 marks"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 4,
+        "unit": "Unit 6: NP-Completeness and Approximation",
+        "marks": 20,
+        "question": "Define the complexity classes P, NP, NP-Complete, and NP-Hard. Prove that the Circuit-SAT problem is NP-Complete (Cook-Levin Theorem summary) and explain polynomial-time reduction.",
+        "solution": "1. P: Class of decision problems solvable in polynomial time O(n^k) by a deterministic Turing machine.\n2. NP: Class of decision problems verifiable in polynomial time by a deterministic Turing machine.\n3. NP-Hard: A problem X is NP-hard if every problem Y in NP can be polynomial-time reduced to X (Y <=_p X).\n4. NP-Complete: A problem X is NP-complete if: (i) X in NP, and (ii) X is NP-hard.\nCook-Levin Theorem proved Circuit-SAT is NP-Complete by encoding any non-deterministic polynomial-time Turing machine computation into a boolean circuit of polynomial size.",
+        "rubric": "Clear definitions of P, NP, NP-Hard, NP-Complete: 8 marks | Polynomial-time reduction explanation: 4 marks | Cook-Levin Theorem proof outline: 6 marks | Venn diagram representation: 2 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "MTH401-2024-ETE",
+    "subject_code": "MTH401",
+    "subject_name": "Discrete Mathematics",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "MTH401/ETE-24",
+    "source": "LPU Department of Mathematics 2024 Archive",
+    "instructions": "Answer ALL in Part A. Answer ANY FOUR in Part B and ANY TWO in Part C.",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "The number of edges in a complete graph K_n with n vertices is:",
+        "options": [
+          "n(n - 1) / 2",
+          "n(n + 1) / 2",
+          "n^2",
+          "2n"
+        ],
+        "correct_option": "n(n - 1) / 2",
+        "marks": 2,
+        "solution": "Each of n vertices connects to (n - 1) other vertices; dividing by 2 avoids double counting: C(n, 2) = n(n - 1) / 2."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "A relation R on a set A is an Equivalence Relation if and only if it is:",
+        "options": [
+          "Reflexive, Symmetric, and Transitive",
+          "Reflexive, Antisymmetric, and Transitive",
+          "Irreflexive and Symmetric",
+          "Symmetric and Transitive only"
+        ],
+        "correct_option": "Reflexive, Symmetric, and Transitive",
+        "marks": 2,
+        "solution": "By definition, an equivalence relation satisfies reflexivity, symmetry, and transitivity."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 3,
+        "unit": "Unit 2: Counting Principles and Recurrence Relations",
+        "marks": 10,
+        "question": "Solve the recurrence relation: a_n - 7 a_(n-1) + 12 a_(n-2) = 0 for n >= 2 with initial conditions a_0 = 2, a_1 = 5.",
+        "solution": "Characteristic equation: r^2 - 7r + 12 = 0 => (r - 3)(r - 4) = 0 => r = 3, 4.\nGeneral solution: a_n = c1 (3^n) + c2 (4^n).\nApply a_0 = 2: c1 + c2 = 2.\nApply a_1 = 5: 3 c1 + 4 c2 = 5.\nMultiply first by 3: 3 c1 + 3 c2 = 6.\nSubtract: c2 = -1 => c1 = 3.\nParticular Solution: a_n = 3 * 3^n - 4^n = 3^(n+1) - 4^n.",
+        "rubric": "Characteristic equation: 2 marks | Characteristic roots: 2 marks | General solution form: 2 marks | Solving constants c1, c2: 3 marks | Final explicit formula: 1 mark"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 4,
+        "unit": "Unit 5: Graph Theory",
+        "marks": 20,
+        "question": "State and prove Euler's formula for connected planar graphs: V - E + F = 2. Verify Euler's formula for a planar graph with 6 vertices and 9 edges.",
+        "solution": "Euler's Formula: For any connected planar graph with V vertices, E edges, and F faces (including outer face), V - E + F = 2.\nProof by induction on number of edges E:\nBase case: Tree (no cycles). In a tree, E = V - 1 and F = 1. V - E + F = V - (V - 1) + 1 = 2. Verified.\nInductive step: Assume true for all connected planar graphs with E - 1 edges. Removing an edge from a cycle merges two faces, preserving V - E + F = 2.\nVerification: For V = 6, E = 9: F = 2 - V + E = 2 - 6 + 9 = 5 faces. V - E + F = 6 - 9 + 5 = 2. Verified.",
+        "rubric": "Statement of Euler's Formula: 3 marks | Base case induction on trees: 5 marks | Inductive step with cycle edge removal: 8 marks | Numerical verification: 4 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "CHE110-2024-ETE",
+    "subject_code": "CHE110",
+    "subject_name": "Environmental Studies",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "CHE110/ETE-24",
+    "source": "LPU School of Chemical Engineering & Physical Sciences 2024",
+    "instructions": "Attempt all in Part A. Attempt any FOUR in Part B and any TWO in Part C.",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "What is the primary international treaty aimed at protecting the ozone layer by phasing out CFCs?",
+        "options": [
+          "Montreal Protocol",
+          "Kyoto Protocol",
+          "Paris Agreement",
+          "Ramsar Convention"
+        ],
+        "correct_option": "Montreal Protocol",
+        "marks": 2,
+        "solution": "The Montreal Protocol (1987) was created to phase out the production of ozone-depleting substances including chlorofluorocarbons (CFCs)."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "Which of the following is an example of an In-situ biodiversity conservation method?",
+        "options": [
+          "National Park",
+          "Botanical Garden",
+          "Zoo",
+          "Gene Bank"
+        ],
+        "correct_option": "National Park",
+        "marks": 2,
+        "solution": "In-situ conservation protects species within their natural habitats (National Parks, Sanctuaries, Biosphere reserves)."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 3,
+        "unit": "Unit 4: Environmental Pollution",
+        "marks": 10,
+        "question": "Explain Eutrophication in aquatic ecosystems. Discuss its causes, environmental consequences, and mitigation measures.",
+        "solution": "Definition: Eutrophication is the excessive enrichment of water bodies with nutrients (nitrogen and phosphorus), leading to explosive growth of algae (algal blooms).\nCauses: Agricultural fertilizer runoff, untreated sewage discharge, industrial effluents containing phosphates.\nConsequences: Algal blooms block sunlight; dying algae decomposed by aerobic bacteria depletes Dissolved Oxygen (DO), causing hypoxia, massive fish kills, and toxic anaerobic decomposition.\nMitigation: Advanced sewage treatment, tertiary phosphate removal, riparian buffer zones, reduced synthetic fertilizer usage.",
+        "rubric": "Definition and mechanism: 3 marks | Causes detailed: 2 marks | Ecological impacts (hypoxia, fish kills): 3 marks | Remediation strategies: 2 marks"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 4,
+        "unit": "Unit 1: Sustainable Development",
+        "marks": 20,
+        "question": "Describe the 17 UN Sustainable Development Goals (SDGs). Detail how environmental sustainability integrates with economic and social equity in the 2030 Agenda.",
+        "solution": "Comprehensive review of 17 UN SDGs with pillars: People, Planet, Prosperity, Peace, Partnership. Detailed breakdown of SDG 6 (Clean Water), SDG 7 (Affordable Clean Energy), SDG 13 (Climate Action), SDG 14 (Life Below Water), SDG 15 (Life on Land). Analysis of circular economy models replacing linear take-make-dispose paradigm.",
+        "rubric": "SDG framework and 3 pillars: 6 marks | Critical environmental goals detailed: 6 marks | Socio-economic integration: 4 marks | Circular economy and green initiatives: 4 marks"
+      }
+    ]
+  },
+  {
+    "paper_id": "PEA305-2024-ETE",
+    "subject_code": "PEA305",
+    "subject_name": "Analytical Skills-I",
+    "year": 2024,
+    "term": "End-Term Examination (ETE)",
+    "duration_minutes": 180,
+    "max_marks": 100,
+    "paper_code": "PEA305/ETE-24",
+    "source": "LPU Department of Soft Skills & Analytical Aptitude 2024",
+    "instructions": "Answer ALL questions in Section A (30 Marks). Answer ALL questions in Section B (70 Marks).",
+    "part_a": [
+      {
+        "q_no": 1,
+        "type": "mcq",
+        "question": "A train 240 m long crosses a platform of equal length in 24 seconds. What is the speed of the train in km/h?",
+        "options": [
+          "72 km/h",
+          "60 km/h",
+          "80 km/h",
+          "54 km/h"
+        ],
+        "correct_option": "72 km/h",
+        "marks": 2,
+        "solution": "Total distance = Train length + Platform length = 240 + 240 = 480 m. Speed = 480 m / 24 s = 20 m/s. In km/h = 20 * (18 / 5) = 72 km/h."
+      },
+      {
+        "q_no": 2,
+        "type": "mcq",
+        "question": "If 12 men or 18 women can do a work in 14 days, then in how many days can 8 men and 16 women do the same work?",
+        "options": [
+          "9 days",
+          "10 days",
+          "12 days",
+          "8 days"
+        ],
+        "correct_option": "9 days",
+        "marks": 2,
+        "solution": "12 Men = 18 Women => 1 Man = 1.5 Women. 8 Men + 16 Women = 8(1.5) + 16 = 12 + 16 = 28 Women. Total work = 18 * 14 woman-days = 252. Days = 252 / 28 = 9 days."
+      }
+    ],
+    "part_b": [
+      {
+        "q_no": 3,
+        "unit": "Unit 2: Quantitative Aptitude - Profit & Loss and SI/CI",
+        "marks": 10,
+        "question": "A trader marks his goods at 40% above the cost price and allows a discount of 25% on the marked price. If he makes a profit of Rs. 150, calculate the Cost Price and Selling Price of the article.",
+        "solution": "Let CP = 100x.\nMarked Price MP = 100x + 40% of 100x = 140x.\nDiscount = 25% of 140x = 35x.\nSelling Price SP = MP - Discount = 140x - 35x = 105x.\nProfit = SP - CP = 105x - 100x = 5x.\nGiven Profit = Rs. 150 => 5x = 150 => x = 30.\nCost Price CP = 100x = 100 * 30 = Rs. 3,000.\nSelling Price SP = 105x = 105 * 30 = Rs. 3,150.",
+        "rubric": "Assumption and MP calculation: 2 marks | Discount calculation: 2 marks | Profit formulation (5x): 2 marks | Solving x = 30: 2 marks | Final CP and SP: 2 marks"
+      }
+    ],
+    "part_c": [
+      {
+        "q_no": 4,
+        "unit": "Unit 4: Syllogisms & Critical Reasoning",
+        "marks": 20,
+        "question": "Examine the following statements and conclusions using Venn Diagrams. Statements: (1) All engineers are innovative. (2) Some innovative people are leaders. (3) No leader is corrupt. Conclusions: (I) Some engineers are leaders. (II) No engineer is corrupt. (III) Some innovative people are not corrupt. Determine which conclusions logically follow with detailed deduction.",
+        "solution": "Venn Diagram Analysis:\nCircle E (Engineers) inside Circle I (Innovative). Circle L (Leaders) overlaps with Circle I. Circle C (Corrupt) is completely disjoint from Circle L.\nConclusion (I): 'Some engineers are leaders'. While Circle E is inside I, and L overlaps with I, the overlap between I and L does not necessarily intersect E. Hence Conclusion (I) does not definitely follow.\nConclusion (II): 'No engineer is corrupt'. Since Circle C is disjoint from L, and E is not necessarily inside L, E and C may or may not overlap. Hence Conclusion (II) does not definitely follow.\nConclusion (III): 'Some innovative people are not corrupt'. From Statement (2), some innovative people are leaders. From Statement (3), no leader is corrupt. Therefore, those innovative people who are leaders cannot be corrupt. Hence Conclusion (III) definitely follows!\nAnswer: Only Conclusion (III) logically follows.",
+        "rubric": "Venn diagram construction for 3 premises: 6 marks | Critical analysis of Conclusion I: 4 marks | Critical analysis of Conclusion II: 4 marks | Rigorous proof for Conclusion III: 6 marks"
+      }
+    ]
+  }
+]

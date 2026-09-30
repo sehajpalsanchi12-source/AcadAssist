@@ -1,0 +1,25 @@
+{
+  "users": {
+    "user_79e58bd698": {
+      "id": "user_79e58bd698",
+      "google_id": "goog_test_987654",
+      "name": "Sanchi Sharma (Verto)",
+      "email": "sanchi.verto.test@gmail.com",
+      "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=sanchi",
+      "lpu_reg_no": "12214589",
+      "phone": "8053122848",
+      "created_at": 1790758218.203488,
+      "last_login": 1790759983.493412,
+      "active_plan": "midterm_mock_49",
+      "plan_name": "Midterm Mode / Subject Mock Test Pass",
+      "plan_expiry": 1798535983.503274,
+      "is_pro": true,
+      "session_token": "acad_usr_0c3c8cd6640e498bb609a4f213baae0d",
+      "mock_tests_count": 3,
+      "total_spent_inr": 147.0,
+      "purchased_subjects": [
+        "MTH166"
+      ]
+    }
+  }
+}

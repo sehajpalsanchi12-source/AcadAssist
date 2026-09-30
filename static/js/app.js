@@ -1,0 +1,905 @@
+/**
+ * LPU Verto AI Exam Prep - Main Application Logic & Study Asset Studio
+ */
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize Theme
+  initTheme();
+
+  // Initialize Paywall
+  await PaywallManager.init();
+
+  // Setup Tabs
+  setupTabs();
+
+  // Load Preloaded Subjects & Custom Subjects
+  await loadSubjectsHub();
+
+  // Load LPU Program Structure
+  await loadPrograms();
+
+  // Setup Form Handlers
+  setupFormHandlers();
+
+  // Setup Note Bank Search
+  setupNoteBankSearch();
+
+  // Setup Custom Subject Modal
+  setupCustomSubjectModal();
+});
+
+// ── Theme Management ──────────────────────────────────────────────────
+function initTheme() {
+  const themeToggle = document.getElementById('theme-toggle');
+  const isDark = localStorage.getItem('theme') === 'dark' || 
+    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  if (isDark) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      localStorage.setItem('theme', current);
+    });
+  }
+}
+
+// ── Tab Management ────────────────────────────────────────────────────
+function setupTabs() {
+  const tabs = document.querySelectorAll('[data-tab-target]');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetId = tab.getAttribute('data-tab-target');
+      switchTab(targetId);
+    });
+  });
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.add('hidden');
+  });
+  document.querySelectorAll('[data-tab-target]').forEach(tab => {
+    tab.classList.remove('border-orange-500', 'text-orange-600', 'dark:text-orange-400');
+    tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-slate-400');
+  });
+
+  const targetContent = document.getElementById(tabId);
+  const activeTabBtn = document.querySelector(`[data-tab-target="${tabId}"]`);
+
+  if (targetContent) targetContent.classList.remove('hidden');
+  if (activeTabBtn) {
+    activeTabBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-slate-400');
+    activeTabBtn.classList.add('border-orange-500', 'text-orange-600', 'dark:text-orange-400');
+  }
+}
+
+// ── Preloaded LPU Subjects Hub (All 266+ Subjects from notes.lpuverto.xyz) ──
+let allAvailableSubjects = [];
+let activeSemesterFilter = 'all';
+let activeSearchQuery = '';
+
+async function loadSubjectsHub() {
+  const hubContainer = document.getElementById('preloaded-subjects-grid');
+  if (!hubContainer) return;
+
+  try {
+    const res = await fetch('/api/all-subjects');
+    allAvailableSubjects = await res.json();
+    renderFilteredSubjects();
+    setupSubjectsSearch();
+  } catch (e) {
+    console.error("Failed to load all subjects:", e);
+    // Fallback to preloaded
+    try {
+      const resFallback = await fetch('/api/preloaded-subjects');
+      allAvailableSubjects = await resFallback.json();
+      renderFilteredSubjects();
+    } catch (err) {
+      hubContainer.innerHTML = '<div class="col-span-full py-12 text-center text-red-500">Failed to load subjects.</div>';
+    }
+  }
+}
+
+function setupSubjectsSearch() {
+  const searchInput = document.getElementById('subjects-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      activeSearchQuery = e.target.value.toLowerCase().trim();
+      renderFilteredSubjects();
+    });
+  }
+}
+
+window.filterSubjectsBySemester = function(sem) {
+  activeSemesterFilter = sem;
+  document.querySelectorAll('.sem-filter-pill').forEach(btn => {
+    btn.classList.remove('bg-pink-500', 'text-white', 'shadow-sm', 'active');
+    btn.classList.add('bg-gray-100', 'dark:bg-slate-800', 'text-gray-700', 'dark:text-slate-300');
+  });
+  const activeBtn = document.querySelector(`.sem-filter-pill[data-sem="${sem}"]`);
+  if (activeBtn) {
+    activeBtn.classList.remove('bg-gray-100', 'dark:bg-slate-800', 'text-gray-700', 'dark:text-slate-300');
+    activeBtn.classList.add('bg-pink-500', 'text-white', 'shadow-sm', 'active');
+  }
+  renderFilteredSubjects();
+};
+
+function renderFilteredSubjects() {
+  const hubContainer = document.getElementById('preloaded-subjects-grid');
+  const countBadge = document.getElementById('subjects-count-badge');
+  if (!hubContainer) return;
+
+  let filtered = allAvailableSubjects;
+
+  // Filter by semester
+  if (activeSemesterFilter === 'priority') {
+    const priorityCodes = ['MTH166', 'PHY109', 'PHY110', 'ECE131', 'CSE101', 'CSE205', 'INT108', 'MTH401', 'CSE408', 'PEA305', 'CHE110', 'CSE316', 'CSE306', 'CSE326'];
+    filtered = filtered.filter(s => priorityCodes.includes(s.code.toUpperCase()));
+  } else if (activeSemesterFilter !== 'all') {
+    const semClean = activeSemesterFilter.toLowerCase().replace(' ', '');
+    filtered = filtered.filter(s => (s.semester || '').toLowerCase().replace(' ', '').includes(semClean));
+  }
+
+  // Filter by search query
+  if (activeSearchQuery) {
+    filtered = filtered.filter(s => 
+      s.code.toLowerCase().includes(activeSearchQuery) || 
+      (s.name || '').toLowerCase().includes(activeSearchQuery) ||
+      (s.description || '').toLowerCase().includes(activeSearchQuery)
+    );
+  }
+
+  if (countBadge) {
+    countBadge.innerText = `${filtered.length} Subjects Showing`;
+  }
+
+  if (filtered.length === 0) {
+    hubContainer.innerHTML = `
+      <div class="col-span-full py-16 text-center">
+        <span class="text-4xl">🔍</span>
+        <h4 class="text-base font-bold text-gray-700 dark:text-slate-300 mt-2">No subjects found</h4>
+        <p class="text-xs text-gray-500 mt-1">Try clearing your search query or switching semester tab.</p>
+        <button onclick="filterSubjectsBySemester('all'); document.getElementById('subjects-search-input').value='';" class="mt-3 px-4 py-1.5 rounded-xl bg-pink-500 text-white font-bold text-xs">Reset All Filters</button>
+      </div>
+    `;
+    return;
+  }
+
+  hubContainer.innerHTML = filtered.map(s => {
+    const isCustom = s.is_custom;
+    const badgeColor = isCustom ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400' : 'bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-400';
+    const badgeText = isCustom ? 'Custom Subject' : (s.badge || `${s.semester || 'LPU'} • Core`);
+
+    return `
+      <div class="rounded-3xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-md hover:border-pink-400 transition-all flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${badgeColor}">
+              ${badgeText}
+            </span>
+            <span class="text-xs text-gray-500 font-semibold">${s.semester || 'Sem 1'} • ${s.credits || '4 Credits'}</span>
+          </div>
+
+          <h3 class="text-lg font-black text-gray-900 dark:text-white leading-tight">
+            ${s.code} — ${s.name}
+          </h3>
+          <p class="text-xs text-gray-600 dark:text-slate-400 mt-2 line-clamp-2">
+            ${s.description || 'Comprehensive syllabus modules, past year question bank, and notes from notes.lpuverto.xyz.'}
+          </p>
+        </div>
+
+        <div class="space-y-2 pt-3 border-t border-gray-100 dark:border-slate-800">
+          <!-- Midterm Mode ₹49 Mock Test Button -->
+          <button onclick="startSubjectMockTest('${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-md shadow-pink-500/20 transition-all flex items-center justify-center gap-2">
+            <span>⚡ Midterm Mock Test (₹49 Pass)</span>
+            <span class="text-[10px] bg-black/20 px-1.5 py-0.5 rounded">30 MCQs + Simulator</span>
+          </button>
+
+          <!-- PYQ Question Papers Button -->
+          <button onclick="openPYQForSubject('${s.code}')" class="w-full py-2 rounded-xl bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 dark:hover:bg-pink-900/40 text-pink-600 dark:text-pink-400 font-bold text-xs border border-pink-200 dark:border-pink-800/60 transition-colors flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>📂 View PYQs & Past Papers (2021-2024)</span>
+          </button>
+
+          <!-- Native PowerPoint (.pptx) & Slide Presenter -->
+          <div class="grid grid-cols-2 gap-2">
+            <a href="/api/subject/${s.code}/download-pptx" download="${s.code}_presentation.pptx" class="py-2 px-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1 text-center">
+              <span>📥 Download .pptx</span>
+            </a>
+            <button onclick="launchSubjectProjector('${s.code}')" class="py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[11px] transition-colors flex items-center justify-center gap-1">
+              <span>🖥️ View Slides</span>
+            </button>
+          </div>
+
+          <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider pt-1">Study Asset Studio:</div>
+          
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button onclick="triggerAssetGeneration('notes', '${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="p-2 rounded-xl bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/50 font-bold text-left transition-colors flex items-center gap-1.5">
+              <span>📖</span> Full Notes
+            </button>
+            <button onclick="triggerAssetGeneration('short_notes', '${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50 font-bold text-left transition-colors flex items-center gap-1.5">
+              <span>⚡</span> Cram Notes
+            </button>
+            <button onclick="triggerAssetGeneration('slides', '${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 font-bold text-left transition-colors flex items-center gap-1.5">
+              <span>🖥️</span> Slides Deck
+            </button>
+            <button onclick="triggerAssetGeneration('roadmap', '${s.code}', '${s.name.replace(/'/g, "\\'")}', '${s.semester || 'Sem2'}')" class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 font-bold text-left transition-colors flex items-center gap-1.5">
+              <span>🗺️</span> 9+ CGPA Plan
+            </button>
+          </div>
+
+          ${s.landing_url ? `
+            <a href="${s.landing_url}" target="_blank" class="w-full py-1.5 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white font-medium text-[11px] transition-colors flex items-center justify-center gap-1">
+              <span>🔗 Original notes.lpuverto.xyz Page ↗</span>
+            </a>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.openPYQForSubject = function(code) {
+  switchTab('tab-pyq');
+  if (window.PYQManager) {
+    window.PYQManager.selectSubject(code);
+  }
+};
+
+window.startSubjectMockTest = async function(subjectCode, subjectName, semester = 'Sem2') {
+  const isPro = window.PaywallManager && window.PaywallManager.isPro;
+  const user = window.AuthManager && window.AuthManager.currentUser;
+  const hasSubjectPass = user && user.purchased_subjects && user.purchased_subjects.includes(subjectCode);
+
+  if (!isPro && !hasSubjectPass) {
+    // Open ₹49 Mock Test Paywall Modal with UPI 7719730804@ptyes
+    if (window.PaywallManager) {
+      window.PaywallManager.openCheckoutModal('midterm_mock_49', subjectCode);
+      return;
+    }
+  }
+
+  // Switch to simulator tab and automatically generate official LPU mock test
+  switchTab('tab-simulator');
+  const simLoader = document.getElementById('simulator-loader');
+  if (simLoader) simLoader.classList.remove('hidden');
+
+  try {
+    const formData = new FormData();
+    formData.append('subject_code', subjectCode);
+    formData.append('subject_name', subjectName);
+    formData.append('semester', semester);
+    formData.append('exam_type', 'mte');
+    formData.append('mcq_count', '30');
+    formData.append('fetch_lpuverto_data', 'true');
+    formData.append('token', localStorage.getItem('lpu_verto_pro_token') || '');
+
+    const res = await fetch('/api/generate-exam', {
+      method: 'POST',
+      body: formData
+    });
+    const paper = await res.json();
+    if (window.ExamSimulator) {
+      window.ExamSimulator.init(paper);
+    }
+  } catch (err) {
+    alert("Failed to synthesize mock test for " + subjectCode);
+  } finally {
+    if (simLoader) simLoader.classList.add('hidden');
+  }
+};
+
+// ── Multi-Asset Generation Logic ──────────────────────────────────────
+window.currentLoadedSlideDeck = null;
+
+window.triggerAssetGeneration = async function(assetType, code, name, sem = 'Sem2', unit = 'Unit1') {
+  // Switch to Asset Viewer Tab/Section
+  switchTab('tab-asset-studio');
+
+  // Fill in active subject details
+  const titleDisplay = document.getElementById('asset-studio-subject-title');
+  if (titleDisplay) titleDisplay.textContent = `${code} — ${name} (${unit})`;
+
+  const loader = document.getElementById('asset-studio-loader');
+  const outputContainer = document.getElementById('asset-studio-output');
+  if (loader) loader.classList.remove('hidden');
+  if (outputContainer) outputContainer.innerHTML = '';
+
+  try {
+    const formData = new FormData();
+    formData.append('asset_type', assetType);
+    formData.append('subject_code', code);
+    formData.append('subject_name', name);
+    formData.append('semester', sem);
+    formData.append('unit', unit);
+    if (PaywallManager.userData.token) {
+      formData.append('token', PaywallManager.userData.token);
+    }
+
+    const res = await fetch('/api/generate-asset', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) throw new Error('Asset generation failed.');
+    const data = await res.json();
+
+    renderStudyAsset(data);
+  } catch (e) {
+    if (outputContainer) {
+      outputContainer.innerHTML = `<div class="p-6 text-center text-red-500 font-semibold">Failed to generate study asset: ${e.message}</div>`;
+    }
+  } finally {
+    if (loader) loader.classList.add('hidden');
+  }
+};
+
+function renderStudyAsset(data) {
+  const container = document.getElementById('asset-studio-output');
+  if (!container) return;
+
+  const type = data.asset_type;
+
+  if (type === 'notes') {
+    // Render Full Notes
+    const sectionsHtml = (data.sections || []).map(sec => `
+      <div class="mb-8 p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm">
+        <h3 class="text-xl font-extrabold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-100 dark:border-slate-800">
+          ${sec.heading}
+        </h3>
+        <div class="prose dark:prose-invert max-w-none text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+          ${sec.content}
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="space-y-6 animate-fade-in-up">
+        <div class="flex items-center justify-between bg-orange-50 dark:bg-orange-950/30 p-4 rounded-2xl border border-orange-200 dark:border-orange-800">
+          <div>
+            <span class="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Comprehensive Study Notes</span>
+            <h2 class="text-lg font-black text-gray-900 dark:text-white">${data.subject_code} — ${data.subject_name}</h2>
+          </div>
+          <span class="px-3 py-1 bg-white dark:bg-slate-800 rounded-full text-xs font-semibold text-gray-600 dark:text-slate-300">
+            ${data.total_read_time || '7 min read'}
+          </span>
+        </div>
+        ${sectionsHtml}
+      </div>
+    `;
+
+  } else if (type === 'short_notes') {
+    // Render Short Cram Notes & Flashcards
+    const cheatsHtml = (data.cheat_sheet || []).map(c => `
+      <div class="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60">
+        <span class="text-xs font-black uppercase text-amber-800 dark:text-amber-400 tracking-wide">${c.topic}</span>
+        <p class="text-xs sm:text-sm font-semibold text-gray-800 dark:text-slate-200 mt-1">${c.summary}</p>
+      </div>
+    `).join('');
+
+    const flashcardsHtml = (data.flashcards || []).map(f => `
+      <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm space-y-2">
+        <div class="flex justify-between items-center text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase">
+          <span>Card #${f.id}</span>
+          <span>${f.exam_tag || 'LPU Flashcard'}</span>
+        </div>
+        <p class="font-bold text-sm text-gray-900 dark:text-white">Q: ${f.question}</p>
+        <p class="text-xs text-gray-600 dark:text-slate-300 pt-1 border-t border-gray-100 dark:border-slate-800">Ans: ${f.answer}</p>
+      </div>
+    `).join('');
+
+    const formulasHtml = (data.high_yield_formulas || []).map(f => `
+      <li class="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-200">${f}</li>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="space-y-6 animate-fade-in-up">
+        <div class="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-200 dark:border-amber-800 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Revision Cheat Sheet & Flashcards</span>
+            <h2 class="text-lg font-black text-gray-900 dark:text-white">${data.subject_code} • ${data.unit}</h2>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ${cheatsHtml}
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 text-white shadow-sm space-y-3">
+          <h4 class="font-black text-sm text-orange-400 uppercase tracking-wider">Top LPU Formulas & Examination Rules:</h4>
+          <ul class="space-y-2">
+            ${formulasHtml}
+          </ul>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="font-black text-base text-gray-900 dark:text-white">High-Yield LPU Flashcards:</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${flashcardsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+
+  } else if (type === 'slides') {
+    // Render Slides Deck
+    window.currentLoadedSlideDeck = data;
+    const slides = data.slides || [];
+
+    const slidesListHtml = slides.map((s, idx) => `
+      <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-slate-800">
+          <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">Slide ${s.slide_number}</span>
+          <span class="text-xs text-gray-400">${data.subject_code}</span>
+        </div>
+        <h4 class="text-lg font-black text-gray-900 dark:text-white">${s.title}</h4>
+        ${s.subtitle ? `<p class="text-xs text-gray-500 font-semibold">${s.subtitle}</p>` : ''}
+        
+        <ul class="list-disc pl-5 space-y-1 text-xs text-gray-700 dark:text-slate-300">
+          ${(s.bullets || []).map(b => `<li>${b}</li>`).join('')}
+        </ul>
+
+        ${s.code_or_diagram ? `<pre class="p-3 bg-slate-950 text-sky-400 rounded-xl text-xs overflow-x-auto font-mono mt-2">${s.code_or_diagram}</pre>` : ''}
+
+        ${s.speaker_notes ? `<div class="p-2.5 bg-orange-50/50 dark:bg-orange-950/20 border-l-2 border-orange-500 text-[11px] text-gray-600 dark:text-slate-400">🎙️ <strong>Speaker Note:</strong> ${s.speaker_notes}</div>` : ''}
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="space-y-6 animate-fade-in-up">
+        <div class="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-2xl border border-blue-200 dark:border-blue-800 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Presentation Slide Deck</span>
+            <h2 class="text-lg font-black text-gray-900 dark:text-white">${data.subject_code} — ${data.subject_name}</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="/api/subject/${data.subject_code}/download-pptx" download="${data.subject_code}_presentation.pptx" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5">
+              <span>📥 Download .pptx Deck</span>
+            </a>
+            <button onclick="launchSlideProjector()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5">
+              <span>⛶ Launch Projector Mode</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          ${slidesListHtml}
+        </div>
+      </div>
+    `;
+
+  } else if (type === 'roadmap') {
+    // Render 7-Day / 4-Week Roadmap
+    const tracks = data.study_tracks || [];
+    const daysHtml = (tracks[0]?.days || []).map(d => `
+      <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+              ${d.day}
+            </span>
+            <span class="text-xs text-gray-500 font-semibold">${d.hours} Hours Target</span>
+          </div>
+          <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">${d.focus}</h4>
+          <ul class="text-xs text-gray-600 dark:text-slate-400 space-y-0.5 pt-1">
+            ${(d.tasks || []).map(t => `<li>• ${t}</li>`).join('')}
+          </ul>
+        </div>
+
+        <div class="sm:text-right shrink-0 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700 text-xs">
+          <span class="text-[10px] text-gray-400 font-bold uppercase block">Milestone Goal:</span>
+          <span class="font-bold text-emerald-600 dark:text-emerald-400">${d.checkpoint}</span>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="space-y-6 animate-fade-in-up">
+        <div class="bg-emerald-50 dark:bg-emerald-950/30 p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Exam Prep Roadmap & Milestones</span>
+            <h2 class="text-lg font-black text-gray-900 dark:text-white">${data.target_goal || '9+ CGPA Strategy'}</h2>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          ${daysHtml}
+        </div>
+      </div>
+    `;
+  }
+}
+
+window.launchSlideProjector = async function() {
+  if (!window.currentLoadedSlideDeck) return;
+  try {
+    const res = await fetch('/api/export-slides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(window.currentLoadedSlideDeck)
+    });
+    const html = await res.text();
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    } else {
+      alert('Please allow popups to launch fullscreen presentation projector.');
+    }
+  } catch (e) {
+    alert('Failed to launch slide presentation.');
+  }
+};
+
+window.launchSubjectProjector = async function(code) {
+  try {
+    const res = await fetch(`/api/subject/${code}/presentation`);
+    if (!res.ok) throw new Error('Failed to fetch presentation slides');
+    const deck = await res.json();
+    window.currentLoadedSlideDeck = deck;
+
+    const exportRes = await fetch('/api/export-slides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(deck)
+    });
+    const html = await exportRes.text();
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    } else {
+      alert('Please allow popups to launch fullscreen presentation projector.');
+    }
+  } catch (e) {
+    alert(`Could not launch presentation: ${e.message}`);
+  }
+};
+
+window.loadSubjectIntoExamGenerator = function(code) {
+  // Pre-select subject in generator tab
+  const subjSelect = document.getElementById('subject-select');
+  if (subjSelect) {
+    for (let i = 0; i < subjSelect.options.length; i++) {
+      if (subjSelect.options[i].value === code) {
+        subjSelect.selectedIndex = i;
+        subjSelect.dispatchEvent(new Event('change'));
+        break;
+      }
+    }
+  }
+  switchTab('tab-generate');
+};
+
+// ── Custom Subject Modal Logic ────────────────────────────────────────
+function setupCustomSubjectModal() {
+  const modal = document.getElementById('custom-subject-modal');
+  const openBtn = document.getElementById('open-custom-subject-btn');
+  const closeBtn = document.getElementById('close-custom-subject-modal');
+  const form = document.getElementById('custom-subject-form');
+
+  if (openBtn && modal) {
+    openBtn.addEventListener('click', () => modal.showModal());
+  }
+  if (closeBtn && modal) {
+    closeBtn.addEventListener('click', () => modal.close());
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = document.getElementById('custom-code-input')?.value.trim();
+      const name = document.getElementById('custom-name-input')?.value.trim();
+      const sem = document.getElementById('custom-sem-input')?.value || 'Sem1';
+      const credits = parseInt(document.getElementById('custom-credits-input')?.value || '4');
+      const desc = document.getElementById('custom-desc-input')?.value.trim();
+      const unitsRaw = document.getElementById('custom-units-input')?.value.trim();
+
+      const units = unitsRaw ? unitsRaw.split('\n').map(u => u.trim()).filter(Boolean) : [
+        "Unit 1: Fundamentals & Introduction",
+        "Unit 2: Core Concepts & Applications",
+        "Unit 3: Advanced Topics",
+        "Unit 4: Case Studies & Projects"
+      ];
+
+      try {
+        const res = await fetch('/api/custom-subject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            name,
+            semester: sem,
+            credits,
+            description: desc,
+            units
+          })
+        });
+
+        if (!res.ok) throw new Error('Failed to create custom course');
+        modal.close();
+        form.reset();
+        await loadSubjectsHub();
+        alert(`🎉 Custom Subject ${code} created successfully!`);
+      } catch (err) {
+        alert(err.message || 'Error creating custom subject.');
+      }
+    });
+  }
+}
+
+// ── LPU Catalog Loading ───────────────────────────────────────────────
+let currentStructure = null;
+
+async function loadPrograms() {
+  const select = document.getElementById('program-select');
+  if (!select) return;
+
+  try {
+    const res = await fetch('/api/programs');
+    const programs = await res.json();
+    select.innerHTML = programs.map(p => 
+      `<option value="${p.id}">${p.name}</option>`
+    ).join('');
+
+    select.addEventListener('change', () => loadStructure(select.value));
+    // Load structure for default program
+    await loadStructure(select.value || 'B. Tech. CSE');
+  } catch (e) {
+    console.error("Failed to load programs:", e);
+  }
+}
+
+async function loadStructure(program) {
+  const semSelect = document.getElementById('sem-select');
+
+  try {
+    const res = await fetch(`/api/structure?program=${encodeURIComponent(program)}`);
+    currentStructure = await res.json();
+
+    const semesters = Object.keys(currentStructure);
+    if (semSelect) {
+      semSelect.innerHTML = semesters.map(s => `<option value="${s}">${s.replace('Sem', 'Semester ')}</option>`).join('');
+      semSelect.onchange = () => updateSubjectDropdown(semSelect.value);
+      if (semesters.length > 0) {
+        updateSubjectDropdown(semesters[0]);
+      }
+    }
+  } catch (e) {
+    console.error("Failed to load structure:", e);
+  }
+}
+
+function updateSubjectDropdown(semester) {
+  const subjSelect = document.getElementById('subject-select');
+  if (!subjSelect || !currentStructure || !currentStructure[semester]) return;
+
+  const subjects = currentStructure[semester];
+  const entries = Object.entries(subjects);
+
+  subjSelect.innerHTML = entries.map(([code, info]) => {
+    const cleanCode = code.split('/').pop();
+    const title = info.title || 'Course Material';
+    return `<option value="${cleanCode}" data-title="${title}">${cleanCode} — ${title}</option>`;
+  }).join('');
+
+  subjSelect.onchange = () => updateUnitsDropdown(semester, subjSelect.value);
+  if (entries.length > 0) {
+    const firstCode = entries[0][0].split('/').pop();
+    updateUnitsDropdown(semester, firstCode);
+  }
+}
+
+function updateUnitsDropdown(semester, subjectCode) {
+  const unitSelect = document.getElementById('unit-select');
+  if (!unitSelect || !currentStructure || !currentStructure[semester]) return;
+
+  const subjects = currentStructure[semester];
+  let info = null;
+  for (const [key, val] of Object.entries(subjects)) {
+    if (key.endsWith(subjectCode) || key === subjectCode) {
+      info = val;
+      break;
+    }
+  }
+
+  const units = (info && info.units && info.units.length > 0)
+    ? info.units
+    : ["Unit1", "Unit2", "Unit3", "Unit4", "Unit5", "Unit6"];
+
+  unitSelect.innerHTML = units.map(u => `<option value="${u}">${u.replace('Unit', 'Unit ')}</option>`).join('');
+}
+
+// ── Form Handlers & File Drag Drop ────────────────────────────────────
+function setupFormHandlers() {
+  const dropZone = document.getElementById('file-drop-zone');
+  const fileInput = document.getElementById('file-upload-input');
+  const filePreview = document.getElementById('file-preview-card');
+  const fileNameDisplay = document.getElementById('file-name-display');
+  const removeFileBtn = document.getElementById('remove-file-btn');
+  let selectedFile = null;
+
+  if (dropZone && fileInput) {
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-orange-500', 'bg-orange-50/50', 'dark:bg-orange-950/20');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-orange-500', 'bg-orange-50/50', 'dark:bg-orange-950/20');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-orange-500', 'bg-orange-50/50', 'dark:bg-orange-950/20');
+      if (e.dataTransfer.files.length > 0) {
+        handleFileSelect(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        handleFileSelect(fileInput.files[0]);
+      }
+    });
+  }
+
+  function handleFileSelect(file) {
+    selectedFile = file;
+    if (filePreview && fileNameDisplay) {
+      fileNameDisplay.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      filePreview.classList.remove('hidden');
+    }
+  }
+
+  if (removeFileBtn) {
+    removeFileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectedFile = null;
+      if (fileInput) fileInput.value = '';
+      if (filePreview) filePreview.classList.add('hidden');
+    });
+  }
+
+  // Generate Exam Submission
+  const generateForm = document.getElementById('generate-exam-form');
+  const generateBtn = document.getElementById('generate-exam-btn');
+  const loaderContainer = document.getElementById('generation-loader');
+
+  if (generateForm) {
+    generateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData();
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
+
+      const textVal = document.getElementById('raw-notes-input')?.value.trim();
+      if (textVal) formData.append('text_content', textVal);
+
+      const prog = document.getElementById('program-select')?.value || 'B. Tech. CSE';
+      const sem = document.getElementById('sem-select')?.value || 'Sem2';
+      const subj = document.getElementById('subject-select')?.value || 'CSE101';
+      const subjOpt = document.querySelector(`#subject-select option[value="${subj}"]`);
+      const subjName = subjOpt ? subjOpt.getAttribute('data-title') : 'Subject Material';
+      const unit = document.getElementById('unit-select')?.value || 'Unit1';
+      const examType = document.querySelector('input[name="exam_type"]:checked')?.value || 'ete';
+      const mcqCount = document.getElementById('mcq-count-input')?.value || 15;
+      const diff = document.getElementById('difficulty-select')?.value || 'Mixed';
+      const negMarking = document.getElementById('neg-marking-toggle')?.checked ?? true;
+
+      formData.append('program', prog);
+      formData.append('semester', sem);
+      formData.append('subject_code', subj);
+      formData.append('subject_name', subjName);
+      formData.append('unit', unit);
+      formData.append('exam_type', examType);
+      formData.append('mcq_count', mcqCount);
+      formData.append('short_count', examType === 'ca' ? 0 : 4);
+      formData.append('long_count', examType === 'ca' ? 0 : 2);
+      formData.append('difficulty', diff);
+      formData.append('negative_marking', negMarking);
+      formData.append('fetch_lpuverto_data', true);
+
+      if (PaywallManager.userData.token) {
+        formData.append('token', PaywallManager.userData.token);
+      }
+
+      // UI Loading state
+      if (generateBtn) generateBtn.disabled = true;
+      if (loaderContainer) loaderContainer.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/generate-exam', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to generate exam paper.');
+        }
+
+        const paperData = await res.json();
+        
+        // Load into Simulator
+        ExamSimulator.init(paperData);
+
+        // Switch to Simulator Tab
+        switchTab('tab-simulator');
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      } catch (err) {
+        alert(err.message || 'Error occurred while generating paper.');
+      } finally {
+        if (generateBtn) generateBtn.disabled = false;
+        if (loaderContainer) loaderContainer.classList.add('hidden');
+      }
+    });
+  }
+}
+
+// ── Note Bank Live Search ─────────────────────────────────────────────
+function setupNoteBankSearch() {
+  const searchInput = document.getElementById('notebank-search-input');
+  const resultsContainer = document.getElementById('notebank-results-list');
+  let debounceTimeout = null;
+
+  if (!searchInput || !resultsContainer) return;
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimeout);
+    const query = searchInput.value.trim();
+    if (query.length < 2) {
+      resultsContainer.innerHTML = '<p class="text-sm text-gray-400 py-6 text-center">Type at least 2 characters to search LPU Verto notes...</p>';
+      return;
+    }
+
+    debounceTimeout = setTimeout(async () => {
+      resultsContainer.innerHTML = '<div class="py-6 text-center text-sm text-orange-500 font-medium">Searching notes.lpuverto.xyz catalog...</div>';
+      try {
+        const prog = document.getElementById('program-select')?.value || 'B. Tech. CSE';
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&program=${encodeURIComponent(prog)}`);
+        const items = await res.json();
+
+        if (items.length === 0) {
+          resultsContainer.innerHTML = '<p class="text-sm text-gray-500 py-6 text-center">No matching subjects found on notes.lpuverto.xyz.</p>';
+          return;
+        }
+
+        resultsContainer.innerHTML = items.map(item => `
+          <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-4 hover:border-orange-400 transition-all">
+            <div class="min-w-0 flex-1">
+              <h5 class="font-bold text-gray-900 dark:text-white text-sm sm:text-base truncate">${item.title}</h5>
+              <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">${item.snippet || 'LPU Academic Course'}</p>
+            </div>
+            <button onclick="loadSubjectFromNoteBank('${item.title}')" class="shrink-0 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+              Generate Paper →
+            </button>
+          </div>
+        `).join('');
+      } catch (e) {
+        resultsContainer.innerHTML = '<p class="text-sm text-red-500 py-4 text-center">Failed to fetch search results.</p>';
+      }
+    }, 400);
+  });
+}
+
+window.loadSubjectFromNoteBank = function(title) {
+  const match = title.match(/([A-Z]{2,4}\d{3})/i);
+  if (match) {
+    const code = match[1].toUpperCase();
+    loadSubjectIntoExamGenerator(code);
+  }
+};

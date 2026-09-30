@@ -1,0 +1,18 @@
+[
+  {
+    "code": "CSE999",
+    "name": "Advanced Autonomous AI & Multi-Agent Robotics",
+    "semester": "Sem7",
+    "program": "B. Tech. CSE",
+    "credits": 4,
+    "category": "Departmental Elective",
+    "description": "Reinforcement learning, neural planners, and multi-agent coordination frameworks.",
+    "units": [
+      "Unit 1: Foundations of Multi-Agent Systems",
+      "Unit 2: Deep Q-Learning & Policy Gradients",
+      "Unit 3: Decentralized Consensus & Swarm Robotics",
+      "Unit 4: Real-time Perception & Path Planning"
+    ],
+    "is_custom": true
+  }
+]

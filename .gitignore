@@ -1,0 +1,28 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+/tmp/
+test_output/
+.idea/
+.vscode/
+
+# Keep data files and pre-generated presentations
+!data/
+!data/*.json
+!data/ppts/

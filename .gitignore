@@ -29,3 +29,4 @@ test_output/
 !data/acadassist.db
 *.db-shm
 *.db-wal
+.env

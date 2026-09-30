@@ -156,7 +156,7 @@ class AIChatService:
             try:
                 reply = await cls._call_gemini(message, subject_code, subject_name, history or [], gemini_api_key)
                 if reply and len(reply.strip()) > 20:
-                    return {"reply": reply, "fallback": False, "engine": "gemini-2.0-flash"}
+                    return {"reply": reply, "fallback": False, "engine": "gemini-2.5-flash"}
             except Exception as e:
                 # Silently fall back to built-in engine if Gemini encounters rate-limits or errors
                 pass
@@ -192,7 +192,7 @@ class AIChatService:
 
         async with httpx.AsyncClient(timeout=25) as client:
             r = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}",
                 json=payload
             )
             data = r.json()

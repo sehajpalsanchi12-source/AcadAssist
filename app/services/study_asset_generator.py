@@ -473,7 +473,7 @@ Be specific to {subject_name} - use actual topic names, real formula names, real
 
                 async with httpx.AsyncClient(timeout=45) as client:
                     resp = await client.post(
-                        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}",
+                        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}",
                         json={
                             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
                             "generationConfig": {"maxOutputTokens": 4096, "temperature": 0.4}

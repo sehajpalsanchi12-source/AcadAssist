@@ -1,6 +1,8 @@
 import os
 import json
 import httpx
+from dotenv import load_dotenv
+load_dotenv()  # Load .env file (GEMINI_API_KEY etc.) at startup
 from typing import Optional, Any, Dict, List
 from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, Response

@@ -960,6 +960,38 @@ async def export_printable(req: ExportRequest):
     """
     return HTMLResponse(content=html)
 
+# ── Admin Portal Page Route ──────────────────────────────────────────────
+
+@app.get("/admin", response_class=FileResponse)
+async def serve_admin_portal():
+    """Serve the Master Admin Control & Payment Approval Portal."""
+    admin_html = os.path.join(STATIC_DIR, "admin.html")
+    if os.path.exists(admin_html):
+        return FileResponse(admin_html)
+    raise HTTPException(status_code=404, detail="Admin portal not found.")
+
+# ── Visitor Analytics Logging ────────────────────────────────────────────
+
+class VisitLogRequest(BaseModel):
+    session_id: Optional[str] = None
+    path: Optional[str] = "/"
+    user_id: Optional[str] = None
+
+@app.post("/api/analytics/visit")
+async def record_visitor_hit(req: VisitLogRequest):
+    """Log an active page hit/session for admin live visitor tracking."""
+    session_id = req.session_id or "anon_guest"
+    path = req.path or "/"
+    Database.record_visit(
+        session_id=session_id,
+        path=path,
+        user_id=req.user_id,
+        ip="127.0.0.1",
+        user_agent="browser"
+    )
+    return {"success": True}
+
 # Serve Frontend static assets
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static_prefix")
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+

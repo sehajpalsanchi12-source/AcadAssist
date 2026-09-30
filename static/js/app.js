@@ -26,7 +26,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Setup Custom Subject Modal
   setupCustomSubjectModal();
+
+  // Track live visitor analytics
+  recordVisitHit();
 });
+
+// ── Visitor Analytics Tracker ─────────────────────────────────────────
+function recordVisitHit() {
+  try {
+    let sessId = localStorage.getItem('acadassist_sess_id');
+    if (!sessId) {
+      sessId = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+      localStorage.setItem('acadassist_sess_id', sessId);
+    }
+    const user = (window.AuthManager && window.AuthManager.currentUser) ? window.AuthManager.currentUser.name : null;
+    fetch('/api/analytics/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessId,
+        path: window.location.pathname || '/',
+        user_id: user
+      })
+    }).catch(() => {});
+  } catch (e) {}
+}
 
 // ── Theme Management ──────────────────────────────────────────────────
 function initTheme() {

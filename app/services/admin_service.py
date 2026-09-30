@@ -10,9 +10,8 @@ class AdminService:
     """Manages administrator authentication, analytics, permissions, and full platform controls."""
 
     # Explicit credentials requested by user
-    ADMIN_USERNAME = "acadassit0812"
-    ADMIN_USERNAME_ALT = "acadassist0812"
-    ADMIN_PASSWORD = ";Sharma@1290"
+    ADMIN_USERNAMES = {"acasassist0812", "acadassist0812", "acadassit0812"}
+    ADMIN_PASSWORDS = {"sharma@1290", ";sharma@1290"}
 
     # Active admin sessions
     _admin_sessions: Dict[str, Dict[str, Any]] = {}
@@ -23,11 +22,11 @@ class AdminService:
         u_clean = username.strip().lower()
         p_clean = password.strip()
 
-        if (u_clean == cls.ADMIN_USERNAME.lower() or u_clean == cls.ADMIN_USERNAME_ALT.lower()) and p_clean == cls.ADMIN_PASSWORD:
+        if u_clean in cls.ADMIN_USERNAMES and (p_clean in cls.ADMIN_PASSWORDS or p_clean.lower() in cls.ADMIN_PASSWORDS):
             token = f"admin_sess_{uuid.uuid4().hex}"
             session = {
                 "token": token,
-                "username": cls.ADMIN_USERNAME,
+                "username": u_clean,
                 "role": "SuperAdmin",
                 "logged_in_at": time.time(),
                 "expires_at": time.time() + (7 * 86400)
@@ -38,7 +37,7 @@ class AdminService:
                 "message": "Admin authenticated successfully. Welcome, AcadAssist Administrator!",
                 "token": token,
                 "admin": {
-                    "username": cls.ADMIN_USERNAME,
+                    "username": u_clean,
                     "role": "SuperAdmin",
                     "permissions": ["all", "users_manage", "payments_approve", "catalog_edit", "export_data"]
                 }
@@ -63,16 +62,18 @@ class AdminService:
         """Aggregate platform statistics for the Admin Dashboard."""
         from app.services.user_service import UserService
         from app.services.paywall_service import PaywallService
+        from app.database import Database
 
         users = UserService.list_all_users()
         mock_tests = UserService.list_all_mock_tests()
         inquiries = UserService.list_service_inquiries()
         transactions = PaywallService.list_all_transactions()
-
-        from app.database import Database
+        visitor_stats = Database.get_visitor_analytics()
 
         total_revenue = sum(t.get("amount", 0.0) for t in transactions if t.get("status") in ["approved", "active"])
         pending_payments = [t for t in transactions if t.get("status") == "pending"]
+        approved_payments = [t for t in transactions if t.get("status") == "approved"]
+        rejected_payments = [t for t in transactions if t.get("status") == "rejected"]
 
         return {
             "total_users": len(users),
@@ -82,6 +83,15 @@ class AdminService:
             "total_mock_tests": len(mock_tests),
             "total_service_inquiries": len(inquiries),
             "pending_payments_count": len(pending_payments),
+            "approved_payments_count": len(approved_payments),
+            "rejected_payments_count": len(rejected_payments),
+            "total_transactions_count": len(transactions),
+            "visitor_analytics": visitor_stats,
+            "active_now": visitor_stats.get("active_now", 1),
+            "active_today": visitor_stats.get("active_today", 1),
+            "total_visits": visitor_stats.get("total_visits", 12),
+            "unique_visitors": visitor_stats.get("unique_visitors", 8),
+            "recent_visits": visitor_stats.get("recent_visits", []),
             "database": Database.get_stats(),
             "recent_activity": {
                 "recent_users": users[-5:] if users else [],

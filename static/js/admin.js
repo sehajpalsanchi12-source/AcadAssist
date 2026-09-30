@@ -24,11 +24,7 @@ const AdminPortal = {
   },
 
   openPortal() {
-    if (this.adminToken) {
-      this.loadDashboard();
-    } else {
-      document.getElementById('admin-login-modal')?.showModal();
-    }
+    window.location.href = '/admin';
   },
 
   async login() {

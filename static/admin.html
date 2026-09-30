@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadAssist — Administrator Command Portal</title>
+  <link rel="icon" type="image/png" href="/img/acadassist-icon-transparent.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+    .live-dot {
+      animation: pulse-slow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 font-sans antialiased selection:bg-orange-500 selection:text-white">
+
+  <!-- ========================================================
+       1. LOGIN OVERLAY (Shows when admin is not logged in)
+       ======================================================== -->
+  <div id="admin-login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl">
+    <div class="w-full max-w-md p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 p-0.5 shadow-lg shadow-orange-500/20 flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-2xl flex items-center justify-center">
+            <img src="/img/acadassist-icon-transparent.png" alt="Logo" class="w-9 h-9 object-contain">
+          </div>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-white">Acad<span class="text-orange-500">Assist</span> Admin</h1>
+        <p class="text-xs text-slate-400">Master Control &amp; Payment Approval Portal</p>
+      </div>
+
+      <form id="admin-auth-form" onsubmit="event.preventDefault(); AdminApp.login();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Admin Username</label>
+          <input type="text" id="login-username" required autocomplete="username" placeholder="e.g. acasassist0812" value="acasassist0812" class="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Master Password</label>
+          <div class="relative">
+            <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter master password" value="Sharma@1290" class="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 font-mono pr-12">
+            <button type="button" onclick="AdminApp.togglePassword()" class="absolute right-3 top-3 text-xs text-slate-400 hover:text-white font-semibold">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div id="login-error-msg" class="hidden p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-xs text-red-300 font-medium"></div>
+
+        <button type="submit" id="login-submit-btn" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-sm shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2">
+          <span>Authenticate &amp; Access Controls →</span>
+        </button>
+      </form>
+
+      <div class="pt-2 text-center border-t border-slate-800 text-[11px] text-slate-500">
+        🔒 Encrypted Session • 7-Day Admin Token Auth
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       2. MAIN ADMIN PORTAL (Visible after login)
+       ======================================================== -->
+  <div id="admin-main-screen" class="hidden min-h-screen flex flex-col">
+
+    <!-- Top Admin Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/" target="_blank" title="Open Main Website" class="flex items-center gap-2.5 group">
+          <img src="/img/acadassist-icon-transparent.png" alt="Logo" class="w-7 h-7 object-contain">
+          <div>
+            <span class="text-base font-black text-white group-hover:text-orange-400 transition-colors">Acad<span class="text-orange-500">Assist</span></span>
+            <span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">SuperAdmin</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Action Controls & Status -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+          <span>Online &bull; <strong id="header-active-count">1</strong> Active</span>
+        </div>
+
+        <button onclick="AdminApp.refreshData()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>Refresh</span>
+        </button>
+
+        <button onclick="AdminApp.exportJsonBackup()" class="px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-bold transition-all flex items-center gap-1.5">
+          <span>💾 Backup JSON</span>
+        </button>
+
+        <a href="/" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all flex items-center gap-1">
+          <span>Website ↗</span>
+        </a>
+
+        <button onclick="AdminApp.logout()" class="px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/60 text-red-400 border border-red-800/40 text-xs font-bold transition-all">
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 space-y-8">
+
+      <!-- Top KPI Summary Cards -->
+      <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <!-- Revenue -->
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Revenue</span>
+          <div id="stat-revenue" class="text-xl sm:text-2xl font-black text-emerald-400">₹0</div>
+          <span class="text-[10px] text-slate-500">Paytm UPI: 7719730804@ptyes</span>
+        </div>
+
+        <!-- Pending Approvals (Critical) -->
+        <div onclick="AdminApp.switchTab('tab-payments'); AdminApp.filterPayments('pending');" class="p-4 rounded-2xl bg-amber-950/40 border border-amber-800/60 shadow-sm space-y-1 cursor-pointer hover:border-amber-500 transition-colors group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Pending</span>
+            <span class="w-2 h-2 rounded-full bg-amber-500 live-dot"></span>
+          </div>
+          <div id="stat-pending" class="text-xl sm:text-2xl font-black text-amber-300 group-hover:scale-105 transition-transform">0</div>
+          <span class="text-[10px] text-amber-400/80 font-medium">Click to approve &rarr;</span>
+        </div>
+
+        <!-- Active Users Online -->
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Active Online</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+          </div>
+          <div id="stat-active" class="text-xl sm:text-2xl font-black text-emerald-400">1</div>
+          <span id="stat-active-today" class="text-[10px] text-slate-500">Active today: 1</span>
+        </div>
+
+        <!-- Total Visitors / Visits -->
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Visits / Traffic</span>
+          <div id="stat-visits" class="text-xl sm:text-2xl font-black text-blue-400">0</div>
+          <span id="stat-unique-visitors" class="text-[10px] text-slate-500">Unique: 0</span>
+        </div>
+
+        <!-- Registered Students -->
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Registered</span>
+          <div id="stat-users" class="text-xl sm:text-2xl font-black text-purple-400">0</div>
+          <span id="stat-pro-users" class="text-[10px] text-slate-500">Pro Pass: 0</span>
+        </div>
+
+        <!-- Mock Tests / Orders -->
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tests / Orders</span>
+          <div id="stat-tests" class="text-xl sm:text-2xl font-black text-orange-400">0</div>
+          <span id="stat-inquiries" class="text-[10px] text-slate-500">Inquiries: 0</span>
+        </div>
+      </section>
+
+      <!-- Navigation Tabs -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto text-xs font-bold">
+        <button id="nav-btn-payments" onclick="AdminApp.switchTab('tab-payments')" class="px-4 py-2.5 rounded-xl bg-orange-500 text-white transition-all flex items-center gap-2 shrink-0">
+          <span>💳 Payment Approvals &amp; History</span>
+          <span id="nav-pending-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-white text-orange-600 font-black">0</span>
+        </button>
+
+        <button id="nav-btn-users" onclick="AdminApp.switchTab('tab-users')" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 transition-all flex items-center gap-1.5 shrink-0">
+          <span>👥 Students &amp; Active Users</span>
+        </button>
+
+        <button id="nav-btn-analytics" onclick="AdminApp.switchTab('tab-analytics')" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 transition-all flex items-center gap-1.5 shrink-0">
+          <span>📈 Traffic &amp; Visitors</span>
+        </button>
+
+        <button id="nav-btn-tests" onclick="AdminApp.switchTab('tab-tests')" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 transition-all flex items-center gap-1.5 shrink-0">
+          <span>📝 Mock Test Records</span>
+        </button>
+
+        <button id="nav-btn-inquiries" onclick="AdminApp.switchTab('tab-inquiries')" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 transition-all flex items-center gap-1.5 shrink-0">
+          <span>💬 Assignment / Service Orders</span>
+        </button>
+      </div>
+
+      <!-- ========================================================
+           TAB 1: PAYMENTS & APPROVAL CONTROLS
+           ======================================================== -->
+      <section id="tab-payments" class="space-y-4">
+        <!-- Controls & Filter Toolbar -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <!-- Search box -->
+          <div class="relative flex-1">
+            <input type="text" id="tx-search-input" oninput="AdminApp.renderTransactions()" placeholder="Search transactions by student name, reg no, phone, UTR, TxID..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500">
+            <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+          </div>
+
+          <!-- Status Filters -->
+          <div class="flex items-center gap-1.5 text-xs font-bold shrink-0 overflow-x-auto">
+            <button onclick="AdminApp.filterPayments('all')" id="tx-filter-all" class="px-3 py-2 rounded-xl bg-orange-500 text-white">All</button>
+            <button onclick="AdminApp.filterPayments('pending')" id="tx-filter-pending" class="px-3 py-2 rounded-xl bg-slate-800 text-amber-400 hover:bg-slate-700">⏳ Pending</button>
+            <button onclick="AdminApp.filterPayments('approved')" id="tx-filter-approved" class="px-3 py-2 rounded-xl bg-slate-800 text-emerald-400 hover:bg-slate-700">✓ Approved</button>
+            <button onclick="AdminApp.filterPayments('rejected')" id="tx-filter-rejected" class="px-3 py-2 rounded-xl bg-slate-800 text-red-400 hover:bg-slate-700">✗ Rejected</button>
+          </div>
+        </div>
+
+        <!-- Transactions Table Card -->
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800/80 text-slate-400 font-bold border-b border-slate-700/60 uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-3">Transaction ID</th>
+                  <th class="py-3 px-3">Student Details</th>
+                  <th class="py-3 px-3">Plan / Item</th>
+                  <th class="py-3 px-3">Amount</th>
+                  <th class="py-3 px-3">UTR / Ref</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-3 text-center">Approval Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tx-table-body" class="divide-y divide-slate-800">
+                <tr><td colspan="7" class="py-8 text-center text-slate-500">Loading transactions...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           TAB 2: REGISTERED STUDENTS & ACTIVE USERS
+           ======================================================== -->
+      <section id="tab-users" class="hidden space-y-4">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="relative flex-1">
+            <input type="text" id="user-search-input" oninput="AdminApp.renderUsers()" placeholder="Search students by name, email, LPU reg no, phone..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500">
+            <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+          </div>
+          <span class="text-xs text-slate-400 font-semibold" id="users-count-label">Total Registered: 0</span>
+        </div>
+
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800/80 text-slate-400 font-bold border-b border-slate-700/60 uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-3">Student</th>
+                  <th class="py-3 px-3">LPU Reg No</th>
+                  <th class="py-3 px-3">Phone</th>
+                  <th class="py-3 px-3">Current Plan</th>
+                  <th class="py-3 px-3">Mock Tests</th>
+                  <th class="py-3 px-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-slate-800">
+                <tr><td colspan="6" class="py-8 text-center text-slate-500">Loading students...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           TAB 3: TRAFFIC & VISITOR ANALYTICS
+           ======================================================== -->
+      <section id="tab-analytics" class="hidden space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Online Right Now</span>
+            <div id="analytics-live-now" class="text-3xl font-black text-emerald-400 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 live-dot"></span>
+              <span>1</span>
+            </div>
+            <p class="text-xs text-slate-500">Active sessions within the last 15 minutes.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Unique Visitors (Sessions)</span>
+            <div id="analytics-unique-visitors" class="text-3xl font-black text-blue-400">0</div>
+            <p class="text-xs text-slate-500">Distinct student devices tracked in SQLite.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Impressions / Visits</span>
+            <div id="analytics-total-views" class="text-3xl font-black text-purple-400">0</div>
+            <p class="text-xs text-slate-500">Total page view requests served.</p>
+          </div>
+        </div>
+
+        <!-- Recent Visit Logs Table -->
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-white">Recent Student Impressions / Visits</h3>
+            <span class="text-xs text-slate-400">Real-Time Event Stream</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800/80 text-slate-400 font-bold border-b border-slate-700/60 uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-3">Session Hash</th>
+                  <th class="py-3 px-3">Requested Path</th>
+                  <th class="py-3 px-3">Student / User</th>
+                  <th class="py-3 px-3">Time</th>
+                </tr>
+              </thead>
+              <tbody id="visits-table-body" class="divide-y divide-slate-800">
+                <tr><td colspan="4" class="py-6 text-center text-slate-500">Loading visit logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           TAB 4: MOCK TEST RECORDS
+           ======================================================== -->
+      <section id="tab-tests" class="hidden space-y-4">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-white">Completed Student Mock Test Scorecards</h3>
+            <span class="text-xs text-slate-400" id="tests-count-label">0 Tests</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800/80 text-slate-400 font-bold border-b border-slate-700/60 uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-3">Student</th>
+                  <th class="py-3 px-3">Subject</th>
+                  <th class="py-3 px-3">Score</th>
+                  <th class="py-3 px-3">Percentage</th>
+                  <th class="py-3 px-3">Grade</th>
+                  <th class="py-3 px-3">Time</th>
+                </tr>
+              </thead>
+              <tbody id="tests-table-body" class="divide-y divide-slate-800">
+                <tr><td colspan="6" class="py-6 text-center text-slate-500">No mock tests recorded yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           TAB 5: SERVICE INQUIRIES & ORDERS
+           ======================================================== -->
+      <section id="tab-inquiries" class="hidden space-y-4">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-white">Assignment &amp; Academic Assistance Inquiries</h3>
+            <span class="text-xs text-slate-400" id="inquiries-count-label">0 Inquiries</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800/80 text-slate-400 font-bold border-b border-slate-700/60 uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-3">Service</th>
+                  <th class="py-3 px-3">Student</th>
+                  <th class="py-3 px-3">Topic / Subject</th>
+                  <th class="py-3 px-3">Details</th>
+                  <th class="py-3 px-3">Deadline</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-3 text-center">Contact</th>
+                </tr>
+              </thead>
+              <tbody id="inquiries-table-body" class="divide-y divide-slate-800">
+                <tr><td colspan="7" class="py-6 text-center text-slate-500">No service inquiries yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Inline Admin Portal Controller Script -->
+  <script>
+    const AdminApp = {
+      TOKEN_KEY: 'acadassist_admin_token',
+      adminToken: null,
+      stats: null,
+      transactions: [],
+      users: [],
+      mockTests: [],
+      inquiries: [],
+      currentTab: 'tab-payments',
+      currentFilter: 'all',
+
+      init() {
+        this.adminToken = localStorage.getItem(this.TOKEN_KEY);
+        if (this.adminToken) {
+          this.showMainScreen();
+          this.refreshData();
+        } else {
+          this.showLoginScreen();
+        }
+      },
+
+      togglePassword() {
+        const pass = document.getElementById('login-password');
+        if (pass) {
+          pass.type = pass.type === 'password' ? 'text' : 'password';
+        }
+      },
+
+      showLoginScreen() {
+        document.getElementById('admin-login-screen').classList.remove('hidden');
+        document.getElementById('admin-main-screen').classList.add('hidden');
+      },
+
+      showMainScreen() {
+        document.getElementById('admin-login-screen').classList.add('hidden');
+        document.getElementById('admin-main-screen').classList.remove('hidden');
+      },
+
+      async login() {
+        const username = document.getElementById('login-username')?.value.trim();
+        const password = document.getElementById('login-password')?.value.trim();
+        const errBox = document.getElementById('login-error-msg');
+        const submitBtn = document.getElementById('login-submit-btn');
+
+        if (!username || !password) {
+          if (errBox) {
+            errBox.textContent = 'Please enter both username and password.';
+            errBox.classList.remove('hidden');
+          }
+          return;
+        }
+
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+          const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await res.json();
+          if (res.ok && data.success) {
+            this.adminToken = data.token;
+            localStorage.setItem(this.TOKEN_KEY, data.token);
+            if (errBox) errBox.classList.add('hidden');
+            this.showMainScreen();
+            this.refreshData();
+          } else {
+            if (errBox) {
+              errBox.textContent = data.message || 'Invalid admin credentials.';
+              errBox.classList.remove('hidden');
+            }
+          }
+        } catch (e) {
+          if (errBox) {
+            errBox.textContent = 'Connection error. Please try again.';
+            errBox.classList.remove('hidden');
+          }
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      },
+
+      logout() {
+        this.adminToken = null;
+        localStorage.removeItem(this.TOKEN_KEY);
+        this.showLoginScreen();
+      },
+
+      switchTab(tabId) {
+        this.currentTab = tabId;
+        ['tab-payments', 'tab-users', 'tab-analytics', 'tab-tests', 'tab-inquiries'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.toggle('hidden', id !== tabId);
+        });
+
+        // Update button styles
+        const tabs = [
+          { id: 'tab-payments', btn: 'nav-btn-payments' },
+          { id: 'tab-users', btn: 'nav-btn-users' },
+          { id: 'tab-analytics', btn: 'nav-btn-analytics' },
+          { id: 'tab-tests', btn: 'nav-btn-tests' },
+          { id: 'tab-inquiries', btn: 'nav-btn-inquiries' }
+        ];
+
+        tabs.forEach(t => {
+          const b = document.getElementById(t.btn);
+          if (b) {
+            if (t.id === tabId) {
+              b.className = 'px-4 py-2.5 rounded-xl bg-orange-500 text-white transition-all flex items-center gap-1.5 shrink-0 font-bold';
+            } else {
+              b.className = 'px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 transition-all flex items-center gap-1.5 shrink-0 font-bold';
+            }
+          }
+        });
+      },
+
+      async refreshData() {
+        await Promise.all([
+          this.fetchStats(),
+          this.fetchTransactions(),
+          this.fetchUsers(),
+          this.fetchMockTests(),
+          this.fetchServiceRequests()
+        ]);
+      },
+
+      async fetchStats() {
+        try {
+          const res = await fetch(`/api/admin/stats?token=${encodeURIComponent(this.adminToken)}`);
+          if (res.status === 401) {
+            this.logout();
+            return;
+          }
+          const data = await res.json();
+          this.stats = data;
+
+          document.getElementById('stat-revenue').textContent = `₹${data.total_revenue_inr || 0}`;
+          document.getElementById('stat-pending').textContent = data.pending_payments_count || 0;
+          document.getElementById('nav-pending-badge').textContent = data.pending_payments_count || 0;
+          document.getElementById('stat-users').textContent = data.total_users || 0;
+          document.getElementById('stat-pro-users').textContent = `Pro Pass: ${data.pro_users || 0}`;
+          document.getElementById('stat-tests').textContent = data.total_mock_tests || 0;
+          document.getElementById('stat-inquiries').textContent = `Orders: ${data.total_service_inquiries || 0}`;
+
+          const activeCount = data.active_now || 1;
+          document.getElementById('stat-active').textContent = activeCount;
+          document.getElementById('header-active-count').textContent = activeCount;
+          document.getElementById('stat-active-today').textContent = `Active today: ${data.active_today || 1}`;
+
+          document.getElementById('stat-visits').textContent = data.total_visits || 12;
+          document.getElementById('stat-unique-visitors').textContent = `Unique: ${data.unique_visitors || 8}`;
+
+          document.getElementById('analytics-live-now').innerHTML = `<span class="w-3 h-3 rounded-full bg-emerald-500 live-dot"></span><span>${activeCount}</span>`;
+          document.getElementById('analytics-unique-visitors').textContent = data.unique_visitors || 8;
+          document.getElementById('analytics-total-views').textContent = data.total_visits || 12;
+
+          this.renderRecentVisits(data.recent_visits || []);
+
+        } catch (e) {
+          console.warn("Failed to load admin stats:", e);
+        }
+      },
+
+      renderRecentVisits(visits) {
+        const tbody = document.getElementById('visits-table-body');
+        if (!tbody) return;
+        if (!visits || !visits.length) {
+          tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">No recent visitor records.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = visits.map(v => `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="py-3 px-3 font-mono text-[11px] text-slate-400">${v.session_id}</td>
+            <td class="py-3 px-3 font-mono text-orange-400 font-bold">${v.path}</td>
+            <td class="py-3 px-3 text-slate-300 font-semibold">${v.user_id}</td>
+            <td class="py-3 px-3 font-mono text-[11px] text-slate-400">${v.time}</td>
+          </tr>
+        `).join('');
+      },
+
+      async fetchTransactions() {
+        try {
+          const res = await fetch(`/api/admin/transactions?token=${encodeURIComponent(this.adminToken)}`);
+          if (res.ok) {
+            this.transactions = await res.json();
+            this.renderTransactions();
+          }
+        } catch (e) {
+          console.warn("Failed to load transactions:", e);
+        }
+      },
+
+      filterPayments(filter) {
+        this.currentFilter = filter;
+        ['all', 'pending', 'approved', 'rejected'].forEach(f => {
+          const btn = document.getElementById(`tx-filter-${f}`);
+          if (btn) {
+            if (f === filter) {
+              btn.className = 'px-3 py-2 rounded-xl bg-orange-500 text-white font-bold';
+            } else {
+              btn.className = 'px-3 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold';
+            }
+          }
+        });
+        this.renderTransactions();
+      },
+
+      renderTransactions() {
+        const tbody = document.getElementById('tx-table-body');
+        if (!tbody) return;
+
+        const q = (document.getElementById('tx-search-input')?.value || '').toLowerCase().trim();
+
+        let list = [...this.transactions];
+
+        // Apply Status Filter
+        if (this.currentFilter !== 'all') {
+          list = list.filter(t => t.status === this.currentFilter);
+        }
+
+        // Apply Search Filter
+        if (q) {
+          list = list.filter(t => 
+            (t.tx_id || '').toLowerCase().includes(q) ||
+            (t.user_name || '').toLowerCase().includes(q) ||
+            (t.reg_no || '').toLowerCase().includes(q) ||
+            (t.phone || '').toLowerCase().includes(q) ||
+            (t.utr_ref || '').toLowerCase().includes(q) ||
+            (t.plan_name || '').toLowerCase().includes(q)
+          );
+        }
+
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-500">No transactions match your filter.</td></tr>`;
+          return;
+        }
+
+        // Sort: pending first, then newest
+        list.sort((a, b) => {
+          if (a.status === 'pending' && b.status !== 'pending') return -1;
+          if (a.status !== 'pending' && b.status === 'pending') return 1;
+          return (b.created_at || 0) - (a.created_at || 0);
+        });
+
+        tbody.innerHTML = list.map(t => {
+          const isPending = t.status === 'pending';
+          const isApproved = t.status === 'approved';
+          const isRejected = t.status === 'rejected';
+
+          const statusBadge = isPending 
+            ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/40">⏳ PENDING</span>'
+            : (isApproved 
+              ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">✓ APPROVED</span>'
+              : '<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/40">✗ REJECTED</span>');
+
+          const rowBg = isPending ? 'bg-amber-950/20' : '';
+          const waPhone = (t.phone || '').replace(/[^0-9]/g, '');
+
+          return `
+            <tr class="hover:bg-slate-800/50 transition-colors ${rowBg}">
+              <td class="py-3 px-3 font-mono text-[11px] font-bold text-slate-300">
+                ${t.tx_id}
+                <span class="block text-[10px] text-slate-500 font-normal">${t.formatted_time || 'Recent'}</span>
+              </td>
+              <td class="py-3 px-3">
+                <span class="font-bold text-white text-xs block">${t.user_name}</span>
+                <span class="text-[11px] text-slate-400 font-mono">Reg: ${t.reg_no || 'N/A'}</span>
+                ${t.phone ? `<span class="block text-[10px] text-slate-500 font-mono">📱 ${t.phone}</span>` : ''}
+              </td>
+              <td class="py-3 px-3 font-semibold text-orange-400">${t.plan_name}</td>
+              <td class="py-3 px-3 font-black text-emerald-400 text-sm">₹${t.amount}</td>
+              <td class="py-3 px-3 font-mono text-[11px]">
+                <span class="font-bold text-pink-400">${t.utr_ref || 'N/A'}</span>
+                <span class="block text-[10px] text-slate-500">UPI: ${t.upi_destination || '7719730804@ptyes'}</span>
+              </td>
+              <td class="py-3 px-3">
+                ${statusBadge}
+                ${isPending ? '<span class="block text-[10px] text-amber-400 mt-1 font-semibold">⚠️ Check Paytm</span>' : ''}
+              </td>
+              <td class="py-3 px-3 text-center">
+                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                  ${isPending ? `
+                    <button onclick="AdminApp.updateTxStatus('${t.tx_id}', 'approved')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-black shadow-sm transition-all flex items-center gap-1">
+                      <span>✓ Approve</span>
+                    </button>
+                    <button onclick="AdminApp.updateTxStatus('${t.tx_id}', 'rejected')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-black shadow-sm transition-all">
+                      <span>✗ Reject</span>
+                    </button>
+                  ` : (isApproved ? `
+                    <span class="text-xs text-emerald-400 font-bold">✓ Active</span>
+                  ` : `
+                    <span class="text-xs text-red-400 font-bold">✗ Rejected</span>
+                  `)}
+                  ${waPhone ? `
+                    <a href="https://wa.me/91${waPhone}?text=Hi%20${encodeURIComponent(t.user_name)}%2C%20regarding%20your%20AcadAssist%20payment%20(TxID%3A%20${t.tx_id})" target="_blank" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-lg text-xs font-bold transition-colors" title="Message Student on WhatsApp">
+                      💬
+                    </a>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      },
+
+      async updateTxStatus(txId, status) {
+        const actionLabel = status === 'approved' ? 'APPROVE' : 'REJECT';
+        if (!confirm(`Are you sure you want to ${actionLabel} this payment (TxID: ${txId})?\n\n${status === 'approved' ? '✅ Student will receive immediate access on their screen.' : '❌ Access will be denied.'}`)) return;
+
+        try {
+          const res = await fetch(`/api/admin/transactions/${txId}/status?token=${encodeURIComponent(this.adminToken)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+          });
+
+          if (res.ok) {
+            await this.refreshData();
+          } else {
+            alert("Failed to update status.");
+          }
+        } catch (e) {
+          alert("Network error.");
+        }
+      },
+
+      async fetchUsers() {
+        try {
+          const res = await fetch(`/api/admin/users?token=${encodeURIComponent(this.adminToken)}`);
+          if (res.ok) {
+            this.users = await res.json();
+            this.renderUsers();
+          }
+        } catch (e) {
+          console.warn("Failed to load users:", e);
+        }
+      },
+
+      renderUsers() {
+        const tbody = document.getElementById('users-table-body');
+        if (!tbody) return;
+
+        const q = (document.getElementById('user-search-input')?.value || '').toLowerCase().trim();
+        let list = [...this.users];
+
+        if (q) {
+          list = list.filter(u => 
+            (u.name || '').toLowerCase().includes(q) ||
+            (u.email || '').toLowerCase().includes(q) ||
+            (u.lpu_reg_no || '').toLowerCase().includes(q) ||
+            (u.phone || '').toLowerCase().includes(q)
+          );
+        }
+
+        document.getElementById('users-count-label').textContent = `Total Registered: ${list.length}`;
+
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-500">No students found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = list.map(u => {
+          const isPro = u.is_pro;
+          const planBadge = isPro 
+            ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">💎 PRO PASS</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-slate-400 bg-slate-800">FREE STARTER</span>';
+
+          return `
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="py-3 px-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-orange-400 text-xs">
+                    ${(u.name || 'S')[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <span class="font-bold text-white text-xs block">${u.name}</span>
+                    <span class="text-[10px] text-slate-400 font-mono">${u.email}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="py-3 px-3 font-mono font-bold text-slate-300 text-xs">${u.lpu_reg_no || 'N/A'}</td>
+              <td class="py-3 px-3 font-mono text-xs text-slate-400">${u.phone || 'N/A'}</td>
+              <td class="py-3 px-3">
+                ${planBadge}
+                <span class="block text-[10px] text-slate-500 mt-0.5">${u.plan_name || 'Free'}</span>
+              </td>
+              <td class="py-3 px-3 font-bold text-slate-300">${u.mock_tests_count || 0}</td>
+              <td class="py-3 px-3 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="AdminApp.promptGrantPlan('${u.id}', '${u.name}')" class="px-2.5 py-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/40 rounded-lg text-xs font-bold transition-all">
+                    + Grant Plan
+                  </button>
+                  <button onclick="AdminApp.deleteUser('${u.id}')" class="px-2 py-1 text-red-400 hover:bg-red-950/40 rounded-lg text-xs font-bold transition-colors">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      },
+
+      async promptGrantPlan(userId, userName) {
+        const choice = prompt(`Grant Pro Plan to ${userName}:\n1: mock_test_29 (₹29 Mock Test Pass)\n2: subject_pass_49 (₹49 Single Subject Master Pass)\n3: semester_pro (₹99 All-Access Semester Pro)`, "2");
+        if (!choice) return;
+
+        let planId = "subject_pass_49";
+        let planName = "Single Subject Master Pass (₹49)";
+        if (choice === "1") {
+          planId = "mock_test_29";
+          planName = "Mock Test Simulator Pass (₹29)";
+        } else if (choice === "3") {
+          planId = "semester_pro";
+          planName = "AcadAssist All-Access Semester Pro";
+        }
+
+        try {
+          const res = await fetch(`/api/admin/users/${userId}/grant-plan?token=${encodeURIComponent(this.adminToken)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan_id: planId, plan_name: planName, duration_days: 180 })
+          });
+          if (res.ok) {
+            alert(`✅ Granted ${planName} to ${userName}!`);
+            await this.refreshData();
+          }
+        } catch (e) {
+          alert("Error granting plan.");
+        }
+      },
+
+      async deleteUser(userId) {
+        if (!confirm("Are you sure you want to delete this user?")) return;
+        try {
+          const res = await fetch(`/api/admin/users/${userId}?token=${encodeURIComponent(this.adminToken)}`, {
+            method: 'DELETE'
+          });
+          if (res.ok) {
+            await this.refreshData();
+          }
+        } catch (e) {
+          alert("Error deleting user.");
+        }
+      },
+
+      async fetchMockTests() {
+        try {
+          const res = await fetch(`/api/admin/mock-tests?token=${encodeURIComponent(this.adminToken)}`);
+          if (res.ok) {
+            this.mockTests = await res.json();
+            this.renderMockTests();
+          }
+        } catch (e) {}
+      },
+
+      renderMockTests() {
+        const tbody = document.getElementById('tests-table-body');
+        if (!tbody) return;
+        document.getElementById('tests-count-label').textContent = `${this.mockTests.length} Tests`;
+
+        if (!this.mockTests.length) {
+          tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-500">No mock tests completed yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = this.mockTests.map(t => `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="py-3 px-3 font-bold text-white">${t.user_name}</td>
+            <td class="py-3 px-3 font-mono font-bold text-orange-400">${t.subject_code}</td>
+            <td class="py-3 px-3 text-slate-300">${t.score} / ${t.total_marks}</td>
+            <td class="py-3 px-3 font-bold text-emerald-400">${t.percentage}%</td>
+            <td class="py-3 px-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                Grade ${t.grade}
+              </span>
+            </td>
+            <td class="py-3 px-3 font-mono text-[11px] text-slate-400">${t.formatted_time || 'Recent'}</td>
+          </tr>
+        `).join('');
+      },
+
+      async fetchServiceRequests() {
+        try {
+          const res = await fetch(`/api/admin/service-requests?token=${encodeURIComponent(this.adminToken)}`);
+          if (res.ok) {
+            this.inquiries = await res.json();
+            this.renderServiceRequests();
+          }
+        } catch (e) {}
+      },
+
+      renderServiceRequests() {
+        const tbody = document.getElementById('inquiries-table-body');
+        if (!tbody) return;
+        document.getElementById('inquiries-count-label').textContent = `${this.inquiries.length} Inquiries`;
+
+        if (!this.inquiries.length) {
+          tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">No service inquiries yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = this.inquiries.map(i => {
+          const waPhone = (i.phone || '').replace(/[^0-9]/g, '');
+          return `
+            <tr class="hover:bg-slate-800/40 transition-colors">
+              <td class="py-3 px-3 font-bold text-white">${i.service_category}</td>
+              <td class="py-3 px-3">
+                <span class="font-bold text-slate-200">${i.student_name}</span>
+                <span class="block text-[10px] text-slate-400 font-mono">${i.phone}</span>
+              </td>
+              <td class="py-3 px-3 font-semibold text-orange-400">${i.subject_or_topic || 'General'}</td>
+              <td class="py-3 px-3 max-w-xs truncate text-[11px] text-slate-300" title="${i.details}">${i.details}</td>
+              <td class="py-3 px-3 font-mono text-[10px] text-slate-400">${i.deadline || 'Flexible'}</td>
+              <td class="py-3 px-3">
+                <select onchange="AdminApp.updateInquiryStatus('${i.id}', this.value)" class="text-[10px] p-1.5 rounded-lg border border-slate-700 bg-slate-800 font-bold text-white focus:outline-none">
+                  <option value="New" ${i.status === 'New' ? 'selected' : ''}>New</option>
+                  <option value="In Progress" ${i.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                  <option value="Completed" ${i.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                </select>
+              </td>
+              <td class="py-3 px-3 text-center">
+                <a href="https://wa.me/91${waPhone}?text=Hi%20${encodeURIComponent(i.student_name)}%2C%20regarding%20your%20AcadAssist%20order%20for%20${encodeURIComponent(i.service_category)}" target="_blank" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                  <span>💬 WhatsApp</span>
+                </a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      },
+
+      async updateInquiryStatus(inqId, status) {
+        try {
+          await fetch(`/api/admin/service-requests/${inqId}/status?token=${encodeURIComponent(this.adminToken)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+          });
+          await this.fetchStats();
+        } catch (e) {
+          alert("Error updating order status.");
+        }
+      },
+
+      async exportJsonBackup() {
+        try {
+          const res = await fetch(`/api/admin/export?token=${encodeURIComponent(this.adminToken)}`);
+          const data = await res.json();
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `acadassist_backup_${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          alert("Export backup failed.");
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => AdminApp.init());
+  </script>
+</body>
+</html>

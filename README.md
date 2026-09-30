@@ -2,10 +2,13 @@
 
 Official smart academic preparation and student assistance platform designed for students of **Lovely Professional University (LPU)**.
 
-Branded as **AcadAssist** (with official visual identity extracted from the poster), this platform provides Vertos with authentic LPU exam pattern simulations, preloaded subject notes from **notes.lpuverto.xyz**, custom course creation, Google Sign-in user accounts, direct UPI monetization to **`8053122848@ptyes`**, and a secure Administrator Control Panel.
+Branded as **AcadAssist** (with official visual identity extracted from the poster), this platform provides Vertos with authentic LPU exam pattern simulations, preloaded subject notes from **notes.lpuverto.xyz**, custom course creation, Google Sign-in user accounts, direct UPI monetization to **`mk9817223@okicici`**, and a secure Administrator Control Panel.
 
-The website is running live at:
+The website is running locally at:
 👉 **http://127.0.0.1:8000**
+
+GitHub Repository:
+👉 **https://github.com/sehajpalsanchi12-source/AcadAssist**
 
 ---
 

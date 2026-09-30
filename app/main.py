@@ -302,7 +302,7 @@ async def generate_study_asset(
     elif asset_type == "slides":
         result = StudyAssetGenerator.generate_slides(extracted_text, subject_code, subject_name, clean_unit)
     elif asset_type == "roadmap":
-        result = StudyAssetGenerator.generate_roadmap(extracted_text, subject_code, subject_name)
+        result = await StudyAssetGenerator.generate_roadmap(extracted_text, subject_code, subject_name)
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported asset type: {asset_type}")
 

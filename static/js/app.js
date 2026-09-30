@@ -654,15 +654,94 @@ function renderStudyAsset(data) {
     `;
 
   } else if (type === 'roadmap') {
-    // Render 7-Day / 4-Week Roadmap
     const tracks = data.study_tracks || [];
+    const units = data.units || [];
+    const strategy = data.exam_strategy || null;
+    const aiGenerated = data.ai_generated === true;
+
+    // Exam Strategy section
+    const strategyHtml = strategy ? `
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        ${[
+          { icon: '📝', label: 'CA Strategy', val: strategy.ca_tip },
+          { icon: '📋', label: 'MTE Strategy', val: strategy.mte_tip },
+          { icon: '🎯', label: 'ETE Strategy', val: strategy.ete_tip },
+          { icon: '⚠️', label: 'Negative Marking', val: strategy.negative_marking_tip }
+        ].map(s => `
+          <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700">
+            <div class="text-[10px] font-black uppercase text-gray-400 mb-1">${s.icon} ${s.label}</div>
+            <p class="text-xs text-gray-700 dark:text-slate-300 leading-relaxed">${s.val}</p>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
+
+    // Units section with important questions
+    const unitsHtml = units.map(u => {
+      const mcqs = (u.important_questions?.mcq || []).map(q => `
+        <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
+          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-2">❓ ${q.q}</p>
+          <div class="grid grid-cols-2 gap-1 mb-2">
+            ${(q.options||[]).map(o => `<span class="text-[11px] px-2 py-1 rounded-lg bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400">${o}</span>`).join('')}
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shrink-0">✓ ${q.answer}</span>
+            <span class="text-[11px] text-gray-500 dark:text-slate-400">${q.explanation || ''}</span>
+          </div>
+        </div>
+      `).join('');
+
+      const fiveMarkHtml = (u.important_questions?.five_mark || []).map(q => `
+        <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white">5 Marks</span>
+          </div>
+          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-1.5">${q.q}</p>
+          <p class="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed"><span class="font-bold text-amber-600 dark:text-amber-400">Answer outline:</span> ${q.answer_outline}</p>
+        </div>
+      `).join('');
+
+      const tenMarkHtml = (u.important_questions?.ten_mark || []).map(q => `
+        <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white">10 Marks</span>
+          </div>
+          <p class="text-xs font-semibold text-gray-800 dark:text-white mb-1.5">${q.q}</p>
+          <p class="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed"><span class="font-bold text-purple-600 dark:text-purple-400">Answer outline:</span> ${q.answer_outline}</p>
+        </div>
+      `).join('');
+
+      const formulasHtml = (u.must_know_formulas || []).length > 0 ? `
+        <div class="flex flex-wrap gap-2 pt-1">
+          ${(u.must_know_formulas).map(f => `
+            <span class="px-3 py-1 rounded-full text-[11px] font-mono bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700">📐 ${f}</span>
+          `).join('')}
+        </div>
+      ` : '';
+
+      return `
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-black text-sm flex items-center justify-center shrink-0">${u.unit_no}</span>
+            <div>
+              <h4 class="font-black text-sm sm:text-base text-gray-900 dark:text-white">${u.unit_title || 'Unit ' + u.unit_no}</h4>
+              <p class="text-[11px] text-gray-500 dark:text-slate-400">${(u.key_topics || []).join(' • ')}</p>
+            </div>
+          </div>
+          ${formulasHtml}
+          ${mcqs ? `<div class="space-y-2"><div class="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">🎯 High-Probability MCQs</div><div class="space-y-2">${mcqs}</div></div>` : ''}
+          ${fiveMarkHtml ? `<div class="space-y-2"><div class="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">📝 5-Mark Questions</div><div class="space-y-2">${fiveMarkHtml}</div></div>` : ''}
+          ${tenMarkHtml ? `<div class="space-y-2"><div class="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">📖 10-Mark Questions</div><div class="space-y-2">${tenMarkHtml}</div></div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    // Day-by-day schedule
     const daysHtml = (tracks[0]?.days || []).map(d => `
-      <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="space-y-1">
           <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
-              ${d.day}
-            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">${d.day}</span>
             <span class="text-xs text-gray-500 font-semibold">${d.hours} Hours Target</span>
           </div>
           <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">${d.focus}</h4>
@@ -670,7 +749,6 @@ function renderStudyAsset(data) {
             ${(d.tasks || []).map(t => `<li>• ${t}</li>`).join('')}
           </ul>
         </div>
-
         <div class="sm:text-right shrink-0 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700 text-xs">
           <span class="text-[10px] text-gray-400 font-bold uppercase block">Milestone Goal:</span>
           <span class="font-bold text-emerald-600 dark:text-emerald-400">${d.checkpoint}</span>
@@ -679,20 +757,37 @@ function renderStudyAsset(data) {
     `).join('');
 
     container.innerHTML = `
-      <div id="printable-study-material" class="space-y-6 animate-fade-in-up">
-        <div class="bg-emerald-50 dark:bg-emerald-950/30 p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+      <div id="printable-study-material" class="space-y-8 animate-fade-in-up">
+
+        <!-- Header -->
+        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex items-start justify-between gap-4">
           <div>
-            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Exam Prep Roadmap & Milestones</span>
-            <h2 class="text-lg font-black text-gray-900 dark:text-white">${data.target_goal || '9+ CGPA Strategy'}</h2>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">9+ CGPA Strategy Roadmap</span>
+            <h2 class="text-lg font-black text-gray-900 dark:text-white mt-1">${data.target_goal || '9+ CGPA Master Plan'}</h2>
+            <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">Unit-wise study structure • High-yield important questions • 7-Day intensive schedule</p>
           </div>
+          ${aiGenerated ? '<span class="px-3 py-1.5 rounded-full text-[11px] font-black bg-gradient-to-r from-purple-500 to-pink-500 text-white shrink-0">✨ AI Generated</span>' : '<span class="px-3 py-1 rounded-full text-[11px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 shrink-0">📚 Subject-Specific</span>'}
         </div>
 
+        <!-- Exam Strategy -->
+        ${strategy ? `<div class="space-y-3"><h3 class="text-sm font-black text-gray-900 dark:text-white">🎓 LPU Exam Strategy</h3>${strategyHtml}</div>` : ''}
+
+        <!-- Units with Important Questions -->
+        ${units.length > 0 ? `
+          <div class="space-y-4">
+            <h3 class="text-sm font-black text-gray-900 dark:text-white">📚 Unit-wise Study Plan & Important Questions</h3>
+            ${unitsHtml}
+          </div>
+        ` : ''}
+
+        <!-- 7-Day Schedule -->
         <div class="space-y-3">
+          <h3 class="text-sm font-black text-gray-900 dark:text-white">📅 ${tracks[0]?.track_name || '7-Day Intensive Sprint'}</h3>
           ${daysHtml}
         </div>
+
       </div>
     `;
-  }
 }
 
 window.launchSlideProjector = async function() {

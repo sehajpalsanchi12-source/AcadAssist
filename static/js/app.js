@@ -2,30 +2,28 @@
  * LPU Verto AI Exam Prep - Main Application Logic & Study Asset Studio
  */
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // Initialize Theme
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize Theme immediately
   initTheme();
 
-  // Initialize Paywall
-  await PaywallManager.init();
-
-  // Setup Tabs
+  // Setup Tabs immediately so navigation works instantly
   setupTabs();
 
-  // Load Preloaded Subjects & Custom Subjects
-  await loadSubjectsHub();
-
-  // Load LPU Program Structure
-  await loadPrograms();
-
-  // Setup Form Handlers
+  // Setup Form Handlers & Modals
   setupFormHandlers();
-
-  // Setup Note Bank Search
   setupNoteBankSearch();
-
-  // Setup Custom Subject Modal
   setupCustomSubjectModal();
+
+  // Load Preloaded Subjects & Custom Subjects immediately
+  loadSubjectsHub();
+
+  // Load LPU Program Structure in background
+  loadPrograms();
+
+  // Initialize Paywall in background without blocking UI
+  if (window.PaywallManager && typeof window.PaywallManager.init === 'function') {
+    window.PaywallManager.init().catch(e => console.warn("Paywall init deferred:", e));
+  }
 
   // Track live visitor analytics
   recordVisitHit();

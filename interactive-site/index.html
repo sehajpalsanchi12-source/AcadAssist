@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AcadAssist — Simplifying Academic Work | Notes, MCQs, Slides &amp; LPU Exam Prep</title>
+  <meta name="description" content="AcadAssist: Preloaded LPU subjects, custom courses, notes, slides, cram notes, roadmaps, and authentic LPU exam papers. Midterm mock tests from ₹59." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+</head>
+<body>
+
+  <!-- ===== Scroll progress ===== -->
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <!-- ===== Cursor glow ===== -->
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <!-- ===== Navbar ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#top" class="logo">
+        <span class="logo-mark">⚡</span>
+        <span class="logo-text">Acad<strong>Assist</strong></span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#services">Services</a>
+        <a href="#pyq">Question Bank</a>
+        <a href="#studio">Study Studio</a>
+        <a href="#exam">Exam Simulator</a>
+        <a href="#search">Note Bank</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#contact" class="btn btn-small btn-primary nav-cta">DM on WhatsApp</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero" id="top">
+    <canvas id="particles" class="hero-canvas"></canvas>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="container hero-inner">
+      <div class="hero-badge reveal">
+        <span class="pulse-dot"></span> 📦 Official LPU Academic Course Library — 266+ Courses
+      </div>
+      <h1 class="reveal delay-1">
+        Simplifying <span class="grad-text" id="typewriter">Academic Work</span>
+      </h1>
+      <p class="hero-sub reveal delay-2">
+        Your complete academic support partner: from ₹59 subject-wise <strong>Midterm mock tests</strong> &amp; formula cheat sheets
+        to <strong>EduCode</strong> programming assistance &amp; <strong>NeoBrowser</strong> workflow completion.
+      </p>
+
+      <div class="hero-actions reveal delay-3">
+        <a href="#pricing" class="btn btn-primary btn-lg magnetic">⚡ Midterm Mode — From ₹59</a>
+        <a href="#exam" class="btn btn-ghost btn-lg magnetic">Try Exam Simulator →</a>
+      </div>
+
+      <div class="hero-tilt reveal delay-4">
+        <div class="quote-chip">"Midterms Are Temporary, Good Grades Stay Forever!"</div>
+      </div>
+
+      <div class="stats reveal delay-5">
+        <div class="stat"><div class="stat-num" data-count="266">0</div><div class="stat-label">Preloaded Courses</div></div>
+        <div class="stat"><div class="stat-num" data-count="9" data-suffix="+">0</div><div class="stat-label">CGPA Roadmaps</div></div>
+        <div class="stat"><div class="stat-num" data-count="4" data-suffix=" Yrs">0</div><div class="stat-label">PYQ Archive (21–24)</div></div>
+        <div class="stat"><div class="stat-num" data-count="98" data-suffix="%">0</div><div class="stat-label">On-Time Delivery</div></div>
+      </div>
+    </div>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>MTH166 Maths</span><span>•</span><span>PHY109 Quantum</span><span>•</span><span>PHY110 Physics</span><span>•</span>
+        <span>ECE131 Electronics</span><span>•</span><span>CSE / Programming</span><span>•</span><span>AI / DSA</span><span>•</span>
+        <span>CSE101 Computer Programming</span><span>•</span><span>CSE201 Data Structures</span><span>•</span>
+        <span>MTH166 Maths</span><span>•</span><span>PHY109 Quantum</span><span>•</span><span>PHY110 Physics</span><span>•</span>
+        <span>ECE131 Electronics</span><span>•</span><span>CSE / Programming</span><span>•</span><span>AI / DSA</span><span>•</span>
+        <span>CSE101 Computer Programming</span><span>•</span><span>CSE201 Data Structures</span><span>•</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Core services ===== -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Everything You Need — All in One Place</span>
+        <h2>Three Powerful <span class="grad-text">Pillars</span></h2>
+        <p>From exam prep to coding help to workflow completion — pick your weapon.</p>
+      </div>
+
+      <div class="pillar-grid">
+        <article class="pillar card-3d reveal" data-tilt>
+          <div class="pillar-icon">📖</div>
+          <h3>Midterm Mode</h3>
+          <div class="price-tag">From ₹59</div>
+          <ul class="check-list">
+            <li>✓ Revision Packs (Unit-wise)</li>
+            <li>✓ Practice MCQs &amp; PYQs</li>
+            <li>✓ Formula Sheets &amp; Diagrams</li>
+            <li>✓ One Night Revision Sheets</li>
+          </ul>
+          <a href="#pricing" class="btn btn-ghost btn-block">Start Revising</a>
+        </article>
+
+        <article class="pillar card-3d featured reveal delay-1" data-tilt>
+          <div class="ribbon">Most Popular</div>
+          <div class="pillar-icon">&lt;/&gt;</div>
+          <h3>EduCode</h3>
+          <div class="price-tag">From ₹99</div>
+          <ul class="check-list">
+            <li>✓ C / C++, Python, DSA, Java</li>
+            <li>✓ Error Debugging &amp; Guidance</li>
+            <li>✓ Lab Help &amp; Viva Preparation</li>
+            <li>✓ Code Review &amp; Suggestions</li>
+          </ul>
+          <a href="#contact" class="btn btn-primary btn-block">Get Code Help</a>
+        </article>
+
+        <article class="pillar card-3d reveal delay-2" data-tilt>
+          <div class="pillar-icon">🌐</div>
+          <h3>NeoBrowser</h3>
+          <div class="price-tag">From ₹99</div>
+          <ul class="check-list">
+            <li>✓ Assignments &amp; Quizzes Support</li>
+            <li>✓ Assessments &amp; Progress Help</li>
+            <li>✓ Navigation &amp; Troubleshooting</li>
+            <li>✓ Reports &amp; Submission Guidance</li>
+          </ul>
+          <a href="#contact" class="btn btn-ghost btn-block">Get Support</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Pro services grid ===== -->
+  <section class="section section-alt" id="pro">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">🛠️ Official AcadAssist Services</span>
+        <h2>Tech &amp; Academic <span class="grad-text">Services Hub</span></h2>
+        <p>Websites, Minor/Major Projects, Reports, Resumes, PPTs, Thesis, Automations &amp; Custom Work — delivered 24–48h.</p>
+        <a class="btn btn-primary magnetic" href="https://wa.me/918053122848?text=Hi%20AcadAssist%2C%20I%20need%20a%20service%20from%20your%20Services%20Hub" target="_blank" rel="noopener">💬 WhatsApp: 8053122848</a>
+      </div>
+
+      <div class="services-grid" id="servicesGrid">
+        <!-- cards injected by JS for staggered animation -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PYQ Bank ===== -->
+  <section class="section" id="pyq">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">🗂️ 2021 – 2024 End-Term &amp; Mid-Term</span>
+        <h2>LPU <span class="grad-text">Question Paper Bank</span></h2>
+        <p>Authentic past papers from student community repositories with step-by-step marking rubrics and model solutions.</p>
+      </div>
+
+      <div class="pyq-panel reveal">
+        <div class="pyq-controls">
+          <label for="courseSelect">Select Course Code:</label>
+          <select id="courseSelect" class="select"></select>
+        </div>
+        <div class="pyq-results" id="pyqResults"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Study Studio ===== -->
+  <section class="section section-alt" id="studio">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">📚 Multi-Asset Study Material Studio</span>
+        <h2>Generate <span class="grad-text">Everything</span> for Any Subject</h2>
+        <p>Notes, cheat sheets, slide decks and week-by-week roadmaps aligned with LPU syllabus.</p>
+      </div>
+
+      <div class="studio reveal">
+        <div class="studio-tabs" id="studioTabs">
+          <button class="tab active" data-tab="notes">📝 Notes</button>
+          <button class="tab" data-tab="cheatsheet">⚡ Cheat Sheet</button>
+          <button class="tab" data-tab="slides">📊 Slides</button>
+          <button class="tab" data-tab="roadmap">🗺️ Roadmap</button>
+        </div>
+
+        <div class="studio-body">
+          <div class="studio-controls">
+            <label>Course
+              <select id="studioCourse" class="select">
+                <option>CSE101 — Computer Programming</option>
+                <option>CSE201 — Data Structures</option>
+                <option>MTH166 — Engineering Mathematics</option>
+                <option>PHY109 — Quantum Mechanics</option>
+                <option>ECE131 — Analog Electronics</option>
+              </select>
+            </label>
+            <label>Unit
+              <select id="studioUnit" class="select">
+                <option>Unit 1</option><option>Unit 2</option><option>Unit 3</option><option>Unit 4</option>
+              </select>
+            </label>
+            <button class="btn btn-primary btn-block magnetic" id="generateBtn">⚡ Generate Material</button>
+          </div>
+
+          <div class="studio-output" id="studioOutput">
+            <div class="loader" id="studioLoader" hidden>
+              <div class="loader-bar"><span></span></div>
+              <p>Synthesizing Learning Material via LPU Syllabus Standards…</p>
+            </div>
+            <div class="output-card" id="outputCard">
+              <h4>👋 Pick a subject &amp; hit Generate</h4>
+              <p>Click <strong>Generate Material</strong> to build full notes, short cram notes, slide decks or a study roadmap for your selected course.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="align-note reveal">🎓 Aligned with Lovely Professional University Academic Curriculum</p>
+    </div>
+  </section>
+
+  <!-- ===== Exam Simulator ===== -->
+  <section class="section" id="exam">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">✍️ Turn Any Subject Notes into an Official LPU Exam Paper</span>
+        <h2><span class="grad-text">End Term Exam</span> Simulator</h2>
+        <p>15 MCQs + 4 Short + 2 Long — 60 Marks. Try the live demo below with a real countdown timer and question palette.</p>
+      </div>
+
+      <div class="ai-panel reveal" id="aiPanel">
+        <div class="ai-head">
+          <span class="ai-badge">🤖 AI Question Generator</span>
+          <button class="btn btn-small btn-ghost" id="aiSettingsToggle" type="button">⚙ API Settings</button>
+        </div>
+
+        <div class="ai-settings" id="aiSettings" hidden>
+          <label>Provider
+            <select id="aiProvider" class="select">
+              <option value="groq">Groq — free tier (llama-3.3-70b)</option>
+              <option value="gemini">Google Gemini — free tier</option>
+              <option value="openai">OpenAI</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="custom">Custom (OpenAI-compatible)</option>
+            </select>
+          </label>
+          <label>API Key
+            <input type="password" id="aiKey" placeholder="Paste your API key — stored only in this browser" autocomplete="off" />
+          </label>
+          <label>Model
+            <input type="text" id="aiModel" placeholder="leave blank for provider default" />
+          </label>
+          <label id="aiCustomWrap" hidden>Base URL
+            <input type="text" id="aiBaseUrl" placeholder="https://api.example.com/v1" />
+          </label>
+          <button class="btn btn-small btn-primary" id="aiSave" type="button">Save</button>
+          <span class="ai-note">🔐 Your key never touches our servers — the browser calls the provider API directly.</span>
+        </div>
+
+        <div class="ai-controls">
+          <input type="text" id="aiSubject" placeholder="Subject / topic — e.g. CSE101 Unit 3: Trees &amp; Traversals" />
+          <textarea id="aiNotes" rows="3" placeholder="Paste your notes or syllabus topics (optional) — the AI will craft exam-style MCQs from them…"></textarea>
+          <div class="ai-opts">
+            <label>Count
+              <input type="number" id="aiCount" min="3" max="15" value="8" />
+            </label>
+            <label>Difficulty
+              <select id="aiDiff" class="select">
+                <option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option>
+              </select>
+            </label>
+            <button class="btn btn-primary" id="aiGenerate" type="button">🤖 Generate with AI</button>
+          </div>
+          <div class="ai-status" id="aiStatus" hidden></div>
+        </div>
+      </div>
+
+      <div class="exam reveal" id="examApp">
+        <div class="exam-header">
+          <div>
+            <strong id="examCourse">CSE101 — Computer Programming</strong>
+            <span class="exam-meta">60 Marks • ETE Simulator • 15 MCQ + 4 Short + 2 Long</span>
+          </div>
+          <div class="exam-timer" id="examTimer">
+            <span class="timer-label">Time Left</span>
+            <span class="timer-value" id="timerValue">15:00</span>
+          </div>
+        </div>
+
+        <div class="exam-body">
+          <div class="exam-question card-3d">
+            <div class="q-section" id="qSection">SECTION A — MCQ (1 Mark Each)</div>
+            <h4 class="q-text" id="qText">Loading question…</h4>
+            <div class="q-options" id="qOptions"></div>
+            <div class="exam-nav">
+              <button class="btn btn-ghost" id="prevBtn">← Previous</button>
+              <button class="btn btn-ghost" id="markBtn">⚑ Mark for Review</button>
+              <button class="btn btn-primary" id="nextBtn">Next →</button>
+            </div>
+          </div>
+
+          <aside class="exam-sidebar">
+            <div class="palette" id="palette"></div>
+            <div class="palette-legend">
+              <span><i class="dot answered"></i> Answered</span>
+              <span><i class="dot unanswered"></i> Unanswered</span>
+              <span><i class="dot review"></i> Review</span>
+              <span><i class="dot current"></i> Current</span>
+            </div>
+            <div class="tally">
+              <div>Answered: <strong id="tAnswered">0</strong></div>
+              <div>Unanswered: <strong id="tUnanswered">0</strong></div>
+              <div>Review: <strong id="tReview">0</strong></div>
+              <div>Unvisited: <strong id="tUnvisited">0</strong></div>
+            </div>
+            <button class="btn btn-primary btn-block" id="submitExam">Submit Exam</button>
+            <div class="exam-result" id="examResult" hidden></div>
+          </aside>
+        </div>
+
+        <div class="exam-footer">
+          <div class="section-tag">B — SECTION B: Conceptual &amp; Analytical (5 Marks) • Answer in 150–250 words</div>
+          <div class="section-tag">C — SECTION C: Problem Solving (10 Marks) • Internal Choices Included</div>
+          <a href="#pricing" class="unlock-link">Want All Model Solutions? Unlock 5M &amp; 10M evaluator answers for ₹29 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Note Bank search ===== -->
+  <section class="section section-alt" id="search">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">🔍 AcadAssist LPU Note Bank</span>
+        <h2>Search <span class="grad-text">260+ Courses</span> Instantly</h2>
+      </div>
+
+      <div class="search-box reveal">
+        <input type="search" id="searchInput" placeholder="Type a subject code or name (e.g. CSE101, Maths, Quantum)…" autocomplete="off" />
+        <div class="popular-chips" id="popularChips"></div>
+      </div>
+
+      <div class="search-results" id="searchResults">
+        <p class="muted">Type a subject code or name above to browse course resources…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Pricing ===== -->
+  <section class="section" id="pricing">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">💎 Affordable Student Pricing • Zero Fluff</span>
+        <h2>Crack LPU Exams with <span class="grad-text">Verto Pro</span></h2>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="price-card reveal">
+          <h3>Verto Free</h3>
+          <div class="amount">₹0<span>/ forever</span></div>
+          <p class="muted">Great for quick syllabus testing and sample practice.</p>
+          <ul class="check-list">
+            <li>✓ 2 Free Exam Generations / Day</li>
+            <li>✓ First 5 MCQ Solutions Unlocked</li>
+            <li>✓ 1 Model Subjective Answer Unlocked</li>
+            <li>✓ Access to Preloaded Subjects Hub</li>
+            <li class="cross">✕ Full 10M Long Solutions Locked</li>
+            <li class="cross">✕ Offline PDF Export Locked</li>
+          </ul>
+          <a href="#exam" class="btn btn-ghost btn-block">Start Free</a>
+        </div>
+
+        <div class="price-card popular reveal delay-1">
+          <div class="ribbon">Night Before Exam ⚡</div>
+          <h3>Exam Night Pass</h3>
+          <div class="amount">₹29<span>/ 24 Hours</span></div>
+          <p class="muted">Complete 24-hour unlimited unlock for tomorrow's exam.</p>
+          <ul class="check-list">
+            <li>✓ Unlimited Exam Generations (24h)</li>
+            <li>✓ ALL MCQ Answers &amp; Explanations</li>
+            <li>✓ ALL 5M &amp; 10M Model Answers Unlocked</li>
+            <li>✓ Download Official LPU Exam PDF</li>
+            <li>✓ Full Slide Presentation &amp; Roadmaps</li>
+          </ul>
+          <a href="#pay" class="btn btn-primary btn-block magnetic">Unlock for ₹29</a>
+        </div>
+
+        <div class="price-card reveal delay-2">
+          <div class="ribbon ribbon-green">Best Value • 67% OFF 🌟</div>
+          <h3>Semester All-Access Pro</h3>
+          <div class="amount">₹99 <s>₹299</s><span>/ 6 Months</span></div>
+          <p class="muted">Master every semester exam, CA test, and Mid-Term.</p>
+          <ul class="check-list">
+            <li>✓ Unlimited Access for ALL 6 Months</li>
+            <li>✓ Upload Any Notes / Slides / PDFs</li>
+            <li>✓ Create Unlimited Custom Courses</li>
+            <li>✓ Full LPU Question Bank &amp; Syllabus Access</li>
+            <li>✓ Printable Official LPU Exam Format</li>
+            <li>✓ 9+ CGPA Scoring Strategy Guide</li>
+          </ul>
+          <a href="#pay" class="btn btn-ghost btn-block">Go Pro</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== UPI Payment ===== -->
+  <section class="section section-alt" id="pay">
+    <div class="container pay-grid">
+      <div class="reveal">
+        <span class="eyebrow">⚡ INSTANT QR UNLOCK</span>
+        <h2>Scan via <span class="grad-text">Paytm / GPay / PhonePe</span></h2>
+        <p class="pay-steps">
+          1️⃣ Scan the QR with any UPI app and pay the exact fee.<br />
+          2️⃣ UTR is optional — fill your name &amp; LPU number below.<br />
+          3️⃣ Admin verifies from the Paytm dashboard &amp; unlocks access instantly.
+        </p>
+        <div class="upi-id">UPI ID: <strong>mk9817223@okicici</strong>
+          <button class="btn btn-small btn-ghost" id="copyUpi">Copy</button>
+        </div>
+        <form class="pay-form" id="payForm">
+          <input type="text" placeholder="Your Name" required />
+          <input type="text" placeholder="LPU Registration Number" required />
+          <select class="select" required>
+            <option value="">Select Plan</option>
+            <option>Exam Night Pass — ₹29</option>
+            <option>Midterm Mode — ₹59</option>
+            <option>Semester Pro — ₹99</option>
+          </select>
+          <input type="text" placeholder="UTR / Transaction ID (optional)" />
+          <button class="btn btn-primary btn-block" type="submit">Submit for Verification</button>
+        </form>
+        <div class="pay-success" id="paySuccess" hidden>✅ Submitted! Admin will verify &amp; unlock your access shortly.</div>
+      </div>
+
+      <div class="qr-wrap reveal delay-1">
+        <div class="qr-card" id="qrCard">
+          <img class="qr-image" id="qrImage" src="assets/official_paywall_qr.jpg"
+               alt="Official Paytm UPI QR (mk9817223@okicici)"
+               onerror="this.onerror=null;this.src='https://acadassist-cor0.onrender.com/static/images/official_paywall_qr.jpg'" />
+          <div class="qr-caption">Scan &amp; Pay ₹29 or ₹59</div>
+          <div class="qr-upi">mk9817223@okicici</div>
+        </div>
+        <div class="shine"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ / contact ===== -->
+  <section class="section" id="contact">
+    <div class="container narrow">
+      <div class="section-head reveal">
+        <span class="eyebrow">💬 Direct WhatsApp: +91 8053122848</span>
+        <h2>Frequently <span class="grad-text">Asked</span></h2>
+      </div>
+
+      <div class="faq" id="faq">
+        <details class="faq-item reveal">
+          <summary>How fast will I get my order?</summary>
+          <p>Most tasks are delivered in 24–48h; exam-night help is prioritized and usually completed within a few hours.</p>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Is the content original and plagiarism-free?</summary>
+          <p>Yes — 100% university-standard. Reports ship with &lt;10% plagiarism and full IEEE formatting where applicable.</p>
+        </details>
+        <details class="faq-item reveal">
+          <summary>How does the ₹29 unlock work?</summary>
+          <p>Scan the UPI QR, pay ₹29, submit your name &amp; LPU number above. Admin verifies the payment and activates 24h unlimited access.</p>
+        </details>
+        <details class="faq-item reveal">
+          <summary>Which subjects are preloaded?</summary>
+          <p>266+ LPU courses including MTH166, PHY109, PHY110, ECE131, CSE programming and AI/DSA — plus unlimited custom courses on Semester Pro.</p>
+        </details>
+      </div>
+
+      <div class="contact-cta reveal">
+        <h3>Still have a question?</h3>
+        <a class="btn btn-primary btn-lg magnetic" href="https://wa.me/918053122848?text=Hi%20AcadAssist!" target="_blank" rel="noopener">💬 Chat on WhatsApp</a>
+        <a class="btn btn-ghost btn-lg" href="https://wa.me/6239470804" target="_blank" rel="noopener">Alt: 6239470804</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <a href="#top" class="logo"><span class="logo-mark">⚡</span><span class="logo-text">Acad<strong>Assist</strong></span></a>
+        <p class="muted">Simplifying Academic Work — Notes, MCQs, Slides &amp; LPU Exam Prep.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#services">Services</a>
+        <a href="#pyq">Question Bank</a>
+        <a href="#studio">Study Studio</a>
+        <a href="#exam">Exam Simulator</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <p class="muted">© <span id="year"></span> AcadAssist · Built for LPU students 💜</p>
+    </div>
+  </footer>
+
+  <button class="to-top" id="toTop" aria-label="Back to top">↑</button>
+
+  <!-- ===== Interactive Slide Deck ===== -->
+  <div class="deck" id="deck" hidden>
+    <div class="deck-top">
+      <div class="deck-title" id="deckTitle">CSE101 — Unit 1</div>
+      <div class="deck-progress"><span id="deckBar"></span></div>
+      <div class="deck-counter" id="deckCounter">1 / 8</div>
+      <button class="deck-close" id="deckClose" aria-label="Close deck">✕</button>
+    </div>
+
+    <div class="deck-stage" id="deckStage"></div>
+
+    <div class="deck-bottom">
+      <button class="btn btn-ghost btn-small" id="deckPrev" type="button">← Prev</button>
+      <div class="deck-dots" id="deckDots"></div>
+      <button class="btn btn-ghost btn-small" id="deckNext" type="button">Next →</button>
+    </div>
+    <div class="deck-hint">Use ← → arrow keys · click diagram blocks to explore · Esc to exit</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

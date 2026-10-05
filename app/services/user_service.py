@@ -636,11 +636,20 @@ class UserService:
 
         purchased_subjects = user.get("purchased_subjects", []) if user else []
 
+        # Entitlement: is_pro (all-access) OR any non-free plan that hasn't expired
+        active_plan = user.get("active_plan", "free") if user else "free"
+        plan_expiry = user.get("plan_expiry", 0) if user else 0
+        has_active_plan = bool(
+            active_plan != "free" and (not plan_expiry or plan_expiry > time.time())
+        )
+
         return {
             "user_id": user_id,
             "is_pro": bool(user.get("is_pro", False)) if user else False,
-            "active_plan": user.get("active_plan", "free") if user else "free",
+            "active_plan": active_plan,
             "plan_name": user.get("plan_name", "Free Starter") if user else "Free Starter",
+            "plan_expiry": plan_expiry,
+            "has_active_plan": has_active_plan,
             "purchased_subjects": purchased_subjects,
             "approved_purchases": approved_txs,
             "pending_purchases": pending_txs,

@@ -34,6 +34,19 @@
         <a href="#search">Note Bank</a>
         <a href="#pricing">Pricing</a>
         <a href="#contact" class="btn btn-small btn-primary nav-cta">DM on WhatsApp</a>
+        <a href="/admin" class="btn btn-small btn-ghost" id="adminLink">🛡 Admin</a>
+        <button class="btn btn-small btn-ghost" id="authBtn" type="button">Login</button>
+        <div class="account-chip" id="accountChip" hidden>
+          <button class="chip-btn" id="accountBtn" type="button">
+            <span id="chipAvatar">👤</span>
+            <span id="chipName">Student</span>
+            <span class="plan-badge" id="chipPlan">Free</span>
+          </button>
+          <div class="account-menu" id="accountMenu" hidden>
+            <button type="button" data-menu="orders">🧾 My Orders</button>
+            <button type="button" data-menu="logout">↩ Logout</button>
+          </div>
+        </div>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
         <span></span><span></span><span></span>
@@ -61,7 +74,7 @@
       </p>
 
       <div class="hero-actions reveal delay-3">
-        <a href="#pricing" class="btn btn-primary btn-lg magnetic">⚡ Midterm Mode — From ₹59</a>
+        <a href="#pricing" class="btn btn-primary btn-lg magnetic" data-plan="subject_pass_49">⚡ Midterm Mode — From ₹59</a>
         <a href="#exam" class="btn btn-ghost btn-lg magnetic">Try Exam Simulator →</a>
       </div>
 
@@ -109,7 +122,7 @@
             <li>✓ Formula Sheets &amp; Diagrams</li>
             <li>✓ One Night Revision Sheets</li>
           </ul>
-          <a href="#pricing" class="btn btn-ghost btn-block">Start Revising</a>
+          <button class="btn btn-ghost btn-block" type="button" data-plan="midterm_mock_49">Start Revising</button>
         </article>
 
         <article class="pillar card-3d featured reveal delay-1" data-tilt>
@@ -123,7 +136,7 @@
             <li>✓ Lab Help &amp; Viva Preparation</li>
             <li>✓ Code Review &amp; Suggestions</li>
           </ul>
-          <a href="#contact" class="btn btn-primary btn-block">Get Code Help</a>
+          <button class="btn btn-primary btn-block" type="button" data-plan="educode_99">Get Code Help</button>
         </article>
 
         <article class="pillar card-3d reveal delay-2" data-tilt>
@@ -136,7 +149,7 @@
             <li>✓ Navigation &amp; Troubleshooting</li>
             <li>✓ Reports &amp; Submission Guidance</li>
           </ul>
-          <a href="#contact" class="btn btn-ghost btn-block">Get Support</a>
+          <button class="btn btn-ghost btn-block" type="button" data-plan="neobrowser_99">Get Support</button>
         </article>
       </div>
     </div>
@@ -238,53 +251,6 @@
         <p>15 MCQs + 4 Short + 2 Long — 60 Marks. Try the live demo below with a real countdown timer and question palette.</p>
       </div>
 
-      <div class="ai-panel reveal" id="aiPanel">
-        <div class="ai-head">
-          <span class="ai-badge">🤖 AI Question Generator</span>
-          <button class="btn btn-small btn-ghost" id="aiSettingsToggle" type="button">⚙ API Settings</button>
-        </div>
-
-        <div class="ai-settings" id="aiSettings" hidden>
-          <label>Provider
-            <select id="aiProvider" class="select">
-              <option value="groq">Groq — free tier (llama-3.3-70b)</option>
-              <option value="gemini">Google Gemini — free tier</option>
-              <option value="openai">OpenAI</option>
-              <option value="openrouter">OpenRouter</option>
-              <option value="custom">Custom (OpenAI-compatible)</option>
-            </select>
-          </label>
-          <label>API Key
-            <input type="password" id="aiKey" placeholder="Paste your API key — stored only in this browser" autocomplete="off" />
-          </label>
-          <label>Model
-            <input type="text" id="aiModel" placeholder="leave blank for provider default" />
-          </label>
-          <label id="aiCustomWrap" hidden>Base URL
-            <input type="text" id="aiBaseUrl" placeholder="https://api.example.com/v1" />
-          </label>
-          <button class="btn btn-small btn-primary" id="aiSave" type="button">Save</button>
-          <span class="ai-note">🔐 Your key never touches our servers — the browser calls the provider API directly.</span>
-        </div>
-
-        <div class="ai-controls">
-          <input type="text" id="aiSubject" placeholder="Subject / topic — e.g. CSE101 Unit 3: Trees &amp; Traversals" />
-          <textarea id="aiNotes" rows="3" placeholder="Paste your notes or syllabus topics (optional) — the AI will craft exam-style MCQs from them…"></textarea>
-          <div class="ai-opts">
-            <label>Count
-              <input type="number" id="aiCount" min="3" max="15" value="8" />
-            </label>
-            <label>Difficulty
-              <select id="aiDiff" class="select">
-                <option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option>
-              </select>
-            </label>
-            <button class="btn btn-primary" id="aiGenerate" type="button">🤖 Generate with AI</button>
-          </div>
-          <div class="ai-status" id="aiStatus" hidden></div>
-        </div>
-      </div>
-
       <div class="exam reveal" id="examApp">
         <div class="exam-header">
           <div>
@@ -331,7 +297,7 @@
         <div class="exam-footer">
           <div class="section-tag">B — SECTION B: Conceptual &amp; Analytical (5 Marks) • Answer in 150–250 words</div>
           <div class="section-tag">C — SECTION C: Problem Solving (10 Marks) • Internal Choices Included</div>
-          <a href="#pricing" class="unlock-link">Want All Model Solutions? Unlock 5M &amp; 10M evaluator answers for ₹29 →</a>
+          <a href="#pay" class="unlock-link" data-plan="rush24">Want All Model Solutions? Unlock 5M &amp; 10M evaluator answers for ₹29 →</a>
         </div>
       </div>
     </div>
@@ -392,13 +358,13 @@
             <li>✓ Download Official LPU Exam PDF</li>
             <li>✓ Full Slide Presentation &amp; Roadmaps</li>
           </ul>
-          <a href="#pay" class="btn btn-primary btn-block magnetic">Unlock for ₹29</a>
+          <button class="btn btn-primary btn-block magnetic" type="button" data-plan="rush24">Unlock for ₹29</button>
         </div>
 
         <div class="price-card reveal delay-2">
           <div class="ribbon ribbon-green">Best Value • 67% OFF 🌟</div>
           <h3>Semester All-Access Pro</h3>
-          <div class="amount">₹99 <s>₹299</s><span>/ 6 Months</span></div>
+          <div class="amount">₹199 <s>₹599</s><span>/ 6 Months</span></div>
           <p class="muted">Master every semester exam, CA test, and Mid-Term.</p>
           <ul class="check-list">
             <li>✓ Unlimited Access for ALL 6 Months</li>
@@ -408,7 +374,7 @@
             <li>✓ Printable Official LPU Exam Format</li>
             <li>✓ 9+ CGPA Scoring Strategy Guide</li>
           </ul>
-          <a href="#pay" class="btn btn-ghost btn-block">Go Pro</a>
+          <button class="btn btn-ghost btn-block" type="button" data-plan="semester_pro">Go Pro — ₹199</button>
         </div>
       </div>
     </div>
@@ -429,15 +395,16 @@
           <button class="btn btn-small btn-ghost" id="copyUpi">Copy</button>
         </div>
         <form class="pay-form" id="payForm">
-          <input type="text" placeholder="Your Name" required />
-          <input type="text" placeholder="LPU Registration Number" required />
-          <select class="select" required>
+          <input type="text" id="pfName" placeholder="Your Name" required />
+          <input type="text" id="pfReg" placeholder="LPU Registration Number" required />
+          <select class="select" id="pfPlan" required>
             <option value="">Select Plan</option>
-            <option>Exam Night Pass — ₹29</option>
-            <option>Midterm Mode — ₹59</option>
-            <option>Semester Pro — ₹99</option>
+            <option value="rush24">Exam Night Pass — ₹29</option>
+            <option value="subject_pass_49">Subject Master Pack — ₹59</option>
+            <option value="midterm_mock_49">Midterm Mode Pass — ₹49</option>
+            <option value="semester_pro">Semester All-Access Pro — ₹199</option>
           </select>
-          <input type="text" placeholder="UTR / Transaction ID (optional)" />
+          <input type="text" id="pfUtr" placeholder="UTR / Transaction ID (optional)" />
           <button class="btn btn-primary btn-block" type="submit">Submit for Verification</button>
         </form>
         <div class="pay-success" id="paySuccess" hidden>✅ Submitted! Admin will verify &amp; unlock your access shortly.</div>
@@ -510,6 +477,123 @@
   </footer>
 
   <button class="to-top" id="toTop" aria-label="Back to top">↑</button>
+
+  <!-- ===== Auth modal ===== -->
+  <div class="modal" id="authModal" hidden>
+    <div class="modal-box">
+      <button class="modal-close" data-close="authModal" aria-label="Close">✕</button>
+      <div class="modal-tabs" id="authTabs">
+        <button class="tab active" data-atab="login">Login</button>
+        <button class="tab" data-atab="register">Create Account</button>
+      </div>
+
+      <form id="loginForm" class="modal-form">
+        <label>Email or LPU Reg No
+          <input type="text" id="loginId" placeholder="you@email.com or 12345678" required autocomplete="username" />
+        </label>
+        <label>Password
+          <input type="password" id="loginPw" placeholder="••••••••" required autocomplete="current-password" />
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Login →</button>
+      </form>
+
+      <form id="registerForm" class="modal-form" hidden>
+        <label>Full Name
+          <input type="text" id="regName" placeholder="Your full name" required />
+        </label>
+        <label>Email
+          <input type="email" id="regEmail" placeholder="you@email.com" required />
+        </label>
+        <label>LPU Registration No
+          <input type="text" id="regNo" placeholder="e.g. 12345678" required />
+        </label>
+        <label>Phone (optional)
+          <input type="tel" id="regPhone" placeholder="10-digit mobile" />
+        </label>
+        <label>Password (min 6 chars)
+          <input type="password" id="regPw" placeholder="••••••••" required minlength="6" autocomplete="new-password" />
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Create Account →</button>
+      </form>
+
+      <div class="modal-status" id="authStatus" hidden></div>
+    </div>
+  </div>
+
+  <!-- ===== Paywall / checkout modal ===== -->
+  <div class="modal" id="payModal" hidden>
+    <div class="modal-box modal-wide">
+      <button class="modal-close" data-close="payModal" aria-label="Close">✕</button>
+
+      <!-- step 1: pay -->
+      <div id="payStepForm">
+        <div class="modal-kicker">🔒 Secure Unlock</div>
+        <h3 id="payPlanName">Plan</h3>
+        <div class="pay-amount" id="payPlanPrice">₹0</div>
+
+        <div class="pay-grid-modal">
+          <div class="pay-qr-mini">
+            <img src="assets/official_paywall_qr.jpg" alt="UPI QR (mk9817223@okicici)"
+                 onerror="this.onerror=null;this.src='https://acadassist-cor0.onrender.com/static/images/official_paywall_qr.jpg'" />
+            <span>UPI: <b>mk9817223@okicici</b></span>
+          </div>
+          <form id="checkoutForm" class="modal-form">
+            <label>Your Name
+              <input type="text" id="payName" placeholder="Full name" required />
+            </label>
+            <label>LPU Registration No
+              <input type="text" id="payReg" placeholder="12345678" required />
+            </label>
+            <label>UPI Transaction ID / UTR (optional)
+              <input type="text" id="payUtr" placeholder="12-digit UTR from your UPI app" />
+            </label>
+            <button class="btn btn-primary btn-block" type="submit" id="paySubmitBtn">✅ I've Paid — Submit for Verification</button>
+          </form>
+        </div>
+        <p class="modal-note">Scan the QR with any UPI app, pay the exact amount, then submit. The admin is notified instantly on WhatsApp.</p>
+      </div>
+
+      <!-- step 2: waiting for approval -->
+      <div id="payStepPending" hidden>
+        <div class="pending-wrap">
+          <div class="pending-ring"></div>
+          <h3>⏳ Waiting for Admin Approval</h3>
+          <p>Your payment has been submitted and sent to the admin panel.<br />
+             Material stays <b>locked</b> until the admin verifies your UPI transaction.</p>
+          <div class="pending-meta">
+            <span>TxID: <b id="pendTx">—</b></span>
+            <span>Amount: <b id="pendAmt">—</b></span>
+            <span>Status: <b id="pendStatus">PENDING</b></span>
+          </div>
+          <div class="modal-note">🔔 Admin notified on WhatsApp • polling for approval every 5s…</div>
+          <button class="btn btn-ghost btn-block" type="button" data-close="payModal">Keep browsing — this will unlock automatically</button>
+        </div>
+      </div>
+
+      <!-- step 3: approved -->
+      <div id="payStepDone" hidden>
+        <div class="done-wrap">
+          <div class="done-check">✓</div>
+          <h3>Payment Approved!</h3>
+          <p id="doneMsg">Your material is now unlocked.</p>
+          <button class="btn btn-primary btn-block" type="button" id="doneBtn">Continue →</button>
+        </div>
+      </div>
+
+      <div class="modal-status" id="payStatus" hidden></div>
+    </div>
+  </div>
+
+  <!-- ===== My Orders modal ===== -->
+  <div class="modal" id="ordersModal" hidden>
+    <div class="modal-box modal-wide">
+      <button class="modal-close" data-close="ordersModal" aria-label="Close">✕</button>
+      <div class="modal-kicker">🧾 Purchase History</div>
+      <h3>My Orders</h3>
+      <div class="orders-plan" id="ordersPlan">Free plan</div>
+      <div class="orders-list" id="ordersList"><p class="muted">Loading…</p></div>
+    </div>
+  </div>
 
   <!-- ===== Interactive Slide Deck ===== -->
   <div class="deck" id="deck" hidden>

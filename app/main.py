@@ -1126,6 +1126,11 @@ async def record_visitor_hit(req: VisitLogRequest):
     )
     return {"success": True}
 
+# Serve interactive frontend (interactive-site/) at /site — registered before the "/" catch-all
+INTERACTIVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "interactive-site")
+if os.path.isdir(INTERACTIVE_DIR):
+    app.mount("/site", StaticFiles(directory=INTERACTIVE_DIR, html=True), name="interactive_site")
+
 # Serve Frontend static assets
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static_prefix")
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

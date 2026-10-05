@@ -275,8 +275,9 @@ function renderPapers(code) {
     <div class="paper" style="animation-delay:${i * 45}ms">
       <h5>${subj.code} — ${it.p}</h5>
       <span>${it.y} • ${it.sem}</span>
-      <span>With marking rubric &amp; model solutions</span>
+      <span>Step-by-step model answers &amp; marking rubric</span>
       <span class="tag">PYQ Repeat: ${55 + ((i * 7) % 40)}%</span>
+      <button class="btn btn-small btn-ghost paper-unlock" type="button" data-plan="subject_pass_49" data-subject="${subj.code}">🔒 Unlock Model Solutions</button>
     </div>`
     )
     .join("");
@@ -340,24 +341,114 @@ const TEMPLATES = {
 function generate() {
   const course = $("#studioCourse").value;
   const unit = $("#studioUnit").value;
+  // Paid material: login + admin-approved plan required before generation runs
+  gateMaterial(course, unit);
+}
+
+async function runGenerate(course, unit) {
+  const code = course.split(" — ")[0];
+  const name = course.split(" — ")[1] || course;
+  const typeMap = { notes: "notes", cheatsheet: "short_notes", slides: "slides", roadmap: "roadmap" };
   studioLoader.hidden = false;
   outputCard.style.display = "none";
-  setTimeout(() => {
+  try {
+    const fd = new FormData();
+    fd.append("asset_type", typeMap[activeTab] || "notes");
+    fd.append("subject_code", code);
+    fd.append("subject_name", name);
+    fd.append("semester", "Sem2");
+    fd.append("unit", unit.replace(/\s+/g, ""));
+    fd.append("token", session.planToken || "");
+    const res = await fetch(API + "/api/generate-asset", { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || data.message || `Server error (${res.status})`);
     studioLoader.hidden = true;
-    outputCard.style.display = "block";
-    outputCard.style.animation = "none";
-    void outputCard.offsetWidth;
-    outputCard.style.animation = "";
-    outputCard.innerHTML = TEMPLATES[activeTab](course.split(" — ")[0], unit);
-    if (activeTab === "slides") {
-      const btn = document.createElement("button");
-      btn.className = "launch-deck";
-      btn.type = "button";
-      btn.innerHTML = "▶ Launch Interactive Deck";
-      btn.addEventListener("click", () => openDeck(course, unit));
-      outputCard.appendChild(btn);
+    showOutput(renderAsset(activeTab, data, code, unit));
+    if (activeTab === "slides") appendDeckButton();
+  } catch (err) {
+    studioLoader.hidden = true;
+    showOutput(
+      `<h4>⚠️ Live generation unavailable</h4><p>${escapeHtml(err.message)}</p>` +
+      `<p class="muted">Showing offline sample structure instead:</p>` + TEMPLATES[activeTab](code, unit)
+    );
+    if (activeTab === "slides") appendDeckButton();
+  }
+}
+
+function showOutput(html) {
+  outputCard.style.display = "block";
+  outputCard.style.animation = "none";
+  void outputCard.offsetWidth;
+  outputCard.style.animation = "";
+  outputCard.innerHTML = html;
+}
+
+function appendDeckButton() {
+  const btn = document.createElement("button");
+  btn.className = "launch-deck";
+  btn.type = "button";
+  btn.innerHTML = "▶ Launch Interactive Deck";
+  btn.addEventListener("click", () => openDeck($("#studioCourse").value, $("#studioUnit").value));
+  outputCard.appendChild(btn);
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function renderAsset(tab, d, code, unit) {
+  if (tab === "notes") {
+    return `<h4>📝 ${escapeHtml(code)} — ${escapeHtml(d.unit || unit)} Comprehensive Notes</h4>` +
+      (d.sections || [])
+        .map((s) => `<div class="asset-sec"><b>${escapeHtml(s.heading)}</b><p>${escapeHtml(s.content).replace(/\n/g, "<br>")}</p></div>`)
+        .join("") || `<p class="muted">No sections returned.</p>`;
+  }
+  if (tab === "cheatsheet") {
+    return `<h4>⚡ ${escapeHtml(code)} — ${escapeHtml(d.unit || unit)} Cheat Sheet</h4>` +
+      `<div class="asset-rows">${(d.cheat_sheet || [])
+        .map((c) => `<div class="asset-row"><b>${escapeHtml(c.topic)}</b><span>${escapeHtml(c.summary)}</span></div>`)
+        .join("")}</div>` +
+      `<div class="asset-sec"><b>🧠 Flashcards</b>${(d.flashcards || [])
+        .map((f) => `<p>Q: ${escapeHtml(f.question)}<br><b>A:</b> ${escapeHtml(f.answer)}</p>`)
+        .join("")}</div>` +
+      `<div class="asset-sec"><b>📐 High-Yield Formulas</b>${(d.high_yield_formulas || [])
+        .map((x) => `<p>${escapeHtml(x)}</p>`).join("")}</div>`;
+  }
+  if (tab === "slides") {
+    return `<h4>📊 ${escapeHtml(code)} — ${escapeHtml(d.unit || unit)} Slide Deck (${d.total_slides || (d.slides || []).length} slides)</h4>` +
+      `<div class="asset-rows">${(d.slides || [])
+        .map((s, i) => {
+          const bullets = s.bullets || s.points || (Array.isArray(s.content) ? s.content : []) || [];
+          return `<div class="asset-row"><b>${i + 1}. ${escapeHtml(s.title || s.heading || "Slide " + (i + 1))}</b>` +
+            (Array.isArray(bullets) && bullets.length
+              ? `<span>${bullets.map((b) => "• " + escapeHtml(b)).join("<br>")}</span>`
+              : typeof s.content === "string" && s.content
+              ? `<span>${escapeHtml(s.content).replace(/\n/g, "<br>")}</span>`
+              : "") +
+            (s.speaker_notes ? `<span class="muted">🎙 ${escapeHtml(s.speaker_notes)}</span>` : "") +
+            `</div>`;
+        })
+        .join("")}</div>`;
+  }
+  // roadmap — render known fields defensively
+  let html = `<h4>🗺️ ${escapeHtml(d.subject_code || code)} 9+ CGPA Roadmap</h4>`;
+  if (d.target_goal) html += `<div class="asset-sec"><b>🎯 Goal</b><p>${escapeHtml(d.target_goal)}</p></div>`;
+  for (const [k, v] of Object.entries(d)) {
+    if (["subject_code", "subject_name", "unit", "target_goal", "asset_type", "is_pro_user", "roadmap"].includes(k)) continue;
+    if (Array.isArray(v) && v.length && typeof v[0] === "object") {
+      html += `<div class="asset-sec"><b>${escapeHtml(k.replace(/_/g, " "))}</b>${v
+        .map((item) => `<p>${Object.entries(item).map(([ik, iv]) => `<b>${escapeHtml(ik.replace(/_/g, " "))}:</b> ${escapeHtml(Array.isArray(iv) ? iv.join(", ") : iv)}`).join("<br>")}</p>`)
+        .join("")}</div>`;
+    } else if (Array.isArray(v) && v.length) {
+      html += `<div class="asset-sec"><b>${escapeHtml(k.replace(/_/g, " "))}</b>${v.map((x) => `<p>• ${escapeHtml(x)}</p>`).join("")}</div>`;
+    } else if (typeof v === "string" && v && k !== "unit") {
+      html += `<div class="asset-sec"><b>${escapeHtml(k.replace(/_/g, " "))}</b><p>${escapeHtml(v).replace(/\n/g, "<br>")}</p></div>`;
     }
-  }, 1400);
+  }
+  if (d.roadmap && typeof d.roadmap === "object") {
+    html += renderAsset("notes", { sections: Object.entries(d.roadmap).map(([h, c]) => ({ heading: h, content: typeof c === "string" ? c : JSON.stringify(c, null, 1) })) }, code, unit);
+  }
+  return html;
 }
 generateBtn.addEventListener("click", generate);
 
@@ -526,166 +617,6 @@ setInterval(() => {
   if (secondsLeft === 0) $("#submitExam").click();
 }, 1000);
 
-function resetExam() {
-  answers = Array(QUESTIONS.length).fill(null);
-  review = Array(QUESTIONS.length).fill(false);
-  visited = Array(QUESTIONS.length).fill(false);
-  qIndex = 0;
-  submitted = false;
-  secondsLeft = 15 * 60;
-  timerBox.classList.remove("danger");
-  $("#examResult").hidden = true;
-  renderQuestion();
-}
-
-/* =====================================================
-   11b. AI question generation
-===================================================== */
-const AI_PROVIDERS = {
-  groq: { kind: "openai", url: "https://api.groq.com/openai/v1/chat/completions", model: "llama-3.3-70b-versatile" },
-  gemini: { kind: "gemini", url: "https://generativelanguage.googleapis.com/v1beta/models", model: "gemini-2.0-flash" },
-  openai: { kind: "openai", url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" },
-  openrouter: { kind: "openai", url: "https://openrouter.ai/api/v1/chat/completions", model: "meta-llama/llama-3.3-70b-instruct:free" },
-  custom: { kind: "openai", url: "", model: "" },
-};
-
-const aiCfg = JSON.parse(localStorage.getItem("aa_ai_cfg") || "null") || { provider: "groq", key: "", model: "", baseUrl: "" };
-const aiStatus = $("#aiStatus");
-
-function setAiStatus(msg, cls) {
-  aiStatus.hidden = false;
-  aiStatus.className = "ai-status " + (cls || "");
-  aiStatus.innerHTML = cls === "working" ? `<span class="spinner"></span>${msg}` : msg;
-}
-
-function syncAiForm() {
-  $("#aiProvider").value = aiCfg.provider;
-  $("#aiKey").value = aiCfg.key;
-  $("#aiModel").value = aiCfg.model || "";
-  $("#aiBaseUrl").value = aiCfg.baseUrl || "";
-  $("#aiCustomWrap").hidden = aiCfg.provider !== "custom";
-}
-syncAiForm();
-
-$("#aiSettingsToggle").addEventListener("click", () => {
-  const box = $("#aiSettings");
-  box.hidden = !box.hidden;
-});
-$("#aiProvider").addEventListener("change", (e) => {
-  $("#aiCustomWrap").hidden = e.target.value !== "custom";
-});
-$("#aiSave").addEventListener("click", () => {
-  aiCfg.provider = $("#aiProvider").value;
-  aiCfg.key = $("#aiKey").value.trim();
-  aiCfg.model = $("#aiModel").value.trim();
-  aiCfg.baseUrl = $("#aiBaseUrl").value.trim();
-  localStorage.setItem("aa_ai_cfg", JSON.stringify(aiCfg));
-  setAiStatus("✅ Settings saved in this browser.", "ok");
-});
-
-function buildPrompt() {
-  const subject = $("#aiSubject").value.trim() || "General engineering fundamentals";
-  const notes = $("#aiNotes").value.trim();
-  const count = Math.min(15, Math.max(3, +$("#aiCount").value || 8));
-  const diff = $("#aiDiff").value;
-  return `You are an exam question author for Lovely Professional University (LPU).\n` +
-    `Create exactly ${count} multiple-choice questions on: ${subject}.\n` +
-    `Difficulty: ${diff}.${notes ? ` Base them on these notes:\n---\n${notes}\n---` : ""}\n` +
-    `Rules: each question has ONE correct answer, 4 plausible options, university exam style.\n` +
-    `Return ONLY valid JSON (no markdown fences) in this exact shape:\n` +
-    `{"questions":[{"q":"question text","opts":["a","b","c","d"],"a":0}]}`;
-}
-
-function extractJson(text) {
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  if (start === -1 || end === -1) throw new Error("No JSON found in model response");
-  return JSON.parse(cleaned.slice(start, end + 1));
-}
-
-function validateQuestions(raw) {
-  const arr = Array.isArray(raw) ? raw : raw.questions;
-  if (!Array.isArray(arr) || !arr.length) throw new Error("Model returned no questions");
-  const clean = arr
-    .filter((q) => q && typeof q.q === "string" && Array.isArray(q.opts) && q.opts.length >= 2)
-    .slice(0, 15)
-    .map((q) => ({
-      q: q.q.trim(),
-      opts: q.opts.slice(0, 4).map((o) => String(o)),
-      a: Math.min(3, Math.max(0, +q.a || 0)),
-    }));
-  clean.forEach((q) => { while (q.opts.length < 4) q.opts.push("—"); });
-  if (!clean.length) throw new Error("Questions failed validation");
-  return clean;
-}
-
-async function callAI(prompt) {
-  const provider = aiCfg.provider;
-  const p = AI_PROVIDERS[provider];
-  const key = aiCfg.key;
-  if (!key) throw new Error("No API key — open ⚙ API Settings and paste your key first.");
-  const model = aiCfg.model || p.model;
-
-  if (p.kind === "gemini") {
-    const url = `${aiCfg.baseUrl || p.url}/${model}:generateContent?key=${encodeURIComponent(key)}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
-      }),
-    });
-    if (!res.ok) throw new Error(`Gemini API ${res.status}: ${(await res.text()).slice(0, 160)}`);
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  }
-
-  const url = provider === "custom" ? aiCfg.baseUrl.replace(/\/$/, "") + "/chat/completions" : p.url;
-  if (!url.startsWith("http")) throw new Error("Custom Base URL missing in settings.");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      temperature: 0.7,
-      messages: [
-        { role: "system", content: "You output only strict JSON. No markdown, no commentary." },
-        { role: "user", content: prompt },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error(`API ${res.status}: ${(await res.text()).slice(0, 160)}`);
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-$("#aiGenerate").addEventListener("click", async () => {
-  const btn = $("#aiGenerate");
-  const subject = $("#aiSubject").value.trim();
-  if (!subject) {
-    setAiStatus("⚠ Enter a subject or topic first (e.g. CSE101 Unit 3: Trees).", "err");
-    return;
-  }
-  btn.disabled = true;
-  btn.style.opacity = 0.6;
-  setAiStatus("Generating questions… this takes a few seconds.", "working");
-  try {
-    const text = await callAI(buildPrompt());
-    const parsed = validateQuestions(extractJson(text));
-    QUESTIONS = parsed;
-    resetExam();
-    $("#examCourse").innerHTML = `${subject}<span class="src-badge">🤖 AI-GENERATED</span>`;
-    setAiStatus(`✅ Loaded ${parsed.length} AI questions — timer reset, answer below!`, "ok");
-    $("#examApp").scrollIntoView({ behavior: "smooth", block: "start" });
-  } catch (err) {
-    setAiStatus(`❌ ${err.message}`, "err");
-  } finally {
-    btn.disabled = false;
-    btn.style.opacity = 1;
-  }
-});
 const searchInput = $("#searchInput");
 const searchResults = $("#searchResults");
 const POPULAR = ["MTH166", "PHY109", "CSE101", "ECE131", "CSE201"];
@@ -740,11 +671,16 @@ $("#copyUpi").addEventListener("click", async () => {
   }
 });
 
-/* Payment form */
+/* Payment form → routes into the real checkout modal (login + admin approval) */
 $("#payForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  $("#paySuccess").hidden = false;
-  e.target.reset();
+  const planId = $("#pfPlan").value;
+  if (!planId) return;
+  openPaywall(planId, null, null, {
+    name: $("#pfName").value.trim(),
+    reg: $("#pfReg").value.trim(),
+    utr: $("#pfUtr").value.trim(),
+  });
 });
 
 /* =====================================================
@@ -1000,6 +936,375 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); deckGo(-1); }
   else if (e.key === "Escape") closeDeck();
 });
+
+/* =====================================================
+   13c. Session, auth, paywall & orders (wired to FastAPI backend)
+===================================================== */
+const API = location.port === "8765" ? "http://127.0.0.1:8000" : "";
+const session = {
+  token: localStorage.getItem("aa_token") || null,
+  user: JSON.parse(localStorage.getItem("aa_user") || "null"),
+  planToken: localStorage.getItem("aa_plan_token") || null,
+  isPro: localStorage.getItem("aa_is_pro") === "1",
+  planName: localStorage.getItem("aa_plan_name") || "",
+};
+let PLANS = null;
+let payCtx = null;       // { planId, subjectCode, thenFn }
+let pollTimer = null;
+let pendingAction = null; // action to resume after login/approval
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : data.message || `Request failed (${res.status})`);
+  return data;
+}
+
+function openModal(id) { document.getElementById(id).hidden = false; document.body.classList.add("deck-open"); }
+function closeModal(id) {
+  document.getElementById(id).hidden = true;
+  if (!document.querySelector(".modal:not([hidden])") && document.querySelector("#deck").hidden) {
+    document.body.classList.remove("deck-open");
+  }
+  if (id === "payModal" && pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+document.addEventListener("click", (e) => {
+  const c = e.target.closest("[data-close]");
+  if (c) closeModal(c.dataset.close);
+  const m = e.target.classList && e.target.classList.contains("modal") ? e.target : null;
+  if (m) closeModal(m.id);
+});
+
+/* ---------- account UI ---------- */
+function updateAuthUI() {
+  const loggedIn = !!session.token && !!session.user;
+  $("#authBtn").hidden = loggedIn;
+  $("#accountChip").hidden = !loggedIn;
+  $("#accountMenu").hidden = true;
+  if (loggedIn) {
+    $("#chipName").textContent = (session.user.name || "Student").split(" ")[0];
+    const badge = $("#chipPlan");
+    if (session.isPro) {
+      badge.textContent = "PRO";
+      badge.classList.remove("free");
+      badge.title = session.planName || "Active plan";
+    } else {
+      badge.textContent = "Free";
+      badge.classList.add("free");
+      badge.title = "Free tier — buy a plan to unlock material";
+    }
+  }
+}
+
+async function refreshAccess() {
+  if (!session.token || !session.user) return false;
+  try {
+    const p = await api(`/api/user/purchases?user_id=${encodeURIComponent(session.user.id)}`);
+    session.isPro = !!p.is_pro || !!p.has_active_plan;
+    session.planName = p.plan_name || "";
+    // restore plan token from latest approved transaction (works across devices)
+    const approved = (p.all_transactions || p.approved_purchases || []).filter(
+      (t) => (t.status || "").toLowerCase() === "approved" && t.token
+    );
+    if (approved.length) {
+      session.planToken = approved[approved.length - 1].token;
+      localStorage.setItem("aa_plan_token", session.planToken);
+    }
+    localStorage.setItem("aa_is_pro", session.isPro ? "1" : "0");
+    localStorage.setItem("aa_plan_name", session.planName);
+    updateAuthUI();
+    return session.isPro;
+  } catch { return session.isPro; }
+}
+
+async function isPro() {
+  if (!session.token || !session.user) return false;
+  if (session.isPro) return true;
+  return refreshAccess();
+}
+
+/* ---------- auth modal ---------- */
+function openAuth(message) {
+  const st = $("#authStatus");
+  st.hidden = !message;
+  if (message) { st.textContent = message; st.className = "modal-status"; }
+  openModal("authModal");
+}
+
+$("#authBtn").addEventListener("click", () => openAuth());
+$("#authTabs").addEventListener("click", (e) => {
+  const t = e.target.closest(".tab");
+  if (!t) return;
+  $$("#authTabs .tab").forEach((x) => x.classList.remove("active"));
+  t.classList.add("active");
+  const isLogin = t.dataset.atab === "login";
+  $("#loginForm").hidden = !isLogin;
+  $("#registerForm").hidden = isLogin;
+  $("#authStatus").hidden = true;
+});
+
+function authErr(msg) {
+  const st = $("#authStatus");
+  st.hidden = false;
+  st.className = "modal-status err";
+  st.textContent = "❌ " + msg;
+}
+
+function onAuthSuccess(res) {
+  session.token = res.session_token || (res.user && res.user.session_token);
+  session.user = res.user;
+  session.isPro = false;
+  if (!session.token) return authErr("Account ready — please login.");
+  localStorage.setItem("aa_token", session.token);
+  localStorage.setItem("aa_user", JSON.stringify(session.user));
+  closeModal("authModal");
+  updateAuthUI();
+  refreshAccess();
+  const act = pendingAction;
+  pendingAction = null;
+  if (act) act();
+}
+
+$("#loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ identifier: $("#loginId").value.trim(), password: $("#loginPw").value }) });
+    onAuthSuccess(res);
+  } catch (err) { authErr(err.message); }
+});
+
+$("#registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: $("#regName").value.trim(),
+        email: $("#regEmail").value.trim(),
+        password: $("#regPw").value,
+        lpu_reg_no: $("#regNo").value.trim(),
+        phone: $("#regPhone").value.trim() || null,
+      }),
+    });
+    onAuthSuccess(res);
+  } catch (err) { authErr(err.message); }
+});
+
+/* account dropdown */
+$("#accountBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  $("#accountMenu").hidden = !$("#accountMenu").hidden;
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".account-chip")) $("#accountMenu").hidden = true;
+});
+$("#accountMenu").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.menu === "orders") openOrders();
+  if (b.dataset.menu === "logout") {
+    session.token = null; session.user = null; session.planToken = null;
+    session.isPro = false; session.planName = "";
+    ["aa_token", "aa_user", "aa_plan_token", "aa_is_pro", "aa_plan_name"].forEach((k) => localStorage.removeItem(k));
+    updateAuthUI();
+  }
+});
+
+/* ---------- gating ---------- */
+function requireLogin(msg, then) {
+  if (session.token && session.user) return true;
+  pendingAction = then || null;
+  openAuth(msg || "Login required to continue.");
+  return false;
+}
+
+function gate(planId, subjectCode, thenFn) {
+  if (!requireLogin("Login to unlock this material.", () => gate(planId, subjectCode, thenFn))) return;
+  isPro().then((pro) => {
+    if (pro) { thenFn && thenFn(); return; }
+    openPaywall(planId, subjectCode, thenFn);
+  });
+}
+
+function gateMaterial(course, unit) {
+  const code = course.split(" — ")[0];
+  if (!requireLogin("Login to generate study material.", () => gateMaterial(course, unit))) return;
+  isPro().then((pro) => {
+    if (pro) { runGenerate(course, unit); return; }
+    openPaywall("subject_pass_49", code, () => runGenerate(course, unit));
+  });
+}
+
+/* every [data-plan] element opens the gate */
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-plan]");
+  if (!el) return;
+  e.preventDefault();
+  let thenFn = null;
+  if (el.dataset.action === "studio") {
+    thenFn = () => {
+      $("#studio").scrollIntoView({ behavior: "smooth" });
+      setTimeout(() => generate(), 500);
+    };
+  }
+  gate(el.dataset.plan, el.dataset.subject || null, thenFn);
+});
+
+/* ---------- paywall checkout modal ---------- */
+async function ensurePlans() {
+  if (!PLANS) PLANS = await api("/api/paywall/plans");
+  return PLANS;
+}
+
+function payStep(step) {
+  $("#payStepForm").hidden = step !== "form";
+  $("#payStepPending").hidden = step !== "pending";
+  $("#payStepDone").hidden = step !== "done";
+  const st = $("#payStatus"); st.hidden = true; st.className = "modal-status";
+}
+
+async function openPaywall(planId, subjectCode, thenFn, prefills) {
+  if (!requireLogin("Login required before purchasing.", () => openPaywall(planId, subjectCode, thenFn, prefills))) return;
+  let plan;
+  try {
+    plan = (await ensurePlans())[planId];
+    if (!plan) throw new Error("Plan not found");
+  } catch (err) {
+    alert("Could not load plans: " + err.message);
+    return;
+  }
+  payCtx = { planId, subjectCode, thenFn };
+  payStep("form");
+  $("#payPlanName").textContent = plan.name;
+  $("#payPlanPrice").textContent = `₹${plan.price_inr}${plan.original_price_inr ? `  <s style="font-size:1rem;color:#9a97b5">₹${plan.original_price_inr}</s>` : ""}`;
+  $("#payPlanPrice").innerHTML = `₹${plan.price_inr}` + (plan.original_price_inr ? ` <s style="font-size:1rem;color:#9a97b5">₹${plan.original_price_inr}</s>` : "");
+  $("#payName").value = (prefills && prefills.name) || (session.user && session.user.name) || "";
+  $("#payReg").value = (prefills && prefills.reg) || (session.user && session.user.lpu_reg_no) || "";
+  $("#payUtr").value = (prefills && prefills.utr) || "";
+  openModal("payModal");
+}
+
+$("#checkoutForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!payCtx) return;
+  const btn = $("#paySubmitBtn");
+  btn.disabled = true; btn.style.opacity = 0.6;
+  const utr = $("#payUtr").value.trim();
+  try {
+    const res = await api("/api/paywall/checkout", {
+      method: "POST",
+      body: JSON.stringify({
+        plan_id: payCtx.planId,
+        payment_method: "upi",
+        user_name: $("#payName").value.trim(),
+        reg_no: $("#payReg").value.trim(),
+        utr_ref: utr || null,
+        user_id: session.user ? session.user.id : null,
+        subject_code: payCtx.subjectCode || null,
+      }),
+    });
+    if (res.verified && res.unlocked) return paymentApproved(res, res.token);
+    // pending → show waiting screen + poll for admin approval
+    payStep("pending");
+    $("#pendTx").textContent = res.transaction_id || "—";
+    $("#pendAmt").textContent = `₹${res.amount_paid ?? "?"}`;
+    $("#pendStatus").textContent = "PENDING ADMIN VERIFICATION";
+    startPolling(res.transaction_id);
+  } catch (err) {
+    payStep("form");
+    const st = $("#payStatus");
+    st.hidden = false; st.className = "modal-status err"; st.textContent = "❌ " + err.message;
+  } finally {
+    btn.disabled = false; btn.style.opacity = 1;
+  }
+});
+
+function startPolling(txId) {
+  if (pollTimer) clearInterval(pollTimer);
+  let ticks = 0;
+  pollTimer = setInterval(async () => {
+    if (!txId) return;
+    ticks++;
+    if (ticks > 360) { clearInterval(pollTimer); pollTimer = null; return; } // ~30 min cap
+    try {
+      const s = await api(`/api/paywall/status/${encodeURIComponent(txId)}`);
+      if (s.status === "approved" || s.is_approved) {
+        clearInterval(pollTimer); pollTimer = null;
+        paymentApproved(s, s.token);
+      } else if (s.status === "rejected") {
+        clearInterval(pollTimer); pollTimer = null;
+        payStep("form");
+        const st = $("#payStatus");
+        st.hidden = false; st.className = "modal-status err";
+        st.textContent = "❌ Payment rejected by admin. Please contact support on WhatsApp.";
+      }
+    } catch { /* transient network error — keep polling */ }
+  }, 5000);
+}
+
+function paymentApproved(res, token) {
+  if (token) {
+    session.planToken = token;
+    localStorage.setItem("aa_plan_token", token);
+  }
+  session.isPro = true;
+  session.planName = res.plan_name || res.plan || session.planName;
+  localStorage.setItem("aa_is_pro", "1");
+  localStorage.setItem("aa_plan_name", session.planName);
+  updateAuthUI();
+  payStep("done");
+  $("#doneMsg").innerHTML = `Admin verified your payment.<br><b>${escapeHtml(session.planName || "Plan")}</b> is now active — material unlocked ✅`;
+}
+
+$("#doneBtn").addEventListener("click", () => {
+  closeModal("payModal");
+  const thenFn = payCtx && payCtx.thenFn;
+  payCtx = null;
+  if (thenFn) thenFn();
+});
+
+/* ---------- orders history ---------- */
+async function openOrders() {
+  if (!requireLogin("Login to view your orders.", openOrders)) return;
+  openModal("ordersModal");
+  const list = $("#ordersList");
+  list.innerHTML = '<p class="muted">Loading…</p>';
+  try {
+    const p = await api(`/api/user/purchases?user_id=${encodeURIComponent(session.user.id)}`);
+    const active = p.is_pro || p.has_active_plan;
+    $("#ordersPlan").textContent = active
+      ? `Active: ${p.plan_name || "Pro"}`
+      : p.pending_purchases && p.pending_purchases.length
+      ? `⏳ ${p.pending_purchases.length} payment(s) awaiting admin approval`
+      : "Free plan — no active purchases";
+    const txs = p.all_transactions || [];
+    if (!txs.length) {
+      list.innerHTML = '<p class="muted">No orders yet. Your UPI payments will appear here after submission.</p>';
+      return;
+    }
+    list.innerHTML = txs
+      .map((t, i) => {
+        const status = (t.status || "pending").toLowerCase();
+        const when = t.created_at ? new Date(t.created_at * 1000).toLocaleString() : t.date || "—";
+        return `<div class="order-row" style="animation-delay:${i * 40}ms">
+          <span class="o-plan">${escapeHtml(t.plan_name || t.plan_id || "Plan")}</span>
+          <span class="o-amt">₹${t.amount ?? "?"}</span>
+          <span class="o-status ${status}">${escapeHtml(status)}</span>
+          <span class="o-meta"><span>Tx: ${escapeHtml(t.tx_id || t.utr_ref || "—")}</span><span>${escapeHtml(String(when))}</span></span>
+        </div>`;
+      })
+      .join("");
+  } catch (err) {
+    list.innerHTML = `<p class="muted">❌ ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+/* ---------- init ---------- */
+$("#adminLink").href = API + "/admin";
+if (session.token && session.user) { updateAuthUI(); refreshAccess(); }
 
 /* =====================================================
    14. Init reveals (after dynamic content injected)
